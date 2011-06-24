@@ -68,35 +68,37 @@ abstractions.
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
         <configuration>
           <source>1.5</source>
           <target>1.5</target>
         </configuration>
       </plugin>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-release-plugin</artifactId>
-            <version>2.0</version>
-            <configuration>
-                <mavenExecutorId>forked-path</mavenExecutorId>
-            </configuration>
-        </plugin>
-        <plugin><!-- plug-in to attach source bundle in repo -->
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-source-plugin</artifactId>
-          <executions>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.1</version>
+        <configuration>
+          <mavenExecutorId>forked-path</mavenExecutorId>
+        </configuration>
+      </plugin>
+      <plugin><!-- plug-in to attach source bundle in repo -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>2.1.2</version>
+        <executions>
             <execution>
               <id>attach-sources</id>
               <goals>
                 <goal>jar</goal>
               </goals>
             </execution>
-          </executions>
-        </plugin>
-        <plugin>
+        </executions>
+      </plugin>
+      <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.6</version>
+                <version>2.6.1</version>
                 <configuration>
                     <source>1.5</source>
                     <target>1.5</target>
@@ -121,6 +123,7 @@ abstractions.
         <plugin>
           <groupId>org.apache.felix</groupId>
           <artifactId>maven-bundle-plugin</artifactId>
+          <version>2.3.4</version>
           <extensions>true</extensions>
           <configuration>
             <instructions>
