@@ -3,6 +3,8 @@ package com.fasterxml.jackson.df.csv.io;
 import java.io.*;
 
 import org.codehaus.jackson.*;
+import org.codehaus.jackson.format.InputAccessor;
+import org.codehaus.jackson.format.MatchStrength;
 import org.codehaus.jackson.io.IOContext;
 import org.codehaus.jackson.io.MergedStream;
 import org.codehaus.jackson.io.UTF32Reader;
@@ -19,7 +21,7 @@ import org.codehaus.jackson.sym.CharsToNameCanonicalizer;
  * (UTF-16, UTF-32). And finally, if neither found, must decide
  * between most likely alternatives, UTF-8 and Latin-1.
  */
-public final class ByteSourceBootstrapper
+public final class CsvParserBootstrapper
 {
     final static byte UTF8_BOM_1 = (byte) 0xEF;
     final static byte UTF8_BOM_2 = (byte) 0xBB;
@@ -84,7 +86,7 @@ public final class ByteSourceBootstrapper
     /**********************************************************
      */
 
-    public ByteSourceBootstrapper(IOContext ctxt, InputStream in)
+    public CsvParserBootstrapper(IOContext ctxt, InputStream in)
     {
         _context = ctxt;
         _in = in;
@@ -94,7 +96,7 @@ public final class ByteSourceBootstrapper
         _bufferRecyclable = true;
     }
 
-    public ByteSourceBootstrapper(IOContext ctxt, byte[] inputBuffer, int inputStart, int inputLen)
+    public CsvParserBootstrapper(IOContext ctxt, byte[] inputBuffer, int inputStart, int inputLen)
     {
         _context = ctxt;
         _in = null;
@@ -212,24 +214,25 @@ public final class ByteSourceBootstrapper
         throw new RuntimeException("Internal error"); // should never get here
     }
 
-    public JsonParser constructParser(int features, ObjectCodec codec, BytesToNameCanonicalizer rootByteSymbols, CharsToNameCanonicalizer rootCharSymbols)
+    public JsonParser constructParser(int baseFeatures, int csvFeatures,
+            ObjectCodec codec, BytesToNameCanonicalizer rootByteSymbols)
         throws IOException, JsonParseException
     {
         JsonEncoding enc = detectEncoding();
 
         // As per [JACKSON-259], may want to fully disable canonicalization:
-        boolean canonicalize = JsonParser.Feature.CANONICALIZE_FIELD_NAMES.enabledIn(features);
-        boolean intern = JsonParser.Feature.INTERN_FIELD_NAMES.enabledIn(features);
+        boolean canonicalize = JsonParser.Feature.CANONICALIZE_FIELD_NAMES.enabledIn(baseFeatures);
+        boolean intern = JsonParser.Feature.INTERN_FIELD_NAMES.enabledIn(baseFeatures);
         if (enc == JsonEncoding.UTF8) {
             /* and without canonicalization, byte-based approach is not performance; just use std UTF-8 reader
              * (which is ok for larger input; not so hot for smaller; but this is not a common case)
              */
             if (canonicalize) {
                 BytesToNameCanonicalizer can = rootByteSymbols.makeChild(canonicalize, intern);
-                return new Utf8StreamParser(_context, features, _in, codec, can, _inputBuffer, _inputPtr, _inputEnd, _bufferRecyclable);
+                return new Utf8StreamParser(_context, baseFeatures, _in, codec, can, _inputBuffer, _inputPtr, _inputEnd, _bufferRecyclable);
             }
         }
-        return new ReaderBasedParser(_context, features, constructReader(), codec, rootCharSymbols.makeChild(canonicalize, intern));
+        return new ReaderBasedParser(_context, baseFeatures, constructReader(), codec, rootCharSymbols.makeChild(canonicalize, intern));
     }
 
     /*

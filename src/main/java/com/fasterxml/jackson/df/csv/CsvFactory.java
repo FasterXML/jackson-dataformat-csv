@@ -14,6 +14,8 @@ import org.codehaus.jackson.format.InputAccessor;
 import org.codehaus.jackson.format.MatchStrength;
 import org.codehaus.jackson.io.IOContext;
 
+import com.fasterxml.jackson.df.csv.io.CsvParserBootstrapper;
+
 public class CsvFactory extends JsonFactory
 {
     /**
@@ -40,9 +42,9 @@ public class CsvFactory extends JsonFactory
     /**********************************************************************
      */
 
-    protected int _smileParserFeatures = DEFAULT_CSV_PARSER_FEATURE_FLAGS;
+    protected int _csvParserFeatures = DEFAULT_CSV_PARSER_FEATURE_FLAGS;
 
-    protected int _smileGeneratorFeatures = DEFAULT_CSV_GENERATOR_FEATURE_FLAGS;
+    protected int _csvGeneratorFeatures = DEFAULT_CSV_GENERATOR_FEATURE_FLAGS;
 
     /*
     /**********************************************************************
@@ -111,7 +113,7 @@ public class CsvFactory extends JsonFactory
      * (check {@link CsvParser.Feature} for list of features)
      */
     public CsvFactory enable(CsvParser.Feature f) {
-        _smileParserFeatures |= f.getMask();
+        _csvParserFeatures |= f.getMask();
         return this;
     }
 
@@ -120,7 +122,7 @@ public class CsvFactory extends JsonFactory
      * (check {@link CsvParser.Feature} for list of features)
      */
     public CsvFactory disable(CsvParser.Feature f) {
-        _smileParserFeatures &= ~f.getMask();
+        _csvParserFeatures &= ~f.getMask();
         return this;
     }
 
@@ -128,7 +130,7 @@ public class CsvFactory extends JsonFactory
      * Checked whether specified parser feature is enabled.
      */
     public final boolean isEnabled(CsvParser.Feature f) {
-        return (_smileParserFeatures & f.getMask()) != 0;
+        return (_csvParserFeatures & f.getMask()) != 0;
     }
 
     /*
@@ -158,7 +160,7 @@ public class CsvFactory extends JsonFactory
      * (check {@link org.codehaus.jackson.JsonGenerator.Feature} for list of features)
      */
     public CsvFactory enable(CsvGenerator.Feature f) {
-        _smileGeneratorFeatures |= f.getMask();
+        _csvGeneratorFeatures |= f.getMask();
         return this;
     }
 
@@ -167,7 +169,7 @@ public class CsvFactory extends JsonFactory
      * (check {@link org.codehaus.jackson.JsonGenerator.Feature} for list of features)
      */
     public CsvFactory disable(CsvGenerator.Feature f) {
-        _smileGeneratorFeatures &= ~f.getMask();
+        _csvGeneratorFeatures &= ~f.getMask();
         return this;
     }
 
@@ -175,7 +177,7 @@ public class CsvFactory extends JsonFactory
      * Check whether specified generator feature is enabled.
      */
     public final boolean isEnabled(CsvGenerator.Feature f) {
-        return (_smileGeneratorFeatures & f.getMask()) != 0;
+        return (_csvGeneratorFeatures & f.getMask()) != 0;
     }
     
     /*
@@ -267,7 +269,7 @@ public class CsvFactory extends JsonFactory
         throws IOException, JsonParseException
     {
         return new CsvParserBootstrapper(ctxt, in).constructParser(_parserFeatures,
-                        _smileParserFeatures, _objectCodec, _rootByteSymbols);
+                        _csvParserFeatures, _objectCodec, _rootByteSymbols);
     }
 
     /**
@@ -290,7 +292,7 @@ public class CsvFactory extends JsonFactory
         throws IOException, JsonParseException
     {
         return new CsvParserBootstrapper(ctxt, data, offset, len).constructParser(_parserFeatures,
-                        _smileParserFeatures, _objectCodec, _rootByteSymbols);
+                        _csvParserFeatures, _objectCodec, _rootByteSymbols);
     }
 
     /**
@@ -321,7 +323,7 @@ public class CsvFactory extends JsonFactory
     protected CsvGenerator _createJsonGenerator(OutputStream out, IOContext ctxt)
         throws IOException
     {
-        int feats = _smileGeneratorFeatures;
+        int feats = _csvGeneratorFeatures;
         CsvGenerator gen = new CsvGenerator(ctxt, _generatorFeatures, feats, _objectCodec, out);
         return gen;
     }
