@@ -3,6 +3,8 @@ package com.fasterxml.jackson.df.csv;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
 import org.codehaus.jackson.*;
 import org.codehaus.jackson.impl.JsonParserBase;
@@ -204,5 +206,134 @@ public class CsvParser
             }
         }
         return false;
+    }
+
+    @Override
+    protected void _closeInput() throws IOException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    /*
+    /**********************************************************
+    /* Parsing
+    /**********************************************************
+     */
+
+    @Override
+    public JsonToken nextToken() throws IOException, JsonParseException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+    
+    /*
+    /**********************************************************
+    /* String handling
+    /**********************************************************
+     */
+
+    @Override
+    public String getText() throws IOException, JsonParseException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    protected void _finishString() throws IOException, JsonParseException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public char[] getTextCharacters() throws IOException, JsonParseException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public int getTextLength() throws IOException, JsonParseException {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public int getTextOffset() throws IOException, JsonParseException {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+    
+    /*
+    /**********************************************************
+    /* Binary (base64)
+    /**********************************************************
+     */
+
+    @Override
+    protected byte[] _decodeBase64(Base64Variant arg0) throws IOException,
+            JsonParseException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public byte[] getBinaryValue(Base64Variant arg0) throws IOException,
+            JsonParseException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /*
+    /**********************************************************
+    /* Numeric access
+    /**********************************************************
+     */
+
+    @Override
+    public BigInteger getBigIntegerValue() throws IOException,
+            JsonParseException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public BigDecimal getDecimalValue() throws IOException, JsonParseException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public double getDoubleValue() throws IOException, JsonParseException {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public float getFloatValue() throws IOException, JsonParseException {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public int getIntValue() throws IOException, JsonParseException {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public long getLongValue() throws IOException, JsonParseException {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public NumberType getNumberType() throws IOException, JsonParseException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Number getNumberValue() throws IOException, JsonParseException {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

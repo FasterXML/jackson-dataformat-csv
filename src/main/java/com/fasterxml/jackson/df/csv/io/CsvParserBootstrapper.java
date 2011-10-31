@@ -11,6 +11,8 @@ import org.codehaus.jackson.io.UTF32Reader;
 import org.codehaus.jackson.sym.BytesToNameCanonicalizer;
 import org.codehaus.jackson.sym.CharsToNameCanonicalizer;
 
+import com.fasterxml.jackson.df.csv.CsvParser;
+
 /**
  * This class is used to determine the encoding of byte stream
  * that is to contain CSV document.
@@ -214,7 +216,7 @@ public final class CsvParserBootstrapper
         throw new RuntimeException("Internal error"); // should never get here
     }
 
-    public JsonParser constructParser(int baseFeatures, int csvFeatures,
+    public CsvParser constructParser(int baseFeatures, int csvFeatures,
             ObjectCodec codec, BytesToNameCanonicalizer rootByteSymbols)
         throws IOException, JsonParseException
     {
@@ -232,7 +234,7 @@ public final class CsvParserBootstrapper
                 return new Utf8StreamParser(_context, baseFeatures, _in, codec, can, _inputBuffer, _inputPtr, _inputEnd, _bufferRecyclable);
             }
         }
-        return new ReaderBasedParser(_context, baseFeatures, constructReader(), codec, rootCharSymbols.makeChild(canonicalize, intern));
+        return new ReaderBasedParser(_context, baseFeatures, constructReader(), codec, makeChild(canonicalize, intern));
     }
 
     /*
