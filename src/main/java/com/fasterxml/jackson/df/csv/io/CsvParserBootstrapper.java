@@ -217,24 +217,13 @@ public final class CsvParserBootstrapper
     }
 
     public CsvParser constructParser(int baseFeatures, int csvFeatures,
-            ObjectCodec codec, BytesToNameCanonicalizer rootByteSymbols)
+            ObjectCodec codec)
         throws IOException, JsonParseException
     {
         JsonEncoding enc = detectEncoding();
-
-        // As per [JACKSON-259], may want to fully disable canonicalization:
-        boolean canonicalize = JsonParser.Feature.CANONICALIZE_FIELD_NAMES.enabledIn(baseFeatures);
-        boolean intern = JsonParser.Feature.INTERN_FIELD_NAMES.enabledIn(baseFeatures);
-        if (enc == JsonEncoding.UTF8) {
-            /* and without canonicalization, byte-based approach is not performance; just use std UTF-8 reader
-             * (which is ok for larger input; not so hot for smaller; but this is not a common case)
-             */
-            if (canonicalize) {
-                BytesToNameCanonicalizer can = rootByteSymbols.makeChild(canonicalize, intern);
-                return new Utf8StreamParser(_context, baseFeatures, _in, codec, can, _inputBuffer, _inputPtr, _inputEnd, _bufferRecyclable);
-            }
-        }
-        return new ReaderBasedParser(_context, baseFeatures, constructReader(), codec, makeChild(canonicalize, intern));
+        // would we want to use optimized UTF-8 parser? Maybe later...
+        return new CsvParser(_context, baseFeatures, csvFeatures, codec,
+                constructReader(), codec);
     }
 
     /*

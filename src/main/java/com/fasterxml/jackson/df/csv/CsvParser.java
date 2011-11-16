@@ -3,6 +3,7 @@ package com.fasterxml.jackson.df.csv;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
@@ -51,9 +52,9 @@ public class CsvParser
     private final static int[] NO_INTS = new int[0];
     
     /*
-    /**********************************************************
+    /**********************************************************************
     /* Configuration
-    /**********************************************************
+    /**********************************************************************
      */
     
     /**
@@ -62,9 +63,9 @@ public class CsvParser
     protected ObjectCodec _objectCodec;
 
     /*
-    /**********************************************************
+    /**********************************************************************
     /* Input source config, state (from ex StreamBasedParserBase)
-    /**********************************************************
+    /**********************************************************************
      */
 
     /**
@@ -72,14 +73,14 @@ public class CsvParser
      * in use. May be null, if input comes just as a full buffer,
      * or if the stream has been closed.
      */
-    protected InputStream _inputStream;
+    protected Reader _inputSource;
 
     /**
      * Current buffer from which data is read; generally data is read into
      * buffer from input source, but in some cases pre-loaded buffer
      * is handed to the parser.
      */
-    protected byte[] _inputBuffer;
+    protected char[] _inputBuffer;
 
     /**
      * Flag that indicates whether the input buffer is recycable (and
@@ -89,57 +90,19 @@ public class CsvParser
      * buffer.
      */
     protected boolean _bufferRecyclable;
-    
-    /*
-    /**********************************************************
-    /* Additional parsing state
-    /**********************************************************
-     */
 
     /*
-    /**********************************************************
-    /* Symbol handling, decoding
-    /**********************************************************
-     */
-
-    /**
-     * Symbol table that contains field names encountered so far
-     */
-    final protected BytesToNameCanonicalizer _symbols;
-    
-    /**
-     * Temporary buffer used for name parsing.
-     */
-    protected int[] _quadBuffer = NO_INTS;
-
-    /**
-     * Quads used for hash calculation
-     */
-    protected int _quad1, _quad2;
-     
-    
-    /*
-    /**********************************************************
+    /**********************************************************************
     /* Life-cycle
-    /**********************************************************
+    /**********************************************************************
      */
     
     public CsvParser(IOContext ctxt, int parserFeatures, int csvFeatures,
-            ObjectCodec codec,
-            BytesToNameCanonicalizer sym,
-            InputStream in, byte[] inputBuffer, int start, int end,
-            boolean bufferRecyclable)
+            ObjectCodec codec, Reader reader)
     {
         super(ctxt, parserFeatures);        
         _objectCodec = codec;
-        _symbols = sym;
-
-        _inputStream = in;
-        _inputBuffer = inputBuffer;
-        _inputPtr = start;
-        _inputEnd = end;
-        _bufferRecyclable = bufferRecyclable;
-        
+        _inputSource = reader;
         _tokenInputRow = -1;
         _tokenInputCol = -1;
     }
