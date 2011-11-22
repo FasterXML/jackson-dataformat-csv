@@ -10,6 +10,8 @@ import org.codehaus.jackson.impl.JsonWriteContext;
 import org.codehaus.jackson.io.IOContext;
 import org.codehaus.jackson.io.SerializedString;
 
+import com.fasterxml.jackson.dataformat.csv.impl.CsvWriter;
+
 public class CsvGenerator extends JsonGeneratorBase
 {
     /**
@@ -76,54 +78,20 @@ public class CsvGenerator extends JsonGeneratorBase
      */
     protected CsvSchema _schema;
 
-    protected char _cfgColumnSeparator;
-
-    protected char _cfgQuoteCharacter;
-    
-    protected char[] _cfgLineSeparator;
+    protected final CsvWriter _writer;
     
     /*
     /**********************************************************
-    /* Output buffering
+    /* Output state
     /**********************************************************
      */
 
     /**
-     * Underlying {@link Writer} used for output.
+     * Index of column that we will be getting next, based on
+     * field name call that was made.
      */
-    final protected Writer _out;
+    protected int _nextColumnByName = -1;
     
-    /**
-     * Intermediate buffer in which contents are buffered before
-     * being written using {@link #_out}.
-     */
-    protected char[] _outputBuffer;
-
-    /**
-     * Flag that indicates whether the <code>_outputBuffer</code> is recycable (and
-     * needs to be returned to recycler once we are done) or not.
-     */
-    protected boolean _bufferRecyclable;
-    
-    /**
-     * Pointer to the next available byte in {@link #_outputBuffer}
-     */
-    protected int _outputTail = 0;
-
-    /**
-     * Offset to index after the last valid index in {@link #_outputBuffer}.
-     * Typically same as length of the buffer.
-     */
-    protected final int _outputEnd;
-    
-    /**
-     * Let's keep track of how many bytes have been output, may prove useful
-     * when debugging. This does <b>not</b> include bytes buffered in
-     * the output buffer, just bytes that have been written using underlying
-     * stream writer.
-     */
-    protected int _charsWritten;
-
     /*
     /**********************************************************
     /* Life-cycle
@@ -132,22 +100,14 @@ public class CsvGenerator extends JsonGeneratorBase
     
     public CsvGenerator(IOContext ctxt, int jsonFeatures, int csvFeatures,
             ObjectCodec codec, Writer out,
-            CsvSchema schema,
-            char columnSeparator, char quoteChar, char[] linefeed)
+            char columnSeparator, char quoteChar, char[] linefeed,
+            CsvSchema schema)
     {
         super(jsonFeatures, codec);
         _ioContext = ctxt;
         _csvFeatures = csvFeatures;
-        _outputBuffer = ctxt.allocConcatBuffer();
-        _bufferRecyclable = true;
-        _outputEnd = _outputBuffer.length;
-        _out = out;
+        _writer = new CsvWriter(ctxt, out, columnSeparator, quoteChar, linefeed);
         _schema = schema;
-
-        _cfgColumnSeparator = columnSeparator;
-        _cfgQuoteCharacter = quoteChar;
-        _cfgLineSeparator = linefeed;
-        
     }
 
     /**
@@ -193,7 +153,7 @@ public class CsvGenerator extends JsonGeneratorBase
 
     @Override
     public Object getOutputTarget() {
-        return _out;
+        return _writer.getOutputTarget();
     }
 
     @Override
@@ -308,43 +268,17 @@ public class CsvGenerator extends JsonGeneratorBase
     @Override
     public final void flush() throws IOException
     {
-        _flushBuffer();
-        if (isEnabled(JsonGenerator.Feature.FLUSH_PASSED_TO_STREAM)) {
-            _out.flush();
-        }
+        _writer.flush(isEnabled(JsonGenerator.Feature.FLUSH_PASSED_TO_STREAM));
     }
-
+    
     @Override
     public void close() throws IOException
     {
         super.close();
 
-        /* one more thing: if we have scopes to close, close...
-         * mostly can just produce trailing linefeed
-         */
-        if (_outputBuffer != null
-            && isEnabled(JsonGenerator.Feature.AUTO_CLOSE_JSON_CONTENT)) {
-            while (true) {
-                JsonStreamContext ctxt = getOutputContext();
-                if (ctxt.inArray()) {
-                    writeEndArray();
-                } else if (ctxt.inObject()) {
-                    writeEndObject();
-                } else {
-                    break;
-                }
-            }
-        }
-        _flushBuffer();
-
-        if (_ioContext.isResourceManaged() || isEnabled(JsonGenerator.Feature.AUTO_CLOSE_TARGET)) {
-            _out.close();
-        } else {
-            // If we can't close it, we should at least flush
-            _out.flush();
-        }
-        // Internal buffer(s) generator has can now be released as well
-        _releaseBuffers();
+        // Let's mark row as closed, if we had any...
+        _writer.endRow();
+        _writer.close(_ioContext.isResourceManaged() || isEnabled(JsonGenerator.Feature.AUTO_CLOSE_TARGET));
     }
     
     /*
@@ -600,28 +534,9 @@ public class CsvGenerator extends JsonGeneratorBase
         }
     }
 
-    /*
-    /**********************************************************
-    /* Internal methods
-    /**********************************************************
-     */
-    
-    protected final void _flushBuffer() throws IOException
-    {
-        if (_outputTail > 0) {
-            _charsWritten += _outputTail;
-            _out.write(_outputBuffer, 0, _outputTail);
-            _outputTail = 0;
-        }
-    }
-
     @Override
     protected void _releaseBuffers()
     {
-        char[] buf = _outputBuffer;
-        if (buf != null && _bufferRecyclable) {
-            _outputBuffer = null;
-            _ioContext.releaseConcatBuffer(buf);
-        }
+        _writer._releaseBuffers();
     }
 }

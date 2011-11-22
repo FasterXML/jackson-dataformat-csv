@@ -15,8 +15,8 @@ import org.codehaus.jackson.format.InputAccessor;
 import org.codehaus.jackson.format.MatchStrength;
 import org.codehaus.jackson.io.IOContext;
 
-import com.fasterxml.jackson.dataformat.csv.io.CsvParserBootstrapper;
-import com.fasterxml.jackson.dataformat.csv.io.UTF8Writer;
+import com.fasterxml.jackson.dataformat.csv.impl.CsvParserBootstrapper;
+import com.fasterxml.jackson.dataformat.csv.impl.UTF8Writer;
 
 public class CsvFactory extends JsonFactory
 {
@@ -352,8 +352,9 @@ public class CsvFactory extends JsonFactory
     {
         int feats = _csvGeneratorFeatures;
         CsvGenerator gen = new CsvGenerator(ctxt, _generatorFeatures, feats,
-                _objectCodec, out, _schema,
-                _cfgColumnSeparator, _cfgQuoteCharacter, _cfgLineSeparator);
+                _objectCodec, out,
+                _cfgColumnSeparator, _cfgQuoteCharacter, _cfgLineSeparator,
+                _schema);
         // important: if header is to be written, this will trigger it
         gen.init();
         return gen;

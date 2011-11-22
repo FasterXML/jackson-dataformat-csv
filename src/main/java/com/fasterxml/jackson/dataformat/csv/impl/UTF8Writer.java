@@ -1,4 +1,4 @@
-package com.fasterxml.jackson.dataformat.csv.io;
+package com.fasterxml.jackson.dataformat.csv.impl;
 
 import java.io.*;
 

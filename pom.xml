@@ -133,9 +133,10 @@ abstractions.
 org.codehaus.jackson
 </Import-Package>
               <Private-Package>
+com.fasterxml.jackson.dataformat.csv.impl
 </Private-Package>
               <Export-Package>
-com.fasterxml.jackson.df.csv
+com.fasterxml.jackson.dataformat.csv
 </Export-Package>
             </instructions>
           </configuration>
