@@ -1,16 +1,12 @@
-package com.fasterxml.jackson.df.csv;
+package com.fasterxml.jackson.dataformat.csv;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Reader;
+import java.io.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import org.codehaus.jackson.*;
 import org.codehaus.jackson.impl.JsonParserBase;
 import org.codehaus.jackson.io.IOContext;
-import org.codehaus.jackson.sym.BytesToNameCanonicalizer;
 
 public class CsvParser
     extends JsonParserBase
@@ -124,7 +120,7 @@ public class CsvParser
      */
 
     @Override
-    public int releaseBuffered(OutputStream out) throws IOException
+    public int releaseBuffered(Writer out) throws IOException
     {
         int count = _inputEnd - _inputPtr;
         if (count < 1) {
@@ -135,10 +131,10 @@ public class CsvParser
         out.write(_inputBuffer, origPtr, count);
         return count;
     }
-    
+
     @Override
     public Object getInputSource() {
-        return _inputStream;
+        return _inputSource;
     }
     
     /*
@@ -154,8 +150,8 @@ public class CsvParser
         _currInputProcessed += _inputEnd;
         _currInputRowStart -= _inputEnd;
         
-        if (_inputStream != null) {
-            int count = _inputStream.read(_inputBuffer, 0, _inputBuffer.length);
+        if (_inputSource != null) {
+            int count = _inputSource.read(_inputBuffer, 0, _inputBuffer.length);
             if (count > 0) {
                 _inputPtr = 0;
                 _inputEnd = count;

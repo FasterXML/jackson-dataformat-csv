@@ -1,7 +1,6 @@
-package com.fasterxml.jackson.df.csv;
+package com.fasterxml.jackson.dataformat.csv;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
@@ -14,10 +13,17 @@ import org.codehaus.jackson.io.SerializedString;
 public class CsvGenerator extends JsonGeneratorBase
 {
     /**
-     * Enumeration that defines all togglable features for Smile generators.
+     * Enumeration that defines all togglable features for CSV writers
      */
     public enum Feature {
-        BOGUS(false) // placeholder
+        /**
+         * Feature that determines whether the first line of output
+         * should consist of column names or not; if not (false), all lines
+         * including the first one are data.
+         *<p>
+         * Default value is false.
+         */
+        WRITE_HEADER(false)
         ;
 
         protected final boolean _defaultState;
@@ -58,14 +64,23 @@ public class CsvGenerator extends JsonGeneratorBase
 
     final protected IOContext _ioContext;
 
-//    final protected OutputStream _out;
-
     /**
      * Bit flag composed of bits that indicate which
      * {@link org.codehaus.jackson.smile.SmileGenerator.Feature}s
      * are enabled.
      */
     protected int _csvFeatures;
+
+    /**
+     * Definition of columns being written, if available.
+     */
+    protected CsvSchema _schema;
+
+    protected char _cfgColumnSeparator;
+
+    protected char _cfgQuoteCharacter;
+    
+    protected char[] _cfgLineSeparator;
     
     /*
     /**********************************************************
@@ -73,13 +88,16 @@ public class CsvGenerator extends JsonGeneratorBase
     /**********************************************************
      */
 
-    final protected OutputStream _out;
+    /**
+     * Underlying {@link Writer} used for output.
+     */
+    final protected Writer _out;
     
     /**
      * Intermediate buffer in which contents are buffered before
      * being written using {@link #_out}.
      */
-    protected byte[] _outputBuffer;
+    protected char[] _outputBuffer;
 
     /**
      * Flag that indicates whether the <code>_outputBuffer</code> is recycable (and
@@ -97,14 +115,6 @@ public class CsvGenerator extends JsonGeneratorBase
      * Typically same as length of the buffer.
      */
     protected final int _outputEnd;
-
-    /**
-     * Intermediate buffer in which characters of a String are copied
-     * before being encoded.
-     */
-    protected char[] _charBuffer;
-
-    protected final int _charBufferLength;
     
     /**
      * Let's keep track of how many bytes have been output, may prove useful
@@ -112,7 +122,7 @@ public class CsvGenerator extends JsonGeneratorBase
      * the output buffer, just bytes that have been written using underlying
      * stream writer.
      */
-    protected int _bytesWritten;
+    protected int _charsWritten;
 
     /*
     /**********************************************************
@@ -121,19 +131,41 @@ public class CsvGenerator extends JsonGeneratorBase
      */
     
     public CsvGenerator(IOContext ctxt, int jsonFeatures, int csvFeatures,
-            ObjectCodec codec, OutputStream out)
+            ObjectCodec codec, Writer out,
+            CsvSchema schema,
+            char columnSeparator, char quoteChar, char[] linefeed)
     {
         super(jsonFeatures, codec);
         _ioContext = ctxt;
         _csvFeatures = csvFeatures;
-        _outputBuffer = ctxt.allocWriteEncodingBuffer();
+        _outputBuffer = ctxt.allocConcatBuffer();
         _bufferRecyclable = true;
         _outputEnd = _outputBuffer.length;
-        _charBuffer = ctxt.allocConcatBuffer();
-        _charBufferLength = _charBuffer.length;
         _out = out;
+        _schema = schema;
+
+        _cfgColumnSeparator = columnSeparator;
+        _cfgQuoteCharacter = quoteChar;
+        _cfgLineSeparator = linefeed;
+        
     }
 
+    /**
+     * Method that {@link CsvFactory} calls immediately after constructing
+     * the generator instance.
+     */
+    public void init()
+        throws IOException, JsonGenerationException    
+    {
+        if (isEnabled(Feature.WRITE_HEADER)) {
+            // could perhaps generate header on-the-fly in future, but for now
+            if (_schema == null) {
+                throw new JsonGenerationException("No Schema assigned, but Feature WRITE_HEADER set to true");
+            }
+            
+        }
+    }
+    
     /*
     /**********************************************************
     /* Overridden methods, configuration
@@ -161,14 +193,23 @@ public class CsvGenerator extends JsonGeneratorBase
 
     @Override
     public Object getOutputTarget() {
-        // !!! TBI
-        return null;
+        return _out;
     }
-    
+
+    @Override
+    public void setSchema(FormatSchema schema)
+    {
+        if (!(schema instanceof CsvSchema)) {
+            super.setSchema(schema);
+            return;
+        }
+        _schema = (CsvSchema) schema;
+    }
+
     /*
-    /**********************************************************
+    /**********************************************************************
     /* Overridden methods; writing field names
-    /**********************************************************
+    /**********************************************************************
      */
     
     /* And then methods overridden to make final, streamline some
@@ -176,7 +217,7 @@ public class CsvGenerator extends JsonGeneratorBase
      */
 
     @Override
-    public final void writeFieldName(String name)  throws IOException, JsonGenerationException
+    public final void writeFieldName(String name) throws IOException, JsonGenerationException
     {
         if (_writeContext.writeFieldName(name) == JsonWriteContext.STATUS_EXPECT_VALUE) {
             _reportError("Can not write a field name, expecting a value");
@@ -278,7 +319,9 @@ public class CsvGenerator extends JsonGeneratorBase
     {
         super.close();
 
-        // First: let's see that we still have buffers...
+        /* one more thing: if we have scopes to close, close...
+         * mostly can just produce trailing linefeed
+         */
         if (_outputBuffer != null
             && isEnabled(JsonGenerator.Feature.AUTO_CLOSE_JSON_CONTENT)) {
             while (true) {
@@ -566,7 +609,7 @@ public class CsvGenerator extends JsonGeneratorBase
     protected final void _flushBuffer() throws IOException
     {
         if (_outputTail > 0) {
-            _bytesWritten += _outputTail;
+            _charsWritten += _outputTail;
             _out.write(_outputBuffer, 0, _outputTail);
             _outputTail = 0;
         }
@@ -575,15 +618,10 @@ public class CsvGenerator extends JsonGeneratorBase
     @Override
     protected void _releaseBuffers()
     {
-        byte[] buf = _outputBuffer;
+        char[] buf = _outputBuffer;
         if (buf != null && _bufferRecyclable) {
             _outputBuffer = null;
-            _ioContext.releaseWriteEncodingBuffer(buf);
-        }
-        char[] cbuf = _charBuffer;
-        if (cbuf != null) {
-            _charBuffer = null;
-            _ioContext.releaseConcatBuffer(cbuf);
+            _ioContext.releaseConcatBuffer(buf);
         }
     }
 }

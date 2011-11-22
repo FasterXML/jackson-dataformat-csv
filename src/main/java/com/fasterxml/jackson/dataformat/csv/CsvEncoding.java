@@ -1,4 +1,4 @@
-package com.fasterxml.jackson.df.csv;
+package com.fasterxml.jackson.dataformat.csv;
 
 import org.codehaus.jackson.JsonEncoding;
 
