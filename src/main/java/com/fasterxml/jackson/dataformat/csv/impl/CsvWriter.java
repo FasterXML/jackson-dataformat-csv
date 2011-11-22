@@ -2,22 +2,32 @@ package com.fasterxml.jackson.dataformat.csv.impl;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Arrays;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonGenerator;
+import org.codehaus.jackson.*;
 import org.codehaus.jackson.io.IOContext;
 
 /**
  * Low-level helper class that handles actual output of CSV, purely
  * based on indexes given without worrying about reordering etc.
  */
-public class CsvWriter
+public final class CsvWriter
 {
     /* As an optimization we try coalescing short writes into
      * buffer; but pass longer directly.
      */
     final protected static int SHORT_WRITE = 32;
 
+    /* Also: only do check for optional quotes for short
+     * values; longer ones will always be quoted.
+     */
+    final protected static int MAX_QUOTE_CHECK = 20;
+    
+    final protected BufferedValue[] NO_BUFFERED = new BufferedValue[0];
+
+    private final static char[] TRUE_CHARS = "true".toCharArray();
+    private final static char[] FALSE_CHARS = "false".toCharArray();
+    
     /*
     /**********************************************************
     /* Configuration
@@ -38,6 +48,12 @@ public class CsvWriter
     protected final char[] _cfgLineSeparator;
 
     protected final int _cfgLineSeparatorLength;
+
+    /**
+     * Lowest-valued character that is safe to output without using
+     * quotes around value
+     */
+    protected final int _cfgMinSafeChar;
     
     /*
     /**********************************************************
@@ -50,6 +66,17 @@ public class CsvWriter
      */
     protected int _nextColumnToWrite = -1;
 
+    /**
+     * And if output comes in shuffled order we will need to do 
+     * bit of ordering.
+     */
+    protected BufferedValue[] _buffered = NO_BUFFERED;
+
+    /**
+     * Index of the last buffered value
+     */
+    protected int _lastBuffered = -1;
+    
     /*
     /**********************************************************
     /* Output buffering, low-level
@@ -106,6 +133,12 @@ public class CsvWriter
         _cfgQuoteCharacter = quoteChar;
         _cfgLineSeparator = linefeed;
         _cfgLineSeparatorLength = linefeed.length;
+
+        int min = Math.max(_cfgColumnSeparator, _cfgQuoteCharacter);
+        for (int i = 0; i < _cfgLineSeparatorLength; ++i) {
+            min = Math.max(min, _cfgLineSeparator[i]);
+        }
+        _cfgMinSafeChar = (min+1);
     }
 
     /*
@@ -120,39 +153,187 @@ public class CsvWriter
 
     /*
     /**********************************************************
-    /* Writer API, writes
+    /* Writer API, writes from generator
     /**********************************************************
      */
 
     public void write(int columnIndex, String value) throws IOException
     {
-        // if not in expected order, must buffer
-        if (columnIndex > _nextColumnToWrite) {
+        // easy case: all in order
+        if (columnIndex == _nextColumnToWrite) {
+            appendValue(value);
+            ++_nextColumnToWrite;
             return;
         }
-        // otherwise just append...
+        _buffer(columnIndex, BufferedValue.buffered(value));
     }
 
+    public void write(int columnIndex, int value) throws IOException
+    {
+        // easy case: all in order
+        if (columnIndex == _nextColumnToWrite) {
+            appendValue(value);
+            ++_nextColumnToWrite;
+            return;
+        }
+        _buffer(columnIndex, BufferedValue.buffered(value));
+    }
+
+    public void write(int columnIndex, long value) throws IOException
+    {
+        // easy case: all in order
+        if (columnIndex == _nextColumnToWrite) {
+            appendValue(value);
+            ++_nextColumnToWrite;
+            return;
+        }
+        _buffer(columnIndex, BufferedValue.buffered(value));
+    }
+
+    public void write(int columnIndex, double value) throws IOException
+    {
+        // easy case: all in order
+        if (columnIndex == _nextColumnToWrite) {
+            appendValue(value);
+            ++_nextColumnToWrite;
+            return;
+        }
+        _buffer(columnIndex, BufferedValue.buffered(value));
+    }
+
+    public void write(int columnIndex, boolean value) throws IOException
+    {
+        // easy case: all in order
+        if (columnIndex == _nextColumnToWrite) {
+            appendValue(value);
+            ++_nextColumnToWrite;
+            return;
+        }
+        _buffer(columnIndex, BufferedValue.buffered(value));
+    }
+    
     public void endRow() throws IOException
     {
-        if (_nextColumnToWrite > 0) {
-            _nextColumnToWrite = 0;
-            if ((_outputTail + _cfgLineSeparatorLength) > _outputEnd) {
-                _flushBuffer();
+        // First things first; any buffered?
+        if (_lastBuffered >= 0) {
+            final int last = _lastBuffered;
+            _lastBuffered = -1;
+            for (int i = _nextColumnToWrite; i <= last; ++i) {
+                BufferedValue value = _buffered[i];
+                if (value != null) {
+                    _buffered[i] = null;
+                    value.write(this);
+                }
             }
-            System.arraycopy(_cfgLineSeparator, 0, _outputBuffer, _outputTail, _cfgLineSeparatorLength);
-            _outputTail += _cfgLineSeparatorLength;
+        } else if (_nextColumnToWrite <= 0) { // empty line; do nothing
+            return;
         }
+        // write line separator
+        _nextColumnToWrite = 0;
+        if ((_outputTail + _cfgLineSeparatorLength) > _outputEnd) {
+            _flushBuffer();
+        }
+        System.arraycopy(_cfgLineSeparator, 0, _outputBuffer, _outputTail, _cfgLineSeparatorLength);
+        _outputTail += _cfgLineSeparatorLength;
+    }
+    
+    /*
+    /**********************************************************
+    /* Writer API, writes via buffered values
+    /**********************************************************
+     */
+
+    protected void appendValue(String value) throws IOException
+    {
+        if (_outputTail >= _outputEnd) {
+            _flushBuffer();
+        }
+        if (_nextColumnToWrite > 0) {
+            _outputBuffer[_outputTail++] = ',';
+        }
+        /* First: determine if we need quotes; simple heuristics;
+         * only check for short Strings, stop if something found
+         */
+        final int len = value.length();
+        if (_mayNeedQuotes(value, len)) {
+            _writeQuoted(value);
+        } else {
+            writeRaw(value);
+        }
+        
+    }
+    
+    protected void appendValue(int value) throws IOException
+    {
+        // up to 10 digits and possible minus sign, leading comma
+        if ((_outputTail + 12) > _outputTail) {
+            _flushBuffer();
+        }
+        if (_nextColumnToWrite > 0) {
+            _outputBuffer[_outputTail++] = ',';
+        }
+        _outputTail = NumberOutput.outputInt(value, _outputBuffer, _outputTail);
     }
 
+    protected void appendValue(long value) throws IOException
+    {
+        // up to 20 digits, minus sign, leading comma
+        if ((_outputTail + 22) > _outputTail) {
+            _flushBuffer();
+        }
+        if (_nextColumnToWrite > 0) {
+            _outputBuffer[_outputTail++] = ',';
+        }
+        _outputTail = NumberOutput.outputLong(value, _outputBuffer, _outputTail);
+    }
+
+    protected void appendValue(double value) throws IOException
+    {
+        String str = NumberOutput.toString(value);
+        final int len = str.length();
+        if ((_outputTail + len) >= _outputTail) { // >= to include possible comma too
+            _flushBuffer();
+        }
+        if (_nextColumnToWrite > 0) {
+            _outputBuffer[_outputTail++] = ',';
+        }
+        System.arraycopy(value, 0, _outputBuffer, _outputTail, len);
+        _outputTail += len;
+    }
+
+    protected void appendValue(boolean value) throws IOException
+    {
+        char[] ch = value ? TRUE_CHARS : FALSE_CHARS;
+        final int len = ch.length;
+        if ((_outputTail + len) >= _outputTail) { // >= to include possible comma too
+            _flushBuffer();
+        }
+        if (_nextColumnToWrite > 0) {
+            _outputBuffer[_outputTail++] = ',';
+        }
+        System.arraycopy(value, 0, _outputBuffer, _outputTail, len);
+        _outputTail += len;
+    }
+    
     /*
     /**********************************************************
     /* Output methods, unprocessed ("raw")
     /**********************************************************
      */
 
-    public void writeRaw(String text)
-        throws IOException, JsonGenerationException
+    public void _writeQuoted(String text) throws IOException
+    {
+        // !!! TODO: implement properly
+        if (_nextColumnToWrite > 0) {
+            _outputBuffer[_outputTail++] = ',';
+        }
+        writeRaw(text);
+        if (_nextColumnToWrite > 0) {
+            _outputBuffer[_outputTail++] = ',';
+        }
+    }
+    
+    public void writeRaw(String text) throws IOException
     {
         // Nothing to check, can just output as is
         int len = text.length();
@@ -171,8 +352,7 @@ public class CsvWriter
         }
     }
 
-    public void writeRaw(String text, int start, int len)
-        throws IOException, JsonGenerationException
+    public void writeRaw(String text, int start, int len) throws IOException
     {
         // Nothing to check, can just output as is
         int room = _outputEnd - _outputTail;
@@ -208,8 +388,7 @@ public class CsvWriter
         _out.write(text, offset, len);
     }
 
-    public void writeRaw(char c)
-        throws IOException, JsonGenerationException
+    public void writeRaw(char c) throws IOException
     {
         if (_outputTail >= _outputEnd) {
             _flushBuffer();
@@ -217,8 +396,7 @@ public class CsvWriter
         _outputBuffer[_outputTail++] = c;
     }
 
-    private void writeRawLong(String text)
-        throws IOException, JsonGenerationException
+    private void writeRawLong(String text) throws IOException
     {
         int room = _outputEnd - _outputTail;
         // If not, need to do it by looping
@@ -273,6 +451,33 @@ public class CsvWriter
     /* Internal methods
     /**********************************************************
      */
+
+    /**
+     * Helper method that determines whether given String is likely
+     * to require quoting; check tries to optimize for speed.
+     */
+    protected final boolean _mayNeedQuotes(String value, int length)
+    {
+        // let's not bother checking long Strings, just quote already:
+        if (length > MAX_QUOTE_CHECK) {
+            return true;
+        }
+        for (int i = 0; i < length; ++i) {
+            if (value.charAt(i) < _cfgMinSafeChar) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    protected void _buffer(int index, BufferedValue v)
+    {
+        _lastBuffered = Math.max(_lastBuffered, index);
+        if (index >= _buffered.length) {
+            _buffered = Arrays.copyOf(_buffered, index+4);
+        }
+        _buffered[index] = v;
+    }
 
     protected final void _flushBuffer() throws IOException
     {
