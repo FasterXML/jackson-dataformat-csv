@@ -3,6 +3,7 @@ package com.fasterxml.jackson.dataformat.csv;
 import java.io.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Arrays;
 
 import org.codehaus.jackson.*;
 import org.codehaus.jackson.impl.JsonGeneratorBase;
@@ -193,7 +194,7 @@ public class CsvGenerator extends JsonGeneratorBase
         if (_writeContext.writeFieldName(name.getValue()) == JsonWriteContext.STATUS_EXPECT_VALUE) {
             _reportError("Can not write a field name, expecting a value");
         }
-        _writeFieldName(name);
+        _writeFieldName(name.getValue());
     }
 
     @Override
@@ -204,7 +205,7 @@ public class CsvGenerator extends JsonGeneratorBase
         if (_writeContext.writeFieldName(name.getValue()) == JsonWriteContext.STATUS_EXPECT_VALUE) {
             _reportError("Can not write a field name, expecting a value");
         }
-        _writeFieldName(name);
+        _writeFieldName(name.getValue());
     }
 
     @Override
@@ -221,13 +222,17 @@ public class CsvGenerator extends JsonGeneratorBase
     private final void _writeFieldName(String name)
         throws IOException, JsonGenerationException
     {
-        // !!! TBI
-    }
-    
-    private final void _writeFieldName(SerializableString name)
-        throws IOException, JsonGenerationException
-    {
-        // !!! TBI
+        // just find the matching index -- must have schema for that
+        if (_schema == null) {
+            _reportError("Unrecognized column '"+name+"', can not resolve without CsvSchema");
+        }
+        CsvSchema.Column col = _schema.column(name);
+        if (col == null) {
+            _reportError("Unrecognized column '"+name+"': known columns: "+_schema.toString());
+            
+        }
+        // and all we do is just note index to use for following value write
+        _nextColumnByName = col.getIndex();
     }
     
     /*
@@ -277,10 +282,10 @@ public class CsvGenerator extends JsonGeneratorBase
         super.close();
 
         // Let's mark row as closed, if we had any...
-        _writer.endRow();
+        finishRow();
         _writer.close(_ioContext.isResourceManaged() || isEnabled(JsonGenerator.Feature.AUTO_CLOSE_TARGET));
     }
-    
+
     /*
     /**********************************************************
     /* Public API: structural output
@@ -292,7 +297,7 @@ public class CsvGenerator extends JsonGeneratorBase
     {
         _verifyValueWrite("start an array");
         _writeContext = _writeContext.createChildArrayContext();
-        // !!! TBI
+        // and that's about it, really
     }
 
     @Override
@@ -302,7 +307,8 @@ public class CsvGenerator extends JsonGeneratorBase
             _reportError("Current context not an ARRAY but "+_writeContext.getTypeDesc());
         }
         _writeContext = _writeContext.getParent();
-        // !!! TBI
+        // not 100% fool-proof, but chances are row should be done now
+        finishRow();
     }
 
     @Override
@@ -310,7 +316,7 @@ public class CsvGenerator extends JsonGeneratorBase
     {
         _verifyValueWrite("start an object");
         _writeContext = _writeContext.createChildObjectContext();
-        // !!! TBI
+        // nothing else to do ...
     }
 
     @Override
@@ -320,7 +326,8 @@ public class CsvGenerator extends JsonGeneratorBase
             _reportError("Current context not an object but "+_writeContext.getTypeDesc());
         }
         _writeContext = _writeContext.getParent();
-        // !!! TBI
+        // not 100% fool-proof, but chances are row should be done now
+        finishRow();
     }
     
     /*
@@ -337,17 +344,14 @@ public class CsvGenerator extends JsonGeneratorBase
             return;
         }
         _verifyValueWrite("write String value");
-        int len = text.length();
-        if (len == 0) {
-        }
-        // !!! TBI
+        _writer.write(_columnIndex(), text);
     }
 
     @Override
     public void writeString(char[] text, int offset, int len) throws IOException, JsonGenerationException
     {
         _verifyValueWrite("write String value");
-        // !!! TBI
+        _writer.write(_columnIndex(), text, offset, len);
     }
 
     @Override
@@ -355,23 +359,21 @@ public class CsvGenerator extends JsonGeneratorBase
         throws IOException, JsonGenerationException
     {
         _verifyValueWrite("write String value");
-        // !!! TBI
+        _writer.write(_columnIndex(), sstr.getValue());
     }
 
     @Override
     public void writeRawUTF8String(byte[] text, int offset, int len)
         throws IOException, JsonGenerationException
     {
-        _verifyValueWrite("write String value");
-        // !!! TBI
+        _reportUnsupportedOperation();
     }
 
     @Override
     public final void writeUTF8String(byte[] text, int offset, int len)
         throws IOException, JsonGenerationException
     {
-            _verifyValueWrite("write String value");
-            // !!! TBI
+        writeString(new String(text, offset, len, "UTF-8"));
     }
 
     /*
@@ -382,37 +384,37 @@ public class CsvGenerator extends JsonGeneratorBase
 
     @Override
     public void writeRaw(String text) throws IOException, JsonGenerationException {
-        // !!! TBI
+        _reportUnsupportedOperation();
     }
 
     @Override
     public void writeRaw(String text, int offset, int len) throws IOException, JsonGenerationException {
-        // !!! TBI
+        _reportUnsupportedOperation();
     }
 
     @Override
     public void writeRaw(char[] text, int offset, int len) throws IOException, JsonGenerationException {
-        // !!! TBI
+        _reportUnsupportedOperation();
     }
 
     @Override
     public void writeRaw(char c) throws IOException, JsonGenerationException {
-        // !!! TBI
+        _reportUnsupportedOperation();
     }
 
     @Override
     public void writeRawValue(String text) throws IOException, JsonGenerationException {
-        // !!! TBI
+        _reportUnsupportedOperation();
     }
 
     @Override
     public void writeRawValue(String text, int offset, int len) throws IOException, JsonGenerationException {
-        // !!! TBI
+        _reportUnsupportedOperation();
     }
 
     @Override
     public void writeRawValue(char[] text, int offset, int len) throws IOException, JsonGenerationException {
-        // !!! TBI
+        _reportUnsupportedOperation();
     }
 
     /*
@@ -429,7 +431,12 @@ public class CsvGenerator extends JsonGeneratorBase
             return;
         }
         _verifyValueWrite("write Binary value");
-        // !!! TBI
+        // ok, better just Base64 encode as a String...
+        if (offset > 0 || (offset+len) != data.length) {
+            data = Arrays.copyOfRange(data, offset, offset+len);
+        }
+        String encoded = b64variant.encode(data);
+        _writer.write(_columnIndex(), encoded);
     }
 
     /*
@@ -442,21 +449,22 @@ public class CsvGenerator extends JsonGeneratorBase
     public void writeBoolean(boolean state) throws IOException, JsonGenerationException
     {
         _verifyValueWrite("write boolean value");
-        // !!! TBI
+        _writer.write(_columnIndex(), state);
     }
 
     @Override
     public void writeNull() throws IOException, JsonGenerationException
     {
         _verifyValueWrite("write null value");
-        // !!! TBI
+        // !!! TODO: empty String vs String null?
+        _writer.write(_columnIndex(), "");
     }
 
     @Override
     public void writeNumber(int i) throws IOException, JsonGenerationException
     {
         _verifyValueWrite("write number");
-        // !!! TBI
+        _writer.write(_columnIndex(), i);
     }
 
     @Override
@@ -468,7 +476,7 @@ public class CsvGenerator extends JsonGeneratorBase
             return;
         }
         _verifyValueWrite("write number");
-        // !!! TBI
+        _writer.write(_columnIndex(), l);
     }
 
     @Override
@@ -479,21 +487,21 @@ public class CsvGenerator extends JsonGeneratorBase
             return;
         }
         _verifyValueWrite("write number");
-        // !!! TBI
+        _writer.write(_columnIndex(), v.toString());
     }
     
     @Override
     public void writeNumber(double d) throws IOException, JsonGenerationException
     {
         _verifyValueWrite("write number");
-        // !!! TBI
+        _writer.write(_columnIndex(), d);
     }    
 
     @Override
     public void writeNumber(float f) throws IOException, JsonGenerationException
     {
         _verifyValueWrite("write number");
-        // !!! TBI
+        _writer.write(_columnIndex(), (double) f);
     }
 
     @Override
@@ -504,7 +512,7 @@ public class CsvGenerator extends JsonGeneratorBase
             return;
         }
         _verifyValueWrite("write number");
-        // !!! TBI
+        _writer.write(_columnIndex(), dec.toString());
     }
 
     @Override
@@ -515,7 +523,7 @@ public class CsvGenerator extends JsonGeneratorBase
             return;
         }
         _verifyValueWrite("write number");
-        // !!! TBI
+        _writer.write(_columnIndex(), encodedValue);
     }
 
     /*
@@ -538,5 +546,31 @@ public class CsvGenerator extends JsonGeneratorBase
     protected void _releaseBuffers()
     {
         _writer._releaseBuffers();
+    }
+
+    /*
+    /**********************************************************
+    /* Internal methods
+    /**********************************************************
+     */
+
+    protected final int _columnIndex()
+    {
+        int ix = _nextColumnByName;
+        if (ix < 0) { // if we had one, remove now
+            ix = _writer.nextColumnIndex();
+        }
+        return ix;
+    }
+
+    /**
+     * Method called when the current row is complete; typically
+     * will flush possibly buffered column values, append linefeed
+     * and reset state appropriately.
+     */
+    protected void finishRow()  throws IOException, JsonGenerationException
+    {
+        _writer.endRow();
+        _nextColumnByName = -1;
     }
 }

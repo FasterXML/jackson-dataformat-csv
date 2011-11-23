@@ -64,7 +64,7 @@ public final class CsvWriter
     /**
      * Index of column we expect to write next
      */
-    protected int _nextColumnToWrite = -1;
+    protected int _nextColumnToWrite = 0;
 
     /**
      * And if output comes in shuffled order we will need to do 
@@ -151,6 +151,10 @@ public final class CsvWriter
         return _out;
     }
 
+    public int nextColumnIndex() {
+        return _nextColumnToWrite;
+    }
+    
     /*
     /**********************************************************
     /* Writer API, writes from generator
@@ -168,6 +172,12 @@ public final class CsvWriter
         _buffer(columnIndex, BufferedValue.buffered(value));
     }
 
+    public void write(int columnIndex, char[] ch, int offset, int len) throws IOException
+    {
+        // !!! TODO: optimize
+        write(columnIndex, new String(ch, offset, len));
+    }
+    
     public void write(int columnIndex, int value) throws IOException
     {
         // easy case: all in order

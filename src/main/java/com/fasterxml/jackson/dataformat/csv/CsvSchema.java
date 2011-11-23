@@ -60,18 +60,21 @@ public class CsvSchema
     public static class Column
     {
         private final String _name;
+        private final int _index;
         private final ColumnType _type;
 
-        public Column(String name) {
-            this(name, ColumnType.STRING);
+        public Column(int index, String name) {
+            this(index, name, ColumnType.STRING);
         }
 
-        public Column(String name, ColumnType type)
+        public Column(int index, String name, ColumnType type)
         {
+            _index = index;
             _name = name;
             _type = type;
         }
 
+        public int getIndex() { return _index; }
         public String getName() { return _name; }
         public ColumnType getType() { return _type; }
     }
@@ -86,10 +89,12 @@ public class CsvSchema
         public Builder() { }
 
         public Builder addColumn(String name) {
-            return addColumn(new Column(name));
+            int index = _columns.size();
+            return addColumn(new Column(index, name));
         }
         public Builder addColumn(String name, ColumnType type) {
-            return addColumn(new Column(name, type));
+            int index = _columns.size();
+            return addColumn(new Column(index, name, type));
         }
         
         public Builder addColumn(Column c) {
@@ -162,5 +167,28 @@ public class CsvSchema
 
     public Column column(String name) {
         return _columnsByName.get(name);
+    }
+
+    /*
+    /**********************************************************************
+    /* Other
+    /**********************************************************************
+     */
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder(100);
+        for (Column col : _columns) {
+            if (sb.length() == 0) {
+                sb.append('[');
+            } else {
+                sb.append(',');
+            }
+            sb.append('"');
+            sb.append(col.getName());
+            sb.append('"');
+        }
+        sb.append(']');
+        return sb.toString();
     }
 }
