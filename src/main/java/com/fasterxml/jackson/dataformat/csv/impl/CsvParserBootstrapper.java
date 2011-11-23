@@ -1,4 +1,4 @@
-package com.fasterxml.jackson.df.csv.io;
+package com.fasterxml.jackson.dataformat.csv.impl;
 
 import java.io.*;
 
@@ -8,10 +8,8 @@ import org.codehaus.jackson.format.MatchStrength;
 import org.codehaus.jackson.io.IOContext;
 import org.codehaus.jackson.io.MergedStream;
 import org.codehaus.jackson.io.UTF32Reader;
-import org.codehaus.jackson.sym.BytesToNameCanonicalizer;
-import org.codehaus.jackson.sym.CharsToNameCanonicalizer;
 
-import com.fasterxml.jackson.df.csv.CsvParser;
+import com.fasterxml.jackson.dataformat.csv.CsvParser;
 
 /**
  * This class is used to determine the encoding of byte stream
@@ -38,7 +36,7 @@ public final class CsvParserBootstrapper
     protected final IOContext _context;
 
     protected final InputStream _in;
-
+    
     /*
     /**********************************************************
     /* Input buffering
@@ -88,7 +86,8 @@ public final class CsvParserBootstrapper
     /**********************************************************
      */
 
-    public CsvParserBootstrapper(IOContext ctxt, InputStream in)
+    public CsvParserBootstrapper(IOContext ctxt, char quoteChar,
+            InputStream in)
     {
         _context = ctxt;
         _in = in;
@@ -98,7 +97,8 @@ public final class CsvParserBootstrapper
         _bufferRecyclable = true;
     }
 
-    public CsvParserBootstrapper(IOContext ctxt, byte[] inputBuffer, int inputStart, int inputLen)
+    public CsvParserBootstrapper(IOContext ctxt, char quoteChar,
+            byte[] inputBuffer, int inputStart, int inputLen)
     {
         _context = ctxt;
         _in = null;
@@ -222,8 +222,11 @@ public final class CsvParserBootstrapper
     {
         JsonEncoding enc = detectEncoding();
         // would we want to use optimized UTF-8 parser? Maybe later...
+        /*
         return new CsvParser(_context, baseFeatures, csvFeatures, codec,
                 constructReader(), codec);
+                */
+        throw new Error();
     }
 
     /*
@@ -240,7 +243,9 @@ public final class CsvParserBootstrapper
      * 
      * @since 1.8
      */
-    public static MatchStrength hasJSONFormat(InputAccessor acc) throws IOException
+    public static MatchStrength hasCSVFormat(InputAccessor acc,
+            char quoteChar, char separatorChar)
+        throws IOException
     {
         // Ideally we should see "[" or "{"; but if not, we'll accept double-quote (String)
         // in future could also consider accepting non-standard matches?
@@ -273,84 +278,20 @@ public final class CsvParserBootstrapper
         if (ch < 0) {
             return MatchStrength.INCONCLUSIVE;
         }
-        // First, let's see if it looks like a structured type:
-        if (ch == '{') { // JSON object?
-            // Ideally we need to find either double-quote or closing bracket
-            ch = skipSpace(acc);
-            if (ch < 0) {
-                return MatchStrength.INCONCLUSIVE;
-            }
-            if (ch == '"' || ch == '}') {
-                return MatchStrength.SOLID_MATCH;
-            }
-            // ... should we allow non-standard? Let's not yet... can add if need be
-            return MatchStrength.NO_MATCH;
+        /* First of all; seeing a quote char is actually reasonable match;
+         * and same for separator char
+         * 
+         */
+        if (ch == quoteChar || ch == separatorChar) {
+            // still rather weak a match, however:
+            return MatchStrength.WEAK_MATCH;
         }
-        MatchStrength strength;
-        
-        if (ch == '[') {
-            ch = skipSpace(acc);
-            if (ch < 0) {
-                return MatchStrength.INCONCLUSIVE;
-            }
-            // closing brackets is easy; but for now, let's also accept opening...
-            if (ch == ']' || ch == '[') {
-                return MatchStrength.SOLID_MATCH;
-            }
-            return MatchStrength.SOLID_MATCH;
-        } else {
-            // plain old value is not very convincing...
-            strength = MatchStrength.WEAK_MATCH;
-        }
-
-        if (ch == '"') { // string value
-            return strength;
-        }
-        if (ch <= '9' && ch >= '0') { // number
-            return strength;
-        }
-        if (ch == '-') { // negative number
-            ch = skipSpace(acc);
-            if (ch < 0) {
-                return MatchStrength.INCONCLUSIVE;
-            }
-            return (ch <= '9' && ch >= '0') ? strength : MatchStrength.NO_MATCH;
-        }
-        // or one of literals
-        if (ch == 'n') { // null
-            return tryMatch(acc, "ull", strength);
-        }
-        if (ch == 't') { // true
-            return tryMatch(acc, "rue", strength);
-        }
-        if (ch == 'f') { // false
-            return tryMatch(acc, "alse", strength);
-        }
-        return MatchStrength.NO_MATCH;
+        /* otherwise, well, almost anything could in theory do it; 
+         * let's trust other format detectors to find positive cases
+         */
+        return MatchStrength.INCONCLUSIVE;
     }
 
-    private final static MatchStrength tryMatch(InputAccessor acc, String matchStr, MatchStrength fullMatchStrength)
-        throws IOException
-    {
-        for (int i = 0, len = matchStr.length(); i < len; ++i) {
-            if (!acc.hasMoreBytes()) {
-                return MatchStrength.INCONCLUSIVE;
-            }
-            if (acc.nextByte() != matchStr.charAt(i)) {
-                return MatchStrength.NO_MATCH;
-            }
-        }
-        return fullMatchStrength;
-    }
-    
-    private final static int skipSpace(InputAccessor acc) throws IOException
-    {
-        if (!acc.hasMoreBytes()) {
-            return -1;
-        }
-        return skipSpace(acc, acc.nextByte());
-    }
-    
     private final static int skipSpace(InputAccessor acc, byte b) throws IOException
     {
         while (true) {

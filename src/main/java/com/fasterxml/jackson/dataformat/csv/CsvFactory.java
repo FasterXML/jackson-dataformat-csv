@@ -1,10 +1,11 @@
-package com.fasterxml.jackson.df.csv;
+package com.fasterxml.jackson.dataformat.csv;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.net.URL;
@@ -14,7 +15,8 @@ import org.codehaus.jackson.format.InputAccessor;
 import org.codehaus.jackson.format.MatchStrength;
 import org.codehaus.jackson.io.IOContext;
 
-import com.fasterxml.jackson.df.csv.io.CsvParserBootstrapper;
+import com.fasterxml.jackson.dataformat.csv.impl.CsvParserBootstrapper;
+import com.fasterxml.jackson.dataformat.csv.impl.UTF8Writer;
 
 public class CsvFactory extends JsonFactory
 {
@@ -36,6 +38,9 @@ public class CsvFactory extends JsonFactory
      */
     final static int DEFAULT_CSV_GENERATOR_FEATURE_FLAGS = CsvGenerator.Feature.collectDefaults();
 
+    // could make it use Platform default too but...
+    protected final static char[] DEFAULT_LF = { '\n' };
+    
     /*
     /**********************************************************************
     /* Configuration
@@ -46,6 +51,14 @@ public class CsvFactory extends JsonFactory
 
     protected int _csvGeneratorFeatures = DEFAULT_CSV_GENERATOR_FEATURE_FLAGS;
 
+    protected CsvSchema _schema = null;
+
+    protected char _cfgColumnSeparator = ',';
+
+    protected char _cfgQuoteCharacter = '"';
+    
+    protected char[] _cfgLineSeparator = DEFAULT_LF;
+    
     /*
     /**********************************************************************
     /* Factory construction, configuration
@@ -66,6 +79,11 @@ public class CsvFactory extends JsonFactory
 
     public CsvFactory(ObjectCodec oc) { super(oc); }
 
+    public CsvFactory setSchema(CsvSchema schema) {
+        _schema = schema;
+        return this;
+    }
+    
     /*
     /**********************************************************
     /* Format detection functionality (since 1.8)
@@ -249,7 +267,7 @@ public class CsvFactory extends JsonFactory
     {
         // false -> we won't manage the stream unless explicitly directed to
         IOContext ctxt = _createContext(out, false);
-        return _createJsonGenerator(out, ctxt);
+        return _createJsonGenerator(ctxt, _createWriter(out, JsonEncoding.UTF8, ctxt));
     }
     
     /*
@@ -268,8 +286,11 @@ public class CsvFactory extends JsonFactory
     protected CsvParser _createJsonParser(InputStream in, IOContext ctxt)
         throws IOException, JsonParseException
     {
+        /*
         return new CsvParserBootstrapper(ctxt, in).constructParser(_parserFeatures,
                         _csvParserFeatures, _objectCodec, _rootByteSymbols);
+                        */
+        return null;
     }
 
     /**
@@ -291,8 +312,11 @@ public class CsvFactory extends JsonFactory
     protected CsvParser _createJsonParser(byte[] data, int offset, int len, IOContext ctxt)
         throws IOException, JsonParseException
     {
+        /*
         return new CsvParserBootstrapper(ctxt, data, offset, len).constructParser(_parserFeatures,
                         _csvParserFeatures, _objectCodec, _rootByteSymbols);
+                        */
+        return null;
     }
 
     /**
@@ -303,7 +327,7 @@ public class CsvFactory extends JsonFactory
     protected JsonGenerator _createJsonGenerator(Writer out, IOContext ctxt)
         throws IOException
     {
-        throw new UnsupportedOperationException("Can not create generator for non-byte-based target");
+        return _createJsonGenerator(ctxt, out);
     }
 
     //public BufferRecycler _getBufferRecycler()
@@ -311,7 +335,10 @@ public class CsvFactory extends JsonFactory
     @Override
     protected Writer _createWriter(OutputStream out, JsonEncoding enc, IOContext ctxt) throws IOException
     {
-        throw new UnsupportedOperationException("Can not create generator for non-byte-based target");
+        if (enc == JsonEncoding.UTF8) {
+            return new UTF8Writer(ctxt, out);
+        }
+        return new OutputStreamWriter(out, enc.getJavaName());
     }
     
     /*
@@ -320,11 +347,17 @@ public class CsvFactory extends JsonFactory
     /**********************************************************
      */
     
-    protected CsvGenerator _createJsonGenerator(OutputStream out, IOContext ctxt)
+    protected CsvGenerator _createJsonGenerator(IOContext ctxt, Writer out)
         throws IOException
     {
         int feats = _csvGeneratorFeatures;
-        CsvGenerator gen = new CsvGenerator(ctxt, _generatorFeatures, feats, _objectCodec, out);
+        CsvGenerator gen = new CsvGenerator(ctxt, _generatorFeatures, feats,
+                _objectCodec, out,
+                _cfgColumnSeparator, _cfgQuoteCharacter, _cfgLineSeparator,
+                _schema);
+        // important: if header is to be written, this will trigger it
+        gen.init();
         return gen;
+ 
     }
 }
