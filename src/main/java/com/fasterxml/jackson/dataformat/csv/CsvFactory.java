@@ -51,8 +51,6 @@ public class CsvFactory extends JsonFactory
 
     protected int _csvGeneratorFeatures = DEFAULT_CSV_GENERATOR_FEATURE_FLAGS;
 
-    protected CsvSchema _schema = null;
-
     protected char _cfgColumnSeparator = ',';
 
     protected char _cfgQuoteCharacter = '"';
@@ -78,11 +76,6 @@ public class CsvFactory extends JsonFactory
     public CsvFactory() { this(null); }
 
     public CsvFactory(ObjectCodec oc) { super(oc); }
-
-    public CsvFactory setSchema(CsvSchema schema) {
-        _schema = schema;
-        return this;
-    }
     
     /*
     /**********************************************************
@@ -330,8 +323,6 @@ public class CsvFactory extends JsonFactory
         return _createJsonGenerator(ctxt, out);
     }
 
-    //public BufferRecycler _getBufferRecycler()
-
     @Override
     protected Writer _createWriter(OutputStream out, JsonEncoding enc, IOContext ctxt) throws IOException
     {
@@ -353,11 +344,8 @@ public class CsvFactory extends JsonFactory
         int feats = _csvGeneratorFeatures;
         CsvGenerator gen = new CsvGenerator(ctxt, _generatorFeatures, feats,
                 _objectCodec, out,
-                _cfgColumnSeparator, _cfgQuoteCharacter, _cfgLineSeparator,
-                _schema);
-        // important: if header is to be written, this will trigger it
-        gen.init();
+                _cfgColumnSeparator, _cfgQuoteCharacter, _cfgLineSeparator);
+        // any other initializations? No?
         return gen;
- 
     }
 }

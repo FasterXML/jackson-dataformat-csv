@@ -46,6 +46,11 @@ public class CsvParser
     }
 
     private final static int[] NO_INTS = new int[0];
+
+    private final static CsvSchema EMPTY_SCHEMA;
+    static {
+        EMPTY_SCHEMA = CsvSchema.emptySchema();
+    }
     
     /*
     /**********************************************************************
@@ -58,6 +63,12 @@ public class CsvParser
      */
     protected ObjectCodec _objectCodec;
 
+    /**
+     * Definition of columns being read. Initialized to "empty" instance, which
+     * has default configuration settings.
+     */
+    protected CsvSchema _schema = EMPTY_SCHEMA;
+    
     /*
     /**********************************************************************
     /* Input source config, state (from ex StreamBasedParserBase)
@@ -112,7 +123,22 @@ public class CsvParser
     public void setCodec(ObjectCodec c) {
         _objectCodec = c;
     }
+    
+    @Override
+    public boolean canUseSchema(FormatSchema schema) {
+        return (schema instanceof FormatSchema);
+    }
 
+    @Override
+    public void setSchema(FormatSchema schema)
+    {
+        if (schema instanceof CsvSchema) {
+            _schema = (CsvSchema) schema;
+        } else {
+            super.setSchema(schema);
+        }
+    }
+    
     /*
     /**********************************************************
     /* Former StreamBasedParserBase methods

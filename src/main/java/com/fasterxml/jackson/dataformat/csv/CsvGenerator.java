@@ -19,14 +19,7 @@ public class CsvGenerator extends JsonGeneratorBase
      * Enumeration that defines all togglable features for CSV writers
      */
     public enum Feature {
-        /**
-         * Feature that determines whether the first line of output
-         * should consist of column names or not; if not (false), all lines
-         * including the first one are data.
-         *<p>
-         * Default value is false.
-         */
-        WRITE_HEADER(false)
+        BOGUS(false) // placeholder
         ;
 
         protected final boolean _defaultState;
@@ -101,30 +94,12 @@ public class CsvGenerator extends JsonGeneratorBase
     
     public CsvGenerator(IOContext ctxt, int jsonFeatures, int csvFeatures,
             ObjectCodec codec, Writer out,
-            char columnSeparator, char quoteChar, char[] linefeed,
-            CsvSchema schema)
+            char columnSeparator, char quoteChar, char[] linefeed)
     {
         super(jsonFeatures, codec);
         _ioContext = ctxt;
         _csvFeatures = csvFeatures;
         _writer = new CsvWriter(ctxt, out, columnSeparator, quoteChar, linefeed);
-        _schema = schema;
-    }
-
-    /**
-     * Method that {@link CsvFactory} calls immediately after constructing
-     * the generator instance.
-     */
-    public void init()
-        throws IOException, JsonGenerationException    
-    {
-        if (isEnabled(Feature.WRITE_HEADER)) {
-            // could perhaps generate header on-the-fly in future, but for now
-            if (_schema == null) {
-                throw new JsonGenerationException("No Schema assigned, but Feature WRITE_HEADER set to true");
-            }
-            
-        }
     }
     
     /*
@@ -157,6 +132,11 @@ public class CsvGenerator extends JsonGeneratorBase
         return _writer.getOutputTarget();
     }
 
+    @Override
+    public boolean canUseSchema(FormatSchema schema) {
+        return (schema instanceof FormatSchema);
+    }
+    
     @Override
     public void setSchema(FormatSchema schema)
     {
@@ -228,7 +208,7 @@ public class CsvGenerator extends JsonGeneratorBase
         }
         CsvSchema.Column col = _schema.column(name);
         if (col == null) {
-            _reportError("Unrecognized column '"+name+"': known columns: "+_schema.toString());
+            _reportError("Unrecognized column '"+name+"': known columns: "+_schema.getColumnDesc());
             
         }
         // and all we do is just note index to use for following value write

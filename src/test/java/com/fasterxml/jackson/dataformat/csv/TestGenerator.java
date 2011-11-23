@@ -8,19 +8,19 @@ public class TestGenerator extends ModuleTestBase
 {
     public void testSimple() throws Exception
     {
-        CsvFactory f = new CsvFactory();
-        f.setSchema(new CsvSchema.Builder()
+            
+        ObjectMapper mapper = mapperForCsv();
+        CsvSchema schema = CsvSchema.builder()
             .addColumn("firstName")
             .addColumn("lastName")
             .addColumn("gender")
             .addColumn("userImage")
             .addColumn("verified")
-            .build());
-            
-        ObjectMapper mapper = new ObjectMapper(f);
+            .build();
+
         FiveMinuteUser user = new FiveMinuteUser("Silu", "Seppala", false, Gender.MALE,
                 new byte[] { 1, 2, 3, 4, 5});
-        String result = mapper.writeValueAsString(user);        
+        String result = mapper.writer(schema).writeValueAsString(user);        
         assertEquals("Silu,Seppala,MALE,AQIDBAU=,false\n", result);
     }
 }

@@ -17,8 +17,40 @@ import org.codehaus.jackson.FormatSchema;
  * @since 1.9
  */
 public class CsvSchema 
-    implements FormatSchema
+    implements FormatSchema,
+        Iterable<CsvSchema.Column>
 {
+    /*
+    /**********************************************************************
+    /* Constants
+    /**********************************************************************
+     */
+ 
+    protected final static Column[] NO_COLUMNS = new Column[0];
+
+    public final static char DEFAULT_COLUMN_SEPARATOR = ',';
+    
+    public final static char DEFAULT_QUOTE_CHAR = '"';
+
+    /**
+     * By default, no escape character is used -- this is denoted by
+     * int value that does not map to a valid character
+     */
+    public final static int DEFAULT_ESCAPE_CHAR = -1;
+    
+    public final static char[] DEFAULT_LINEFEED = "\n".toCharArray();
+
+    /**
+     * By default we do NOT expect the first line to be header.
+     */
+    public final static boolean DEFAULT_USE_HEADER = false;
+    
+    /*
+    /**********************************************************************
+    /* Helper classes
+    /**********************************************************************
+     */
+    
     /**
      * Enumeration that defines optional type indicators that can be passed
      * with schema. If used type is used to determine type of {@link JsonToken}
@@ -85,9 +117,36 @@ public class CsvSchema
     public static class Builder
     {
         protected final ArrayList<Column> _columns = new ArrayList<Column>();
+
+        protected boolean _useHeader = DEFAULT_USE_HEADER;
+
+        protected char _columnSeparator = DEFAULT_COLUMN_SEPARATOR;
+
+        protected char _quoteChar = DEFAULT_QUOTE_CHAR;
+
+        // note: need to use int to allow -1 for 'none'
+        protected int _escapeChar = DEFAULT_QUOTE_CHAR;
+        
+        protected char[] _lineSeparator = DEFAULT_LINEFEED;
         
         public Builder() { }
 
+        /**
+         * "Copy" constructor which creates builder that has settings of
+         * given source schema
+         */
+        public Builder(CsvSchema src)
+        {
+            for (Column col : src._columns) {
+                _columns.add(col);
+            }
+            _useHeader = src._useHeader;
+            _columnSeparator = src._columnSeparator;
+            _quoteChar = src._quoteChar;
+            _escapeChar = src._escapeChar;
+            _lineSeparator = src._lineSeparator;
+        }
+        
         public Builder addColumn(String name) {
             int index = _columns.size();
             return addColumn(new Column(index, name));
@@ -102,35 +161,125 @@ public class CsvSchema
             return this;
         }
 
+        public Builder removeColumns() {
+            _columns.clear();
+            return this;
+        }
+
+        public int getColumnCount() {
+            return _columns.size();
+        }
+
+        public Iterator<Column> getColumns() {
+            return _columns.iterator();
+        }
+        
+        /**
+         * Method for specifying whether Schema should indicate that
+         * a header line (first row that contains column names) is to be
+         * used for reading and writing or not.
+         */
+        public Builder setUseHeader(boolean b) {
+            _useHeader = b;
+            return this;
+        }
+        
+        /**
+         * Method for specifying character used to separate column
+         * values.
+         * Default is comma (',').
+         */
+        public Builder setColumnSeparator(char c) {
+            _columnSeparator = c;
+            return this;
+        }
+
+        /**
+         * Method for specifying character used for optional quoting
+         * of values.
+         * Default is double-quote ('"').
+         */
+        public Builder setQuoteChar(char c) {
+            _quoteChar = c;
+            return this;
+        }
+
+        /**
+         * Method for specifying character used for optional escaping
+         * of characters in quoted String values.
+         * Default is "not used", meaning that no escaping used.
+         */
+        public Builder setEscapeChar(char c) {
+            _escapeChar = (int) c;
+            return this;
+        }
+
+        /**
+         * Method for specifying that no escape character is to be used
+         * with CSV documents this schema defines.
+         */
+        public Builder disableEscapeChar() {
+            _escapeChar = -1;
+            return this;
+        }
+        
+        public Builder setLineSeparator(String lf) {
+            _lineSeparator = lf.toCharArray();
+            return this;
+        }
+
+        public Builder setLineSeparator(char lf) {
+            _lineSeparator = new char[] { lf };
+            return this;
+        }
+        
         public CsvSchema build()
         {
             Column[] cols = _columns.toArray(new Column[_columns.size()]);
-            return new CsvSchema(cols);
+            return new CsvSchema(cols,
+                    _useHeader, _columnSeparator, _quoteChar, _escapeChar, _lineSeparator);
         }
     }
-
+    
     /*
     /**********************************************************************
     /* Configuration, construction
     /**********************************************************************
      */
- 
-    protected final static Column[] NO_COLUMNS = new Column[0];
     
     /**
      * Column definitions, needed for optional header and/or mapping
      * of field names to column positions.
      */
     protected final Column[] _columns;
-
-    protected final Map<String,Column> _columnsByName;
     
-    public CsvSchema(Column[] columns)
+    protected final Map<String,Column> _columnsByName;
+
+    protected final boolean _useHeader;
+
+    protected final char _columnSeparator;
+
+    protected final char _quoteChar;
+    
+    protected final int _escapeChar;
+    
+    protected final char[] _lineSeparator;
+    
+    public CsvSchema(Column[] columns,
+            boolean useHeader, char columnSeparator, char quoteChar, int escapeChar,
+            char[] lineSeparator)
     {
         if (columns == null) {
             columns = NO_COLUMNS;
         }
         _columns = columns;
+ 
+        _useHeader = useHeader;
+        _columnSeparator = columnSeparator;
+        _quoteChar = quoteChar;
+        _escapeChar = escapeChar;
+        _lineSeparator = lineSeparator;
+        
         // and then we may need to create a mapping
         if (_columns.length == 0) {
             _columnsByName = Collections.emptyMap();
@@ -140,6 +289,22 @@ public class CsvSchema
                 _columnsByName.put(c.getName(), c);
             }
         }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+    
+    /**
+     * Helper method for constructing Builder that can be used to create modified
+     * schema.
+     */
+    public Builder copy() {
+        return new Builder(this);
+    }
+
+    public static CsvSchema emptySchema() {
+        return builder().build();
     }
     
     /*
@@ -155,10 +320,27 @@ public class CsvSchema
 
     /*
     /**********************************************************************
-    /* Public API, extended
+    /* Public API, extended, properties
     /**********************************************************************
      */
 
+    public boolean useHeader() { return _useHeader; }
+    public char getColumnSeparator() { return _columnSeparator; }
+    public char getQuoteChar() { return _quoteChar; }
+    public int getEscapeChar() { return _escapeChar; }
+    public char[] getLineSeparator() { return _lineSeparator; }
+    
+    /*
+    /**********************************************************************
+    /* Public API, extended; column access
+    /**********************************************************************
+     */
+    
+    @Override
+    public Iterator<Column> iterator() {
+        return Arrays.asList(_columns).iterator();
+    }
+    
     public int size() { return _columns.length; }
     
     public Column column(int index) {
@@ -168,15 +350,13 @@ public class CsvSchema
     public Column column(String name) {
         return _columnsByName.get(name);
     }
-
-    /*
-    /**********************************************************************
-    /* Other
-    /**********************************************************************
+    
+    /**
+     * Method for getting description of column definitions in
+     * developer-readable form
      */
-
-    @Override
-    public String toString() {
+    public String getColumnDesc()
+    {
         StringBuilder sb = new StringBuilder(100);
         for (Column col : _columns) {
             if (sb.length() == 0) {
@@ -189,6 +369,23 @@ public class CsvSchema
             sb.append('"');
         }
         sb.append(']');
+        return sb.toString();
+    }
+    
+    /*
+    /**********************************************************************
+    /* Other
+    /**********************************************************************
+     */
+
+    @Override
+    public String toString()
+    {
+        StringBuilder sb = new StringBuilder(150);
+        sb.append("[CsvSchema: ")
+            .append("columns=")
+            .append(getColumnDesc())
+            .append(']');
         return sb.toString();
     }
 }
