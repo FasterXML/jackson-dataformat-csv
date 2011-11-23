@@ -135,7 +135,13 @@ abstractions.
               <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
               <Bundle-Vendor>fasterml.com</Bundle-Vendor>
               <Import-Package>
-org.codehaus.jackson
+org.codehaus.jackson,
+org.codehaus.jackson.format,
+org.codehaus.jackson.impl,
+org.codehaus.jackson.io,
+org.codehaus.jackson.map,
+org.codehaus.jackson.map.introspect,
+org.codehaus.jackson.type
 </Import-Package>
               <Private-Package>
 com.fasterxml.jackson.dataformat.csv.impl
