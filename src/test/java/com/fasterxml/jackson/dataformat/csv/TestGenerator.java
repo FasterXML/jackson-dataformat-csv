@@ -6,7 +6,7 @@ import com.fasterxml.jackson.dataformat.csv.ModuleTestBase.FiveMinuteUser.Gender
 
 public class TestGenerator extends ModuleTestBase
 {
-    public void testSimple() throws Exception
+    public void testSimpleExplicit() throws Exception
     {
             
         ObjectMapper mapper = mapperForCsv();
@@ -22,5 +22,15 @@ public class TestGenerator extends ModuleTestBase
                 new byte[] { 1, 2, 3, 4, 5});
         String result = mapper.writer(schema).writeValueAsString(user);        
         assertEquals("Silu,Seppala,MALE,AQIDBAU=,false\n", result);
+    }
+
+    public void testSimpleWithAutoSchema() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        CsvSchema schema = mapper.schemaFor(FiveMinuteUser.class);
+        FiveMinuteUser user = new FiveMinuteUser("Veltto", "Virtanen", true, Gender.MALE,
+                new byte[] { 3, 1 });
+        String result = mapper.writer(schema).writeValueAsString(user);        
+        assertEquals("Veltto,Virtanen,true,MALE,AwE=\n", result);
     }
 }

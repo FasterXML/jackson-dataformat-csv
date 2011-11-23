@@ -75,7 +75,7 @@ public class CsvSchema
         /**
          * Value should be a number, but literals "null", "true" and "false"
          * are also understood, and an empty String is considered null.
-         * Other non-numeric Strings consider parsing exception.
+         * Other non-numeric Strings will cause parsing exception.
          */
         NUMBER,
 
@@ -106,6 +106,13 @@ public class CsvSchema
             _type = type;
         }
 
+        public Column withName(String newName) {
+            return new Column(_index, newName, _type);
+        }
+        public Column withType(ColumnType newType) {
+            return new Column(_index, _name, newType);
+        }
+        
         public int getIndex() { return _index; }
         public String getName() { return _name; }
         public ColumnType getType() { return _type; }
@@ -155,10 +162,21 @@ public class CsvSchema
             int index = _columns.size();
             return addColumn(new Column(index, name, type));
         }
-        
-        protected Builder addColumn(Column c) {
+        public Builder addColumn(Column c) {
             _columns.add(c);
             return this;
+        }
+        public void replaceColumn(int index, Column c) {
+            _checkIndex(index);
+            _columns.set(index, c);
+        }
+        public void renameColumn(int index, String newName) {
+            _checkIndex(index);
+            _columns.set(index, _columns.get(index).withName(newName));
+        }
+        public void setColumnType(int index, ColumnType type) {
+            _checkIndex(index);
+            _columns.set(index, _columns.get(index).withType(type));
         }
 
         public Builder removeColumns() {
@@ -238,6 +256,12 @@ public class CsvSchema
             Column[] cols = _columns.toArray(new Column[_columns.size()]);
             return new CsvSchema(cols,
                     _useHeader, _columnSeparator, _quoteChar, _escapeChar, _lineSeparator);
+        }
+
+        protected void _checkIndex(int index) {
+            if (index < 0 || index >= _columns.size()) {
+                throw new IllegalArgumentException("Illegal index "+index+"; only got "+_columns.size()+" columns");
+            }
         }
     }
     
@@ -383,9 +407,21 @@ public class CsvSchema
     {
         StringBuilder sb = new StringBuilder(150);
         sb.append("[CsvSchema: ")
-            .append("columns=")
-            .append(getColumnDesc())
-            .append(']');
+            .append("columns=");
+        for (Column col : _columns) {
+            if (sb.length() == 0) {
+                sb.append('[');
+            } else {
+                sb.append(',');
+            }
+            sb.append('"');
+            sb.append(col.getName());
+            sb.append("\"/");
+            sb.append(col.getType());
+        }
+        sb.append(']');
+        
+        sb.append(']');
         return sb.toString();
     }
 }

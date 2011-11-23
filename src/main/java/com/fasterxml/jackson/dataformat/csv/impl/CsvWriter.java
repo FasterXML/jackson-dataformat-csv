@@ -230,7 +230,9 @@ public final class CsvWriter
             _lastBuffered = -1;
             for (int i = _nextColumnToWrite; i <= last; ++i) {
                 BufferedValue value = _buffered[i];
-                if (value != null) {
+                if (value == null) { // missing value still needs separator
+                    appendColumnSeparator();
+                } else {
                     _buffered[i] = null;
                     value.write(this);
                 }
@@ -259,7 +261,7 @@ public final class CsvWriter
             _flushBuffer();
         }
         if (_nextColumnToWrite > 0) {
-            _outputBuffer[_outputTail++] = ',';
+            _outputBuffer[_outputTail++] = _cfgColumnSeparator;
         }
         /* First: determine if we need quotes; simple heuristics;
          * only check for short Strings, stop if something found
@@ -280,7 +282,7 @@ public final class CsvWriter
             _flushBuffer();
         }
         if (_nextColumnToWrite > 0) {
-            _outputBuffer[_outputTail++] = ',';
+            _outputBuffer[_outputTail++] = _cfgColumnSeparator;
         }
         _outputTail = NumberOutput.outputInt(value, _outputBuffer, _outputTail);
     }
@@ -292,7 +294,7 @@ public final class CsvWriter
             _flushBuffer();
         }
         if (_nextColumnToWrite > 0) {
-            _outputBuffer[_outputTail++] = ',';
+            _outputBuffer[_outputTail++] = _cfgColumnSeparator;
         }
         _outputTail = NumberOutput.outputLong(value, _outputBuffer, _outputTail);
     }
@@ -305,7 +307,7 @@ public final class CsvWriter
             _flushBuffer();
         }
         if (_nextColumnToWrite > 0) {
-            _outputBuffer[_outputTail++] = ',';
+            _outputBuffer[_outputTail++] = _cfgColumnSeparator;
         }
         System.arraycopy(value, 0, _outputBuffer, _outputTail, len);
         _outputTail += len;
@@ -319,10 +321,20 @@ public final class CsvWriter
             _flushBuffer();
         }
         if (_nextColumnToWrite > 0) {
-            _outputBuffer[_outputTail++] = ',';
+            _outputBuffer[_outputTail++] = _cfgColumnSeparator;
         }
         System.arraycopy(ch, 0, _outputBuffer, _outputTail, len);
         _outputTail += len;
+    }
+
+    protected void appendColumnSeparator() throws IOException
+    {
+        if (_nextColumnToWrite > 0) {
+            if (_outputTail >= _outputTail) {
+                _flushBuffer();
+            }
+            _outputBuffer[_outputTail++] = _cfgColumnSeparator;
+        }
     }
     
     /*
