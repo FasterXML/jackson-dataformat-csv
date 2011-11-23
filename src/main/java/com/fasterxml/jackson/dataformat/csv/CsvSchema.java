@@ -97,7 +97,7 @@ public class CsvSchema
             return addColumn(new Column(index, name, type));
         }
         
-        public Builder addColumn(Column c) {
+        protected Builder addColumn(Column c) {
             _columns.add(c);
             return this;
         }

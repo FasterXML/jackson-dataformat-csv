@@ -321,7 +321,7 @@ public final class CsvWriter
         if (_nextColumnToWrite > 0) {
             _outputBuffer[_outputTail++] = ',';
         }
-        System.arraycopy(value, 0, _outputBuffer, _outputTail, len);
+        System.arraycopy(ch, 0, _outputBuffer, _outputTail, len);
         _outputTail += len;
     }
     
