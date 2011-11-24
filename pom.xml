@@ -141,7 +141,8 @@ org.codehaus.jackson.impl,
 org.codehaus.jackson.io,
 org.codehaus.jackson.map,
 org.codehaus.jackson.map.introspect,
-org.codehaus.jackson.type
+org.codehaus.jackson.type,
+org.codehaus.jackson.util
 </Import-Package>
               <Private-Package>
 com.fasterxml.jackson.dataformat.csv.impl

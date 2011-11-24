@@ -5,11 +5,16 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import org.codehaus.jackson.*;
-import org.codehaus.jackson.impl.JsonParserBase;
+import org.codehaus.jackson.impl.JsonParserMinimalBase;
+import org.codehaus.jackson.impl.JsonReadContext;
 import org.codehaus.jackson.io.IOContext;
+import org.codehaus.jackson.util.BufferRecycler;
+
+import com.fasterxml.jackson.dataformat.csv.impl.CsvReader;
+import com.fasterxml.jackson.dataformat.csv.impl.TextBuffer;
 
 public class CsvParser
-    extends JsonParserBase
+    extends JsonParserMinimalBase
 {
     /**
      * Enumeration that defines all togglable features for Smile generators.
@@ -45,8 +50,6 @@ public class CsvParser
         public int getMask() { return _mask; }
     }
 
-    private final static int[] NO_INTS = new int[0];
-
     private final static CsvSchema EMPTY_SCHEMA;
     static {
         EMPTY_SCHEMA = CsvSchema.emptySchema();
@@ -69,49 +72,50 @@ public class CsvParser
      */
     protected CsvSchema _schema = EMPTY_SCHEMA;
     
+    protected final CsvReader _reader;
+
     /*
     /**********************************************************************
-    /* Input source config, state (from ex StreamBasedParserBase)
+    /* State
     /**********************************************************************
      */
+    
+    /**
+     * Information about parser context, context in which
+     * the next token is to be parsed (root, array, object).
+     */
+    protected JsonReadContext _parsingContext;
 
     /**
-     * Input stream that can be used for reading more content, if one
-     * in use. May be null, if input comes just as a full buffer,
-     * or if the stream has been closed.
+     * Buffer that contains contents of all values after processing
+     * of doubled-quotes, escaped characters.
      */
-    protected Reader _inputSource;
-
+    protected final TextBuffer _textBuffer;
+    
     /**
-     * Current buffer from which data is read; generally data is read into
-     * buffer from input source, but in some cases pre-loaded buffer
-     * is handed to the parser.
+     * We will hold on to decoded binary data, for duration of
+     * current event, so that multiple calls to
+     * {@link #getBinaryValue} will not need to decode data more
+     * than once.
      */
-    protected char[] _inputBuffer;
-
-    /**
-     * Flag that indicates whether the input buffer is recycable (and
-     * needs to be returned to recycler once we are done) or not.
-     *<p>
-     * If it is not, it also means that parser can NOT modify underlying
-     * buffer.
-     */
-    protected boolean _bufferRecyclable;
-
+    protected byte[] _binaryValue;
+    
     /*
     /**********************************************************************
     /* Life-cycle
     /**********************************************************************
      */
     
-    public CsvParser(IOContext ctxt, int parserFeatures, int csvFeatures,
+    public CsvParser(IOContext ctxt, BufferRecycler br,
+            int parserFeatures, int csvFeatures,
             ObjectCodec codec, Reader reader)
     {
-        super(ctxt, parserFeatures);        
+        super(parserFeatures);    
         _objectCodec = codec;
-        _inputSource = reader;
-        _tokenInputRow = -1;
-        _tokenInputCol = -1;
+        _textBuffer = new TextBuffer(br);
+        _parsingContext = JsonReadContext.createRootContext();
+        _reader = new CsvReader(ctxt, reader, _textBuffer,
+                isEnabled(JsonParser.Feature.AUTO_CLOSE_SOURCE));
     }
 
     @Override
@@ -138,67 +142,46 @@ public class CsvParser
             super.setSchema(schema);
         }
     }
-    
-    /*
-    /**********************************************************
-    /* Former StreamBasedParserBase methods
-    /**********************************************************
-     */
 
     @Override
     public int releaseBuffered(Writer out) throws IOException
     {
-        int count = _inputEnd - _inputPtr;
-        if (count < 1) {
-            return 0;
-        }
-        // let's just advance ptr to end
-        int origPtr = _inputPtr;
-        out.write(_inputBuffer, origPtr, count);
-        return count;
+        return _reader.releaseBuffered(out);
     }
 
     @Override
-    public Object getInputSource() {
-        return _inputSource;
-    }
+    public boolean isClosed() { return _reader.isClosed(); }
+
+    @Override
+    public void close() throws IOException { _reader.close(); }
     
     /*
     /**********************************************************
-    /* Low-level reading, other
+    /* Location info
     /**********************************************************
      */
     
     @Override
-    protected final boolean loadMore()
-        throws IOException
-    {
-        _currInputProcessed += _inputEnd;
-        _currInputRowStart -= _inputEnd;
-        
-        if (_inputSource != null) {
-            int count = _inputSource.read(_inputBuffer, 0, _inputBuffer.length);
-            if (count > 0) {
-                _inputPtr = 0;
-                _inputEnd = count;
-                return true;
-            }
-            // End of input
-            _closeInput();
-            // Should never return 0, so let's fail
-            if (count == 0) {
-                throw new IOException("InputStream.read() returned 0 characters when trying to read "+_inputBuffer.length+" bytes");
-            }
-        }
-        return false;
+    public JsonStreamContext getParsingContext() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
-    protected void _closeInput() throws IOException {
-        // TODO Auto-generated method stub
-        
+    public JsonLocation getTokenLocation() {
+        return _reader.getTokenLocation();
     }
 
+    @Override
+    public JsonLocation getCurrentLocation() {
+        return _reader.getCurrentLocation();
+    }
+
+    @Override
+    public Object getInputSource() {
+        return _reader.getInputSource();
+    }
+    
     /*
     /**********************************************************
     /* Parsing
@@ -210,23 +193,29 @@ public class CsvParser
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    public String getCurrentName() throws IOException, JsonParseException {
+        // TODO Auto-generated method stub
+        return null;
+    }
     
     /*
     /**********************************************************
-    /* String handling
+    /* String value handling
     /**********************************************************
      */
 
+    // For now we do not store char[] representation...
+    @Override
+    public boolean hasTextCharacters() {
+        return false;
+    }
+    
     @Override
     public String getText() throws IOException, JsonParseException {
         // TODO Auto-generated method stub
         return null;
-    }
-
-    @Override
-    protected void _finishString() throws IOException, JsonParseException {
-        // TODO Auto-generated method stub
-        
     }
 
     @Override
@@ -248,77 +237,80 @@ public class CsvParser
     }
     
     /*
-    /**********************************************************
+    /**********************************************************************
     /* Binary (base64)
-    /**********************************************************
+    /**********************************************************************
      */
 
     @Override
-    protected byte[] _decodeBase64(Base64Variant arg0) throws IOException,
-            JsonParseException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public byte[] getBinaryValue(Base64Variant arg0) throws IOException,
+    public byte[] getBinaryValue(Base64Variant variant) throws IOException,
             JsonParseException {
         // TODO Auto-generated method stub
         return null;
     }
 
     /*
-    /**********************************************************
-    /* Numeric access
-    /**********************************************************
+    /**********************************************************************
+    /* Number accessors
+    /**********************************************************************
      */
 
     @Override
-    public BigInteger getBigIntegerValue() throws IOException,
-            JsonParseException {
-        // TODO Auto-generated method stub
-        return null;
+    public NumberType getNumberType() throws IOException, JsonParseException {
+        return _reader.getNumberType();
     }
-
+    
     @Override
-    public BigDecimal getDecimalValue() throws IOException, JsonParseException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public double getDoubleValue() throws IOException, JsonParseException {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public float getFloatValue() throws IOException, JsonParseException {
-        // TODO Auto-generated method stub
-        return 0;
+    public Number getNumberValue() throws IOException, JsonParseException {
+        return _reader.getNumberValue();
     }
 
     @Override
     public int getIntValue() throws IOException, JsonParseException {
-        // TODO Auto-generated method stub
-        return 0;
+        return _reader.getIntValue();
     }
-
+    
     @Override
     public long getLongValue() throws IOException, JsonParseException {
-        // TODO Auto-generated method stub
-        return 0;
+        return _reader.getLongValue();
+    }
+    
+    @Override
+    public BigInteger getBigIntegerValue() throws IOException, JsonParseException {
+        return _reader.getBigIntegerValue();
+    }
+    
+    @Override
+    public float getFloatValue() throws IOException, JsonParseException {
+        return _reader.getFloatValue();
+    }
+    
+    @Override
+    public double getDoubleValue() throws IOException, JsonParseException {
+        return _reader.getDoubleValue();
+    }
+    
+    @Override
+    public BigDecimal getDecimalValue() throws IOException, JsonParseException {
+        return _reader.getDecimalValue();
+    }
+    
+    
+    /*
+    /**********************************************************************
+    /* Helper methods from base class
+    /**********************************************************************
+     */
+    
+    @Override
+    protected void _handleEOF() throws JsonParseException {
+        // I don't think there's problem with EOFs usually; except maybe in quoted stuff?
+        _reportInvalidEOF(": expected closing quote character");
     }
 
-    @Override
-    public NumberType getNumberType() throws IOException, JsonParseException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Number getNumberValue() throws IOException, JsonParseException {
-        // TODO Auto-generated method stub
-        return null;
-    }
+    /*
+    /**********************************************************************
+    /* Internal methods
+    /**********************************************************************
+     */
 }

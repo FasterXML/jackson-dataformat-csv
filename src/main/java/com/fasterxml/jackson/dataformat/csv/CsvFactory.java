@@ -1,13 +1,6 @@
 package com.fasterxml.jackson.dataformat.csv;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
-import java.io.Writer;
+import java.io.*;
 import java.net.URL;
 
 import org.codehaus.jackson.*;
@@ -306,10 +299,17 @@ public class CsvFactory extends JsonFactory
         throws IOException, JsonParseException
     {
         /*
+    public CsvParser(IOContext ctxt, int parserFeatures, int csvFeatures,
+            ObjectCodec codec, Reader reader)
+    {
+         */
+        /*
         return new CsvParserBootstrapper(ctxt, data, offset, len).constructParser(_parserFeatures,
                         _csvParserFeatures, _objectCodec, _rootByteSymbols);
                         */
-        return null;
+        Reader r = new InputStreamReader(new ByteArrayInputStream(data, offset, len));
+        return new CsvParser(ctxt, _getBufferRecycler(), _parserFeatures, _csvParserFeatures,
+                _objectCodec, r);
     }
 
     /**
