@@ -270,7 +270,7 @@ public class CsvReader
     // !!!! Only to allow compilation to succeed; remove once done!
     JsonToken _currToken = null;
     
-    public CsvReader(IOContext ctxt, Reader r, TextBuffer textBuffer,
+    public CsvReader(IOContext ctxt, Reader r, CsvSchema schema, TextBuffer textBuffer,
             boolean autoCloseInput)
     {
         _ioContext = ctxt;
@@ -282,6 +282,7 @@ public class CsvReader
         _inputSource = r;
         _tokenInputRow = -1;
         _tokenInputCol = -1;
+        setSchema(schema);
     }
 
     public void setSchema(CsvSchema schema)
@@ -401,8 +402,8 @@ public class CsvReader
                 _inputEnd = count;
                 return true;
             }
-            // End of input
-            _closeInput();
+            // End of input; close here
+            close();
             // Should never return 0, so let's fail
             if (count == 0) {
                 throw new IOException("InputStream.read() returned 0 characters when trying to read "+_inputBuffer.length+" bytes");
@@ -434,30 +435,115 @@ public class CsvReader
         _numTypesValid = NR_UNKNOWN;
 
         if (_pendingLF > 0) { // either pendingLF, or closed
-            if (_closed) {
-                return null;
+            if (!_closed) { // if closed, we just need to return null
+                _pendingLF = 0;
+                _handleLF();
             }
-            _pendingLF = 0;
-            _handleLF();
             return null;
         }
         int i = _skipLeadingSpace();
         if (i < 0) { // EOF at this point signifies empty value
             return "";
         }
-        if (i == INT_CR || i == INT_LF) {
+        if (i == INT_CR || i == INT_LF) { // end-of-line means end of record; but also need to handle LF later on
             _pendingLF = i;
-            --_inputPtr;
+            --_inputPtr; // push back to keep column number correct
             return "";
         }
+        // two modes: quoted, unquoted
+        if (i == _quoteChar) { // offline quoted case (longer)
+            return _nextQuotedString();
+        }
+        char[] outBuf = _textBuffer.emptyAndGetCurrentSegment();
+        outBuf[0] = (char) i;
+        int outPtr = 1;
 
-        // !!! TODO: actual parsing
-        
-        return null;
+        int ptr = _inputPtr;
+        if (ptr >= _inputEnd) {
+            if (!loadMore()) { // ok to have end-of-input but...
+                _textBuffer.setCurrentLength(outPtr);
+                return _textBuffer.contentsAsString();
+            }
+            ptr = _inputPtr;
+        }
+        final int max = Math.min(_inputEnd, (ptr + outBuf.length));
+
+        // handle unquoted locally as it's simpler: parse until separator or linefeed
+        // start with quickie loop
+        char[] inputBuffer = _inputBuffer;
+
+        while (ptr < max) {
+            char c = inputBuffer[ptr++];
+            if (c <= _maxSpecialChar) {
+                if (c == _separatorChar) { // end of value, yay!
+                    _inputPtr = ptr;
+                    _textBuffer.setCurrentLength(outPtr);
+                    return _textBuffer.contentsAsString();
+                }
+                if (c == '\r' || c == '\n') {
+                    _pendingLF = c;
+                    _inputPtr = ptr;
+                    _textBuffer.setCurrentLength(outPtr);
+                    return _textBuffer.contentsAsString();
+                }
+            }
+            outBuf[outPtr++] = (char) c;
+        }
+        // ok, either input or output across buffer boundary, offline
+        _inputPtr = ptr;
+        return _nextUnquotedString(outBuf, outPtr);
     }
 
+    protected String _nextUnquotedString(char[] outBuf, int outPtr) throws IOException, JsonParseException
+    {
+        int c;
+        final char[] inputBuffer = _inputBuffer;
+
+        main_loop:
+        while (true) {
+            int ptr = _inputPtr;
+            if (ptr >= _inputEnd) {
+                if (!loadMore()) { // ok to have end-of-input, are done
+                    _inputPtr = ptr;
+                    break main_loop;
+                }
+            }
+            if (outPtr >= outBuf.length) {
+                outBuf = _textBuffer.finishCurrentSegment();
+                outPtr = 0;
+            }
+            final int max = Math.min(_inputEnd, (ptr + (outBuf.length - outPtr)));
+            while (ptr < max) {
+                c = inputBuffer[ptr++];
+                if (c <= _maxSpecialChar) {
+                    if (c == _separatorChar) { // end of value, yay!
+                        _inputPtr = ptr;
+                        break main_loop;
+                    }
+                    if (c == '\r' || c == '\n') {
+                        _inputPtr = ptr;
+                        _pendingLF = c;
+                        break main_loop;
+                    }
+                }
+                ++ptr;
+                outBuf[outPtr++] = (char) c;
+            }
+            _inputPtr = ptr;
+        }
+        _textBuffer.setCurrentLength(outPtr);
+        return _textBuffer.contentsAsString();
+    }
+    
+    protected String _nextQuotedString() throws IOException, JsonParseException
+    {
+        // !!! TODO
+        return null;
+    }
+    
     protected void _handleLF() throws IOException, JsonParseException
     {
+        ++_inputPtr; // we already know that char, stored as _pendingLF, skip
         if (_pendingLF == INT_CR) {
             if (_inputPtr < _inputEnd || loadMore()) {
                 if (_inputBuffer[_inputPtr] == '\n') {

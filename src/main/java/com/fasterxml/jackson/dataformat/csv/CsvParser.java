@@ -114,7 +114,7 @@ public class CsvParser
         _objectCodec = codec;
         _textBuffer = new TextBuffer(br);
         _parsingContext = JsonReadContext.createRootContext();
-        _reader = new CsvReader(ctxt, reader, _textBuffer,
+        _reader = new CsvReader(ctxt, reader, _schema, _textBuffer,
                 isEnabled(JsonParser.Feature.AUTO_CLOSE_SOURCE));
     }
 
@@ -138,6 +138,7 @@ public class CsvParser
     {
         if (schema instanceof CsvSchema) {
             _schema = (CsvSchema) schema;
+            _reader.setSchema(_schema);
         } else {
             super.setSchema(schema);
         }
