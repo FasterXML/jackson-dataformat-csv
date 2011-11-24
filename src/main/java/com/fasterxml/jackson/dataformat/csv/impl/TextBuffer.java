@@ -25,6 +25,7 @@ public final class TextBuffer
     /**********************************************************
      */
 
+    // thing we can borrow char array from, return...
     private final BufferRecycler _allocator;
 
     /*
@@ -35,8 +36,7 @@ public final class TextBuffer
 
     /**
      * Shared input buffer; stored here in case some input can be returned
-     * as is, without being copied to collector's own buffers. Note that
-     * this is read-only for this Object.
+     * as is, without being copied to collector's own buffers.
      */
     private char[] _inputBuffer;
 

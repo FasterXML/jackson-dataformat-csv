@@ -61,20 +61,23 @@ public class CsvSchema
         /**
          * Default type if not explicitly defined; value will
          * be presented as <code>VALUE_STRING</code> by parser,
-         * that is, no type-inference is performed
+         * that is, no type-inference is performed, and value is
+         * not trimmed.
          */
         STRING,
 
         /**
          * Value is considered to be a String, except that tokens
          * "null", "true" and "false" are recognized as matching
-         * tokens and reported as such.
+         * tokens and reported as such;
+         * and values are trimmed (leading/trailing white space)
          */
         STRING_OR_LITERAL,
         
         /**
          * Value should be a number, but literals "null", "true" and "false"
          * are also understood, and an empty String is considered null.
+         * Values are also trimmed (leading/trailing white space)
          * Other non-numeric Strings will cause parsing exception.
          */
         NUMBER,
@@ -83,6 +86,7 @@ public class CsvSchema
          * Value is taken to be a number (if it matches valid JSON number
          * formatting rules), literal (null, true or false) or String,
          * depending on best match.
+         * Values are also trimmed (leading/trailing white space)
          */
         NUMBER_OR_STRING
         

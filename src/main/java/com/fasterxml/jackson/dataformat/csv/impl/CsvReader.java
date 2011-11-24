@@ -8,12 +8,18 @@ import org.codehaus.jackson.*;
 import org.codehaus.jackson.JsonParser.NumberType;
 import org.codehaus.jackson.io.IOContext;
 
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+
 /**
  * Low-level helper class that handles actual reading of CSV,
  * purely based on indexes given without worrying about reordering etc.
  */
 public class CsvReader
 {
+    private final static int INT_SPACE = 0x0020;
+
+    private final static int INT_CR = '\r';
+    private final static int INT_LF = '\n';
     
     /*
     /**********************************************************************
@@ -44,6 +50,17 @@ public class CsvReader
     protected boolean _bufferRecyclable;
 
     protected boolean _autoCloseInput;
+
+    /**
+     * Maximum of quote character, linefeeds (\r and \n), escape character.
+     */
+    protected int _maxSpecialChar;
+    
+    protected int _separatorChar;
+
+    protected int _quoteChar;
+
+    protected int _escapeChar;
     
     /*
     /**********************************************************************
@@ -74,6 +91,12 @@ public class CsvReader
      */
     protected int _inputEnd = 0;
 
+    /**
+     * Marker to indicate that a linefeed was encountered and now
+     * needs to be handled (indicates end-of-record).
+     */
+    protected int _pendingLF = 0;
+    
     /**
      * Flag that indicates whether parser is closed or not. Gets
      * set when parser is either closed by explicit call
@@ -261,6 +284,18 @@ public class CsvReader
         _tokenInputCol = -1;
     }
 
+    public void setSchema(CsvSchema schema)
+    {
+        _separatorChar = schema.getColumnSeparator();
+        _quoteChar = schema.getQuoteChar();
+        _escapeChar = schema.getEscapeChar();
+        int max = Math.max(_separatorChar, _quoteChar);
+        max = Math.max(max, _escapeChar);
+        max = Math.max(max, '\r');
+        max = Math.max(max, '\n');
+        _maxSpecialChar = max;
+    }
+    
     /*
     /**********************************************************************
     /* JsonParser implementations passed-through by CsvParser
@@ -275,6 +310,7 @@ public class CsvReader
     
     public void close() throws IOException
     {
+        _pendingLF = 1; // just to ensure we'll also check _closed flag later on
         if (!_closed) {
             _closed = true;
             try {
@@ -391,13 +427,93 @@ public class CsvReader
      * values.
      * 
      * @return Column value if more found; null to indicate end of line
+     *  of input
      */
     public String nextString() throws IOException, JsonParseException
     {
         _numTypesValid = NR_UNKNOWN;
 
+        if (_pendingLF > 0) { // either pendingLF, or closed
+            if (_closed) {
+                return null;
+            }
+            _pendingLF = 0;
+            _handleLF();
+            return null;
+        }
+        int i = _skipLeadingSpace();
+        if (i < 0) { // EOF at this point signifies empty value
+            return "";
+        }
+        if (i == INT_CR || i == INT_LF) {
+            _pendingLF = i;
+            --_inputPtr;
+            return "";
+        }
+
+        // !!! TODO: actual parsing
+        
         return null;
     }
+
+    protected void _handleLF() throws IOException, JsonParseException
+    {
+        if (_pendingLF == INT_CR) {
+            if (_inputPtr < _inputEnd || loadMore()) {
+                if (_inputBuffer[_inputPtr] == '\n') {
+                    ++_inputPtr;
+                }
+            }
+        }
+        ++_currInputRow;
+        _currInputRowStart = _inputPtr;
+    }
+    
+    protected int _skipLeadingSpace() throws IOException, JsonParseException
+    {
+        // First, need to ensure we know the starting location of token
+        _tokenInputTotal = _currInputProcessed + _inputPtr - 1;
+        _tokenInputRow = _currInputRow;
+        _tokenInputCol = _inputPtr - _currInputRowStart - 1;
+
+        while (true) {
+            if (_inputPtr >= _inputEnd) {
+                if (!loadMore()) {
+                    return -1;
+                }
+            }
+            char ch = _inputBuffer[_inputPtr++];
+            if (ch > ' ') {
+                return ch;
+            }
+            switch (ch) {
+            case '\r':
+            case '\n':
+                return ch;
+            }
+        }
+    }
+    
+    public JsonToken nextStringOrLiteral() throws IOException, JsonParseException
+    {
+        _numTypesValid = NR_UNKNOWN;
+
+        return null;
+    }
+
+    public JsonToken nextNumber() throws IOException, JsonParseException
+    {
+        _numTypesValid = NR_UNKNOWN;
+
+        return null;
+    }
+    public JsonToken nextNumberOrString() throws IOException, JsonParseException
+    {
+        _numTypesValid = NR_UNKNOWN;
+
+        return null;
+    }
+
     
     /*
     /**********************************************************************
