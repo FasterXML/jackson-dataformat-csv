@@ -106,11 +106,11 @@ public final class TextBuffer
     public void releaseBuffers()
     {
         if (_allocator == null) {
-            resetWithEmpty();
+            reset();
         } else {
             if (_currentSegment != null) {
                 // First, let's get rid of all but the largest char array
-                resetWithEmpty();
+                reset();
                 // And then return that array
                 char[] buf = _currentSegment;
                 _currentSegment = null;
@@ -119,7 +119,7 @@ public final class TextBuffer
         }
     }
 
-    public void resetWithEmpty()
+    public void reset()
     {
         _inputStart = -1; // indicates shared buffer not used
         _currentSize = 0;
@@ -404,10 +404,28 @@ public final class TextBuffer
         return _currentSize;
     }
 
-    public void setCurrentLength(int len) {
-        _currentSize = len;
+    /**
+     * 
+     * @param lastSegmentEnd End offset in the currently active segment 
+     * @param trimTrailingSpaces Whether trailing spaces should be trimmed or not
+     */
+    public String finishAndReturn(int lastSegmentEnd, boolean trimTrailingSpaces)
+    {
+        _currentSize = lastSegmentEnd;
+        if (trimTrailingSpaces) {
+            // !!! TODO
+        }
+        return contentsAsString();
     }
 
+    public void finish(int lastSegmentEnd, boolean trimTrailingSpaces)
+    {
+        _currentSize = lastSegmentEnd;
+        if (trimTrailingSpaces) {
+            // !!! TODO
+        }
+    }
+    
     public char[] finishCurrentSegment()
     {
         if (_segments == null) {

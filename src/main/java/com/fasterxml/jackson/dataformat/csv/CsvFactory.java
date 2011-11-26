@@ -2,6 +2,7 @@ package com.fasterxml.jackson.dataformat.csv;
 
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.Charset;
 
 import org.codehaus.jackson.*;
 import org.codehaus.jackson.format.InputAccessor;
@@ -272,11 +273,9 @@ public class CsvFactory extends JsonFactory
     protected CsvParser _createJsonParser(InputStream in, IOContext ctxt)
         throws IOException, JsonParseException
     {
-        /*
-        return new CsvParserBootstrapper(ctxt, in).constructParser(_parserFeatures,
-                        _csvParserFeatures, _objectCodec, _rootByteSymbols);
-                        */
-        return null;
+        Reader r = _createReader(in, null, ctxt);
+        return new CsvParser(ctxt, _getBufferRecycler(), _parserFeatures, _csvParserFeatures,
+                _objectCodec, r);
     }
 
     /**
@@ -287,7 +286,8 @@ public class CsvFactory extends JsonFactory
     protected JsonParser _createJsonParser(Reader r, IOContext ctxt)
         throws IOException, JsonParseException
     {
-        throw new UnsupportedOperationException("Can not create generator for non-byte-based target");
+        return new CsvParser(ctxt, _getBufferRecycler(), _parserFeatures, _csvParserFeatures,
+                _objectCodec, r);
     }
 
     /**
@@ -298,16 +298,7 @@ public class CsvFactory extends JsonFactory
     protected CsvParser _createJsonParser(byte[] data, int offset, int len, IOContext ctxt)
         throws IOException, JsonParseException
     {
-        /*
-    public CsvParser(IOContext ctxt, int parserFeatures, int csvFeatures,
-            ObjectCodec codec, Reader reader)
-    {
-         */
-        /*
-        return new CsvParserBootstrapper(ctxt, data, offset, len).constructParser(_parserFeatures,
-                        _csvParserFeatures, _objectCodec, _rootByteSymbols);
-                        */
-        Reader r = new InputStreamReader(new ByteArrayInputStream(data, offset, len));
+        Reader r = _createReader(new ByteArrayInputStream(data, offset, len), null, ctxt);
         return new CsvParser(ctxt, _getBufferRecycler(), _parserFeatures, _csvParserFeatures,
                 _objectCodec, r);
     }
@@ -347,5 +338,16 @@ public class CsvFactory extends JsonFactory
                 _cfgColumnSeparator, _cfgQuoteCharacter, _cfgLineSeparator);
         // any other initializations? No?
         return gen;
+    }
+
+    protected final Charset UTF8 = Charset.forName("UTF-8");
+    
+    protected Reader _createReader(InputStream in, JsonEncoding enc, IOContext ctxt) throws IOException
+    {
+        // default to UTF-8 if encoding missing
+        if (enc == null || enc == JsonEncoding.UTF8) { // !!! TODO: custom UTF-8 reader
+            return new InputStreamReader(in, UTF8);
+        }
+        return new InputStreamReader(in, "enc");
     }
 }

@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import org.codehaus.jackson.*;
+import org.codehaus.jackson.JsonParser.Feature;
 import org.codehaus.jackson.impl.JsonParserMinimalBase;
 import org.codehaus.jackson.impl.JsonReadContext;
 import org.codehaus.jackson.io.IOContext;
@@ -20,7 +21,14 @@ public class CsvParser
      * Enumeration that defines all togglable features for Smile generators.
      */
     public enum Feature {
-        BOGUS(true) // placeholder
+        /**
+         * Feature determines whether spaces around separator characters
+         * (commas) are to be automatically trimmed before being reported
+         * or not.
+         *<p>
+         * Default value is false, as per <a href="http://tools.ietf.org/html/rfc4180">RFC-4180</a>.
+         */
+        TRIM_SPACES(false)
         ;
 
         final boolean _defaultState;
@@ -66,6 +74,8 @@ public class CsvParser
      */
     protected ObjectCodec _objectCodec;
 
+    protected int _csvFeatures;
+    
     /**
      * Definition of columns being read. Initialized to "empty" instance, which
      * has default configuration settings.
@@ -113,9 +123,11 @@ public class CsvParser
         super(parserFeatures);    
         _objectCodec = codec;
         _textBuffer = new TextBuffer(br);
+        _csvFeatures = csvFeatures;
         _parsingContext = JsonReadContext.createRootContext();
         _reader = new CsvReader(ctxt, reader, _schema, _textBuffer,
-                isEnabled(JsonParser.Feature.AUTO_CLOSE_SOURCE));
+                isEnabled(JsonParser.Feature.AUTO_CLOSE_SOURCE),
+                isEnabled(Feature.TRIM_SPACES));
     }
 
     @Override
@@ -155,6 +167,54 @@ public class CsvParser
 
     @Override
     public void close() throws IOException { _reader.close(); }
+
+    /*
+    /***************************************************
+    /* Public API, configuration
+    /***************************************************
+     */
+
+    /**
+     * Method for enabling specified CSV feature
+     * (check {@link Feature} for list of features)
+     */
+    public JsonParser enable(Feature f)
+    {
+        _csvFeatures |= f.getMask();
+        return this;
+    }
+
+    /**
+     * Method for disabling specified  CSV feature
+     * (check {@link Feature} for list of features)
+     */
+    public JsonParser disable(Feature f)
+    {
+        _csvFeatures &= ~f.getMask();
+        return this;
+    }
+
+    /**
+     * Method for enabling or disabling specified CSV feature
+     * (check {@link Feature} for list of features)
+     */
+    public JsonParser configure(Feature f, boolean state)
+    {
+        if (state) {
+            enable(f);
+        } else {
+            disable(f);
+        }
+        return this;
+    }
+
+    /**
+     * Method for checking whether specified CSV {@link Feature}
+     * is enabled.
+     */
+    public boolean isEnabled(Feature f) {
+        return (_csvFeatures & f.getMask()) != 0;
+    }
     
     /*
     /**********************************************************
@@ -190,13 +250,15 @@ public class CsvParser
      */
 
     @Override
-    public JsonToken nextToken() throws IOException, JsonParseException {
+    public JsonToken nextToken() throws IOException, JsonParseException
+    {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public String getCurrentName() throws IOException, JsonParseException {
+    public String getCurrentName() throws IOException, JsonParseException
+    {
         // TODO Auto-generated method stub
         return null;
     }

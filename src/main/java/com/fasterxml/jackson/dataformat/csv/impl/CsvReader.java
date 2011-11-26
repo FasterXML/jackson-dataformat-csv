@@ -52,6 +52,12 @@ public class CsvReader
     protected boolean _autoCloseInput;
 
     /**
+     * Configuration flag that determines whether spaces surrounding
+     * separator characters are to be automatically trimmed or not.
+     */
+    protected boolean _trimSpaces;
+    
+    /**
      * Maximum of quote character, linefeeds (\r and \n), escape character.
      */
     protected int _maxSpecialChar;
@@ -271,12 +277,13 @@ public class CsvReader
     JsonToken _currToken = null;
     
     public CsvReader(IOContext ctxt, Reader r, CsvSchema schema, TextBuffer textBuffer,
-            boolean autoCloseInput)
+            boolean autoCloseInput, boolean trimSpaces)
     {
         _ioContext = ctxt;
         _inputSource = r;
         _textBuffer = textBuffer;
         _autoCloseInput = autoCloseInput;
+        _trimSpaces = trimSpaces;
         _inputBuffer = ctxt.allocTokenBuffer();
         _bufferRecyclable = true; // since we allocated it
         _inputSource = r;
@@ -441,7 +448,13 @@ public class CsvReader
             }
             return null;
         }
-        int i = _skipLeadingSpace();
+        int i;
+        
+        if (_trimSpaces) {
+            i = _skipLeadingSpace();
+        } else {
+            i = _nextChar();
+        }
         if (i < 0) { // EOF at this point signifies empty value
             return "";
         }
@@ -454,6 +467,10 @@ public class CsvReader
         if (i == _quoteChar) { // offline quoted case (longer)
             return _nextQuotedString();
         }
+        if (i == _separatorChar) {
+            _textBuffer.resetWithString("");
+            return "";
+        }
         char[] outBuf = _textBuffer.emptyAndGetCurrentSegment();
         outBuf[0] = (char) i;
         int outPtr = 1;
@@ -461,15 +478,14 @@ public class CsvReader
         int ptr = _inputPtr;
         if (ptr >= _inputEnd) {
             if (!loadMore()) { // ok to have end-of-input but...
-                _textBuffer.setCurrentLength(outPtr);
-                return _textBuffer.contentsAsString();
+                return _textBuffer.finishAndReturn(outPtr, _trimSpaces);
             }
             ptr = _inputPtr;
         }
         final int max = Math.min(_inputEnd, (ptr + outBuf.length));
 
-        // handle unquoted locally as it's simpler: parse until separator or linefeed
-        // start with quickie loop
+        // handle unquoted case locally if it can be handled without
+        // crossing buffer boundary...
         char[] inputBuffer = _inputBuffer;
 
         while (ptr < max) {
@@ -477,14 +493,12 @@ public class CsvReader
             if (c <= _maxSpecialChar) {
                 if (c == _separatorChar) { // end of value, yay!
                     _inputPtr = ptr;
-                    _textBuffer.setCurrentLength(outPtr);
-                    return _textBuffer.contentsAsString();
+                    _textBuffer.finishAndReturn(outPtr, _trimSpaces);
                 }
                 if (c == '\r' || c == '\n') {
                     _pendingLF = c;
                     _inputPtr = ptr;
-                    _textBuffer.setCurrentLength(outPtr);
-                    return _textBuffer.contentsAsString();
+                    _textBuffer.finishAndReturn(outPtr, _trimSpaces);
                 }
             }
             outBuf[outPtr++] = (char) c;
@@ -494,6 +508,44 @@ public class CsvReader
         return _nextUnquotedString(outBuf, outPtr);
     }
 
+    public JsonToken nextStringOrLiteral() throws IOException, JsonParseException
+    {
+        _numTypesValid = NR_UNKNOWN;
+        // !!! TODO: implement properly
+        String value = nextString();
+        if (value == null) {
+            return null;
+        }
+        return JsonToken.VALUE_STRING;
+    }
+
+    public JsonToken nextNumber() throws IOException, JsonParseException
+    {
+        _numTypesValid = NR_UNKNOWN;
+        // !!! TODO: implement properly
+        String value = nextString();
+        if (value == null) {
+            return null;
+        }
+        return JsonToken.VALUE_STRING;
+    }
+    public JsonToken nextNumberOrString() throws IOException, JsonParseException
+    {
+        _numTypesValid = NR_UNKNOWN;
+        // !!! TODO: implement properly
+        String value = nextString();
+        if (value == null) {
+            return null;
+        }
+        return JsonToken.VALUE_STRING;
+    }
+    
+    /*
+    /**********************************************************************
+    /* Actual parsing, private helper methods
+    /**********************************************************************
+     */
+    
     protected String _nextUnquotedString(char[] outBuf, int outPtr) throws IOException, JsonParseException
     {
         int c;
@@ -531,14 +583,70 @@ public class CsvReader
             }
             _inputPtr = ptr;
         }
-        _textBuffer.setCurrentLength(outPtr);
-        return _textBuffer.contentsAsString();
+        return _textBuffer.finishAndReturn(outPtr, _trimSpaces);
     }
     
     protected String _nextQuotedString() throws IOException, JsonParseException
     {
+        char[] outBuf = _textBuffer.emptyAndGetCurrentSegment();
+        int outPtr = 0;
+
+        int c = 0;
+        final char[] inputBuffer = _inputBuffer;
+
+        main_loop:
+        while (true) {
+            int ptr = _inputPtr;
+            if (ptr >= _inputEnd) {
+                if (!loadMore()) { // not ok, missing end quote
+                    _reportError("Missing closing quote for value"); // should indicate start position?
+                }
+            }
+            if (outPtr >= outBuf.length) {
+                outBuf = _textBuffer.finishCurrentSegment();
+                outPtr = 0;
+            }
+            final int max = Math.min(_inputEnd, (ptr + (outBuf.length - outPtr)));
+            while (true) {
+                c = inputBuffer[ptr++];
+                if (c <= _maxSpecialChar) {
+                    if (c == _quoteChar || c == '\r' || c == '\n') {
+                        break;
+                    }
+                }
+                ++ptr;
+                outBuf[outPtr++] = (char) c;
+                if (ptr >= max) {
+                    _inputPtr = ptr;
+                    continue main_loop;
+                }
+            }
+            _inputPtr = ptr;
+            // Ok: quote or LF?
+            if (c == _quoteChar) { // doubled up, or end?
+                if (_inputPtr >= _inputEnd) {
+                    if (!loadMore()) { // not ok, missing end quote
+                        _reportError("Missing closing quote for value"); // should indicate start position?
+                    }
+                }
+                if (_inputBuffer[_inputPtr] == _quoteChar) { // doubled up, append
+                    // note: should have enough room, is safe
+                    outBuf[outPtr++] = (char) _quoteChar;
+                    ++_inputPtr;
+                    continue main_loop;
+                }
+                
+                break;
+            }
+        }
+        // note: do NOT trim from within quoted Strings
+        String result = _textBuffer.finishAndReturn(outPtr, false);
+
+        // good, but we also need to locate and skip trailing separator
+
         // !!! TODO
-        return null;
+        
+        return result;
     }
     
     protected void _handleLF() throws IOException, JsonParseException
@@ -553,6 +661,16 @@ public class CsvReader
         }
         ++_currInputRow;
         _currInputRowStart = _inputPtr;
+    }
+
+    protected int _nextChar() throws IOException, JsonParseException
+    {
+        if (_inputPtr >= _inputEnd) {
+            if (!loadMore()) {
+                return -1;
+            }
+        }
+        return _inputBuffer[_inputPtr++];
     }
     
     protected int _skipLeadingSpace() throws IOException, JsonParseException
@@ -579,27 +697,6 @@ public class CsvReader
             }
         }
     }
-    
-    public JsonToken nextStringOrLiteral() throws IOException, JsonParseException
-    {
-        _numTypesValid = NR_UNKNOWN;
-
-        return null;
-    }
-
-    public JsonToken nextNumber() throws IOException, JsonParseException
-    {
-        _numTypesValid = NR_UNKNOWN;
-
-        return null;
-    }
-    public JsonToken nextNumberOrString() throws IOException, JsonParseException
-    {
-        _numTypesValid = NR_UNKNOWN;
-
-        return null;
-    }
-
     
     /*
     /**********************************************************************
