@@ -10,6 +10,7 @@ import org.codehaus.jackson.impl.JsonParserMinimalBase;
 import org.codehaus.jackson.impl.JsonReadContext;
 import org.codehaus.jackson.io.IOContext;
 import org.codehaus.jackson.util.BufferRecycler;
+import org.codehaus.jackson.util.ByteArrayBuilder;
 
 import com.fasterxml.jackson.dataformat.csv.impl.CsvReader;
 import com.fasterxml.jackson.dataformat.csv.impl.TextBuffer;
@@ -158,11 +159,6 @@ public class CsvParser
      */
     protected int _columnCount = 0;
 
-    /**
-     * Thing that actually reads the CSV content
-     */
-    protected final CsvReader _reader;
-
     /*
     /**********************************************************************
     /* State
@@ -174,12 +170,6 @@ public class CsvParser
      * the next token is to be parsed (root, array, object).
      */
     protected JsonReadContext _parsingContext;
-
-    /**
-     * Buffer that contains contents of all values after processing
-     * of doubled-quotes, escaped characters.
-     */
-    protected final TextBuffer _textBuffer;
 
     /**
      * Name of column that we exposed most recently, accessible after
@@ -211,6 +201,25 @@ public class CsvParser
      * than once.
      */
     protected byte[] _binaryValue;
+
+    /*
+    /**********************************************************************
+    /* Helper objects
+    /**********************************************************************
+     */
+
+    /**
+     * Thing that actually reads the CSV content
+     */
+    protected final CsvReader _reader;
+
+    /**
+     * Buffer that contains contents of all values after processing
+     * of doubled-quotes, escaped characters.
+     */
+    protected final TextBuffer _textBuffer;
+    
+    protected ByteArrayBuilder _byteArrayBuilder;
     
     /*
     /**********************************************************************
@@ -356,6 +365,7 @@ public class CsvParser
     @Override
     public JsonToken nextToken() throws IOException, JsonParseException
     {
+        _binaryValue = null;
         switch (_state) {
         case STATE_DOC_START:
             return (_currToken = _handleStartDoc());
@@ -514,10 +524,17 @@ public class CsvParser
      */
 
     @Override
-    public byte[] getBinaryValue(Base64Variant variant) throws IOException,
-            JsonParseException {
-        // TODO Auto-generated method stub
-        return null;
+    public byte[] getBinaryValue(Base64Variant variant) throws IOException, JsonParseException
+    {
+        if (_binaryValue == null) {
+            if (_currToken != JsonToken.VALUE_STRING) {
+                _reportError("Current token ("+_currToken+") not VALUE_STRING, can not access as binary");
+            }
+            ByteArrayBuilder builder = _getByteArrayBuilder();
+            _decodeBase64(_currentValue, builder, variant);
+            _binaryValue = builder.toByteArray();
+        }
+        return _binaryValue;
     }
 
     /*
@@ -584,4 +601,15 @@ public class CsvParser
     /* Internal methods
     /**********************************************************************
      */
+    
+    public ByteArrayBuilder _getByteArrayBuilder()
+    {
+        if (_byteArrayBuilder == null) {
+            _byteArrayBuilder = new ByteArrayBuilder();
+        } else {
+            _byteArrayBuilder.reset();
+        }
+        return _byteArrayBuilder;
+    }
+
 }

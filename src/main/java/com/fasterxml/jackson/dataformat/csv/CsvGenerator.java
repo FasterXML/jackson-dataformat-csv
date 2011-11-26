@@ -276,6 +276,12 @@ public class CsvGenerator extends JsonGeneratorBase
     public final void writeStartArray() throws IOException, JsonGenerationException
     {
         _verifyValueWrite("start an array");
+        /* Ok to create root-level array to contain Objects/Arrays, but
+         * can not nest arrays in objects
+         */
+        if (_writeContext.inObject()) {
+            _reportError("CSV generator does not support Array values for properties");
+        }
         _writeContext = _writeContext.createChildArrayContext();
         // and that's about it, really
     }
@@ -295,8 +301,13 @@ public class CsvGenerator extends JsonGeneratorBase
     public final void writeStartObject() throws IOException, JsonGenerationException
     {
         _verifyValueWrite("start an object");
+        /* No nesting for objects; can write Objects inside logical
+         * root-level arrays.
+         */
+        if (_writeContext.inObject()) {
+            _reportError("CSV generator does not support Object values for properties");
+        }
         _writeContext = _writeContext.createChildObjectContext();
-        // nothing else to do ...
     }
 
     @Override

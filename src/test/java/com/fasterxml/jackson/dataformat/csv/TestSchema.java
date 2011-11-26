@@ -6,6 +6,6 @@ public class TestSchema extends ModuleTestBase
     {
         CsvMapper mapper = mapperForCsv();
         CsvSchema schema = mapper.schemaFor(FiveMinuteUser.class);
-        assertEquals("[\"firstName\",\"lastName\",\"verified\",\"gender\",\"userImage\"]", schema.getColumnDesc());
+        assertEquals("[\"firstName\",\"lastName\",\"gender\",\"verified\",\"userImage\"]", schema.getColumnDesc());
     }
 }

@@ -1,5 +1,6 @@
 package com.fasterxml.jackson.dataformat.csv;
 
+import org.codehaus.jackson.annotate.JsonPropertyOrder;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import com.fasterxml.jackson.dataformat.csv.ModuleTestBase.FiveMinuteUser.Gender;
@@ -31,6 +32,6 @@ public class TestGenerator extends ModuleTestBase
         FiveMinuteUser user = new FiveMinuteUser("Veltto", "Virtanen", true, Gender.MALE,
                 new byte[] { 3, 1 });
         String result = mapper.writer(schema).writeValueAsString(user);        
-        assertEquals("Veltto,Virtanen,true,MALE,AwE=\n", result);
+        assertEquals("Veltto,Virtanen,MALE,true,AwE=\n", result);
     }
 }
