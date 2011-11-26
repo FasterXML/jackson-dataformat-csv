@@ -19,7 +19,7 @@ public class TestParser extends ModuleTestBase
             .addColumn("verified")
             .build();
 
-        FiveMinuteUser user = mapper.reader(schema).readValue("Bob,Robertson,MALE,AQIDBAU=,false\n");
+        FiveMinuteUser user = mapper.reader(schema).withType(FiveMinuteUser.class).readValue("Bob,Robertson,MALE,AQIDBAU=,false\n");
         assertEquals("Bob", user.firstName);
         assertEquals("Robertson", user.lastName);
         assertEquals(Gender.MALE, user.getGender());
@@ -31,7 +31,7 @@ public class TestParser extends ModuleTestBase
     {
         CsvMapper mapper = mapperForCsv();
         CsvSchema schema = mapper.schemaFor(FiveMinuteUser.class);
-        FiveMinuteUser user = mapper.reader(schema).readValue("Joe,Josephson,MALE,AwE=,true\n");
+        FiveMinuteUser user = mapper.reader(schema).withType(FiveMinuteUser.class).readValue("Joe,Josephson,MALE,AwE=,true\n");
         assertEquals("Joe", user.firstName);
         assertEquals("Josephson", user.lastName);
         assertEquals(Gender.MALE, user.getGender());

@@ -6,6 +6,7 @@ import java.math.BigInteger;
 
 import org.codehaus.jackson.*;
 import org.codehaus.jackson.JsonParser.NumberType;
+import org.codehaus.jackson.impl.JsonReadContext;
 import org.codehaus.jackson.io.IOContext;
 
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
@@ -341,6 +342,18 @@ public class CsvReader
         out.write(_inputBuffer, origPtr, count);
         return count;
     }
+
+    public JsonReadContext childArrayContext(JsonReadContext context)
+    {
+        int col = _inputPtr - _currInputRowStart + 1; // 1-based
+        return context.createChildArrayContext(_currInputRow, col);
+    }
+
+    public JsonReadContext childObjectContext(JsonReadContext context)
+    {
+        int col = _inputPtr - _currInputRowStart + 1; // 1-based
+        return context.createChildObjectContext(_currInputRow, col);
+    }
     
     public JsonLocation getTokenLocation()
     {
@@ -430,6 +443,18 @@ public class CsvReader
     }
 
     /**
+     * Method that can be called to see if there is at least one more
+     * character to be parsed.
+     */
+    public boolean hasMoreInput() throws IOException, JsonParseException
+    {
+        if (_inputPtr < _inputEnd) {
+            return true;
+        }
+        return loadMore();
+    }
+    
+    /**
      * Method called to parse the next token when we don't have any type
      * information, so that all tokens are exposed as basic String
      * values.
@@ -493,12 +518,12 @@ public class CsvReader
             if (c <= _maxSpecialChar) {
                 if (c == _separatorChar) { // end of value, yay!
                     _inputPtr = ptr;
-                    _textBuffer.finishAndReturn(outPtr, _trimSpaces);
+                    return _textBuffer.finishAndReturn(outPtr, _trimSpaces);
                 }
                 if (c == '\r' || c == '\n') {
                     _pendingLF = c;
                     _inputPtr = ptr;
-                    _textBuffer.finishAndReturn(outPtr, _trimSpaces);
+                    return _textBuffer.finishAndReturn(outPtr, _trimSpaces);
                 }
             }
             outBuf[outPtr++] = (char) c;
