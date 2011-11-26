@@ -418,6 +418,7 @@ public final class TextBuffer
         return contentsAsString();
     }
 
+    /*
     public void finish(int lastSegmentEnd, boolean trimTrailingSpaces)
     {
         _currentSize = lastSegmentEnd;
@@ -425,6 +426,7 @@ public final class TextBuffer
             // !!! TODO
         }
     }
+    */
     
     public char[] finishCurrentSegment()
     {

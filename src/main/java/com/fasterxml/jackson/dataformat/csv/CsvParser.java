@@ -5,7 +5,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import org.codehaus.jackson.*;
-import org.codehaus.jackson.JsonParser.Feature;
 import org.codehaus.jackson.impl.JsonParserMinimalBase;
 import org.codehaus.jackson.impl.JsonReadContext;
 import org.codehaus.jackson.io.IOContext;
@@ -236,7 +235,7 @@ public class CsvParser
         _textBuffer = new TextBuffer(br);
         _csvFeatures = csvFeatures;
         _parsingContext = JsonReadContext.createRootContext();
-        _reader = new CsvReader(ctxt, reader, _schema, _textBuffer,
+        _reader = new CsvReader(this, ctxt, reader, _schema, _textBuffer,
                 isEnabled(JsonParser.Feature.AUTO_CLOSE_SOURCE),
                 isEnabled(Feature.TRIM_SPACES));
     }
@@ -378,6 +377,7 @@ public class CsvParser
         case STATE_UNNAMED_VALUE:
             return (_currToken = _handleUnnamedValue());
         case STATE_DOC_END:
+            _reader.close();
             if (_parsingContext.inRoot()) {
                 return null;
             }
@@ -436,7 +436,7 @@ public class CsvParser
         String next = _reader.nextString();
         if (next == null) { // end of record or input...
             _parsingContext = _parsingContext.getParent();
-            if (_reader.isClosed()) { // end of whole thing...
+            if (_reader.reachedEOF()) { // end of whole thing...
                 _state = STATE_DOC_END;
             } else {
                 // no, just end of record
@@ -447,7 +447,7 @@ public class CsvParser
         _state = STATE_NAMED_VALUE;
         _currentValue = next;
         if (_columnIndex >= _columnCount) {
-            _reportError("Too many entries: expected at most "+_columnCount);
+            _reportError("Too many entries: expected at most "+_columnCount+" (value ("+next.length()+" chars) \""+next+"\")");
         }
         _currentName = _schema.column(_columnIndex).getName();
         return JsonToken.FIELD_NAME;
@@ -465,7 +465,7 @@ public class CsvParser
         String next = _reader.nextString();
         if (next == null) { // end of record or input...
             _parsingContext = _parsingContext.getParent();
-            if (_reader.isClosed()) { // end of whole thing...
+            if (_reader.reachedEOF()) { // end of whole thing...
                 _state = STATE_DOC_END;
             } else {
                 // no, just end of record
@@ -583,7 +583,6 @@ public class CsvParser
         return _reader.getDecimalValue();
     }
     
-    
     /*
     /**********************************************************************
     /* Helper methods from base class
@@ -596,6 +595,21 @@ public class CsvParser
         _reportInvalidEOF(": expected closing quote character");
     }
 
+    /*
+    /**********************************************************************
+    /* Helper methods for CsvReader
+    /**********************************************************************
+     */
+
+    // must be (re)defined to make package-accessible
+    public void _reportCsvError(String msg)  throws JsonParseException {
+        super._reportError(msg);
+    }
+
+    public void _reportUnexpectedCsvChar(int ch, String msg)  throws JsonParseException {
+        super._reportUnexpectedChar(ch, msg);
+    }
+    
     /*
     /**********************************************************************
     /* Internal methods

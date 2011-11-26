@@ -9,6 +9,7 @@ import org.codehaus.jackson.JsonParser.NumberType;
 import org.codehaus.jackson.impl.JsonReadContext;
 import org.codehaus.jackson.io.IOContext;
 
+import com.fasterxml.jackson.dataformat.csv.CsvParser;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 
 /**
@@ -28,6 +29,11 @@ public class CsvReader
     /**********************************************************************
      */
 
+    /**
+     * Unfortunate back reference, needed for error reporting
+     */
+    final protected CsvParser _owner;
+    
     /**
      * I/O context for this reader. It handles buffer allocation
      * for the reader.
@@ -277,9 +283,10 @@ public class CsvReader
     // !!!! Only to allow compilation to succeed; remove once done!
     JsonToken _currToken = null;
     
-    public CsvReader(IOContext ctxt, Reader r, CsvSchema schema, TextBuffer textBuffer,
+    public CsvReader(CsvParser owner, IOContext ctxt, Reader r, CsvSchema schema, TextBuffer textBuffer,
             boolean autoCloseInput, boolean trimSpaces)
     {
+        _owner = owner;
         _ioContext = ctxt;
         _inputSource = r;
         _textBuffer = textBuffer;
@@ -394,6 +401,8 @@ public class CsvReader
 
     protected void _closeInput() throws IOException
     {
+        _pendingLF = 1; // just to ensure we'll also check _closed flag later on
+
         /* 25-Nov-2008, tatus: As per [JACKSON-16] we are not to call close()
          *   on the underlying Reader, unless we "own" it, or auto-closing
          *   feature is enabled.
@@ -422,8 +431,10 @@ public class CsvReader
                 _inputEnd = count;
                 return true;
             }
-            // End of input; close here
-            close();
+            /* End of input; close here --  but note, do NOT yet call releaseBuffers()
+             * as there may be buffered input to handle
+             */
+            _closeInput();
             // Should never return 0, so let's fail
             if (count == 0) {
                 throw new IOException("InputStream.read() returned 0 characters when trying to read "+_inputBuffer.length+" bytes");
@@ -453,6 +464,10 @@ public class CsvReader
         }
         return loadMore();
     }
+
+    public boolean reachedEOF() {
+        return (_inputSource == null);
+    }
     
     /**
      * Method called to parse the next token when we don't have any type
@@ -467,7 +482,7 @@ public class CsvReader
         _numTypesValid = NR_UNKNOWN;
 
         if (_pendingLF > 0) { // either pendingLF, or closed
-            if (!_closed) { // if closed, we just need to return null
+            if (_inputSource != null) { // if closed, we just need to return null
                 _pendingLF = 0;
                 _handleLF();
             }
@@ -616,7 +631,6 @@ public class CsvReader
         char[] outBuf = _textBuffer.emptyAndGetCurrentSegment();
         int outPtr = 0;
 
-        int c = 0;
         final char[] inputBuffer = _inputBuffer;
 
         main_loop:
@@ -624,59 +638,74 @@ public class CsvReader
             int ptr = _inputPtr;
             if (ptr >= _inputEnd) {
                 if (!loadMore()) { // not ok, missing end quote
-                    _reportError("Missing closing quote for value"); // should indicate start position?
+                    _owner._reportCsvError("Missing closing quote for value"); // should indicate start position?
                 }
+                ptr = _inputPtr;
             }
             if (outPtr >= outBuf.length) {
                 outBuf = _textBuffer.finishCurrentSegment();
                 outPtr = 0;
             }
             final int max = Math.min(_inputEnd, (ptr + (outBuf.length - outPtr)));
+
+            inner_loop:
             while (true) {
-                c = inputBuffer[ptr++];
+                char c = inputBuffer[ptr++];
                 if (c <= _maxSpecialChar) {
-                    if (c == _quoteChar || c == '\r' || c == '\n') {
+                    if (c == _quoteChar) {
+                        _inputPtr = ptr;
                         break;
                     }
+                    if (c == '\r' || c == '\n') {
+                        _inputPtr = ptr;
+                        _pendingLF = c;
+                        return _textBuffer.finishAndReturn(outPtr, false);
+                    }
                 }
-                ++ptr;
                 outBuf[outPtr++] = (char) c;
                 if (ptr >= max) {
                     _inputPtr = ptr;
                     continue main_loop;
                 }
+                continue inner_loop;
             }
-            _inputPtr = ptr;
-            // Ok: quote or LF?
-            if (c == _quoteChar) { // doubled up, or end?
-                if (_inputPtr >= _inputEnd) {
-                    if (!loadMore()) { // not ok, missing end quote
-                        _reportError("Missing closing quote for value"); // should indicate start position?
-                    }
-                }
+            // We get here if we hit a quote, check if it's doubled up, or end of value:
+            if (_inputPtr < _inputEnd || loadMore()) { 
                 if (_inputBuffer[_inputPtr] == _quoteChar) { // doubled up, append
                     // note: should have enough room, is safe
                     outBuf[outPtr++] = (char) _quoteChar;
                     ++_inputPtr;
                     continue main_loop;
                 }
-                
-                break;
             }
+            // Not doubled; leave next char as is
+            break;
         }
         // note: do NOT trim from within quoted Strings
         String result = _textBuffer.finishAndReturn(outPtr, false);
 
-        // good, but we also need to locate and skip trailing separator
-
-        // !!! TODO
-        
+        // good, but we also need to locate and skip trailing space, separator
+        // (note: space outside quotes never included, but must be skipped)
+        while (_inputPtr < _inputEnd || loadMore()) { // end-of-input is fine
+            int ch = _inputBuffer[_inputPtr++];
+            if (ch == _separatorChar) { // common case, separator between columns
+                break;
+            }
+            if (ch <= INT_SPACE) { // extra space, fine as well
+                if (ch == INT_CR || ch == INT_LF) { // but end-of-line can't be yet skipped
+                    _pendingLF = ch;
+                    break;
+                }
+                continue;
+            }
+            _owner._reportUnexpectedCsvChar(ch, "Expected separator ("+_getCharDesc(_quoteChar)+") or end-of-line");
+        }
         return result;
     }
     
-    protected void _handleLF() throws IOException, JsonParseException
+    protected final void _handleLF() throws IOException, JsonParseException
     {
-        ++_inputPtr; // we already know that char, stored as _pendingLF, skip
+        // already skipped past first part of potentiall two-char linefeed:
         if (_pendingLF == INT_CR) {
             if (_inputPtr < _inputEnd || loadMore()) {
                 if (_inputBuffer[_inputPtr] == '\n') {

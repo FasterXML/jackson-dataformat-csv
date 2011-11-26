@@ -48,20 +48,32 @@ public class CsvMapper extends ObjectMapper
      */
     
     public CsvMapper configure(CsvGenerator.Feature f, boolean state) {
-        ((CsvFactory)_jsonFactory).configure(f, state);
-        return this;
+        return state ? enable(f) : disable(f);
     }
 
     public CsvMapper configure(CsvParser.Feature f, boolean state) {
-        ((CsvFactory)_jsonFactory).configure(f, state);
+        return state ? enable(f) : disable(f);
+    }
+
+    public CsvMapper enable(CsvGenerator.Feature f) {
+        ((CsvFactory)_jsonFactory).enable(f);
         return this;
     }
 
-    /*
-    /**********************************************************************
-    /* ObjectReader/ObjectWriter factories
-    /**********************************************************************
-     */
+    public CsvMapper enable(CsvParser.Feature f) {
+        ((CsvFactory)_jsonFactory).enable(f);
+        return this;
+    }
+
+    public CsvMapper disable(CsvGenerator.Feature f) {
+        ((CsvFactory)_jsonFactory).disable(f);
+        return this;
+    }
+
+    public CsvMapper disable(CsvParser.Feature f) {
+        ((CsvFactory)_jsonFactory).disable(f);
+        return this;
+    }
     
     /*
     /**********************************************************************
