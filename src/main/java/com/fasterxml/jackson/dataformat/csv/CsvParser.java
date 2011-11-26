@@ -446,6 +446,7 @@ public class CsvParser
     protected JsonToken _handleNamedValue() throws IOException, JsonParseException
     {
         _state = STATE_NEXT_ENTRY;
+        ++_columnIndex;
         return JsonToken.VALUE_STRING;
     }
 
@@ -464,6 +465,7 @@ public class CsvParser
         }
         // state remains the same
         _currentValue = next;
+        ++_columnIndex;
         return JsonToken.VALUE_STRING;
     }
     

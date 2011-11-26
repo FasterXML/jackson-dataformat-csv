@@ -31,7 +31,8 @@ public class TestParser extends ModuleTestBase
     {
         CsvMapper mapper = mapperForCsv();
         CsvSchema schema = mapper.schemaFor(FiveMinuteUser.class);
-        FiveMinuteUser user = mapper.reader(schema).withType(FiveMinuteUser.class).readValue("Joe,Josephson,MALE,AwE=,true\n");
+        // NOTE: order different from above test (as per POJO def!)
+        FiveMinuteUser user = mapper.reader(schema).withType(FiveMinuteUser.class).readValue("Joe,Josephson,MALE,true,AwE=\n");
         assertEquals("Joe", user.firstName);
         assertEquals("Josephson", user.lastName);
         assertEquals(Gender.MALE, user.getGender());
