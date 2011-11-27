@@ -661,15 +661,22 @@ public class CsvReader
                         _pendingLF = c;
                         return _textBuffer.finishAndReturn(outPtr, false);
                     }
+                    if (c == _escapeChar) {
+                        _inputPtr = ptr;
+                        c = _unescape();
+                        outBuf[outPtr++] = c;
+                        // May have passed input boundary, need to re-set
+                        continue main_loop;
+                    }
                 }
-                outBuf[outPtr++] = (char) c;
+                outBuf[outPtr++] = c;
                 if (ptr >= max) {
                     _inputPtr = ptr;
                     continue main_loop;
                 }
                 continue inner_loop;
             }
-            // We get here if we hit a quote, check if it's doubled up, or end of value:
+            // We get here if we hit a quote: check if it's doubled up, or end of value:
             if (_inputPtr < _inputEnd || loadMore()) { 
                 if (_inputBuffer[_inputPtr] == _quoteChar) { // doubled up, append
                     // note: should have enough room, is safe
@@ -717,6 +724,29 @@ public class CsvReader
         _currInputRowStart = _inputPtr;
     }
 
+    protected char _unescape() throws IOException, JsonParseException
+    {
+        if (_inputPtr >= _inputEnd) {
+            if (!loadMore()) {
+                _reportError("Unexpected EOF in escaped character");
+            }
+        }
+        // Some characters are more special than others, so:
+        char c = _inputBuffer[_inputPtr++];
+        switch (c) {
+        case '0':
+            return '\0';
+        case 'n':
+            return '\n';
+        case 'r':
+            return '\r';
+        case 't':
+            return '\t';
+        }
+        // others, return as is...
+        return c;
+    }
+    
     protected int _nextChar() throws IOException, JsonParseException
     {
         if (_inputPtr >= _inputEnd) {

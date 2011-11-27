@@ -74,12 +74,16 @@ public abstract class ModuleTestBase extends junit.framework.TestCase
     {
         return new CsvMapper();
     }
-
+    
     /*
     /**********************************************************
     /* Helper methods; low-level
     /**********************************************************
      */
+
+    public String quote(String str) {
+        return '"'+str+'"';
+    }
 
     protected void assertToken(JsonToken expToken, JsonToken actToken)
     {

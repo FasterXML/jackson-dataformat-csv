@@ -301,7 +301,6 @@ public class CsvSchema
             columns = NO_COLUMNS;
         }
         _columns = columns;
- 
         _useHeader = useHeader;
         _columnSeparator = columnSeparator;
         _quoteChar = quoteChar;
@@ -319,6 +318,24 @@ public class CsvSchema
         }
     }
 
+    /**
+     * Copy constructor used for creating variants using
+     * <code>withXxx()</code> methods.
+     */
+    protected CsvSchema(Column[] columns,
+            boolean useHeader, char columnSeparator, char quoteChar, int escapeChar,
+            char[] lineSeparator,
+            Map<String,Column> columnsByName)
+    {
+        _columns = columns;
+        _useHeader = useHeader;
+        _columnSeparator = columnSeparator;
+        _quoteChar = quoteChar;
+        _escapeChar = escapeChar;
+        _lineSeparator = lineSeparator;
+        _columnsByName = columnsByName;
+    }    
+    
     public static Builder builder() {
         return new Builder();
     }
@@ -327,10 +344,40 @@ public class CsvSchema
      * Helper method for constructing Builder that can be used to create modified
      * schema.
      */
-    public Builder copy() {
+    public Builder modify() {
         return new Builder(this);
     }
 
+    public CsvSchema withUseHeader(boolean state) {
+        return new CsvSchema(_columns, state, _columnSeparator, _quoteChar,
+                _escapeChar, _lineSeparator, _columnsByName);
+    }
+
+    public CsvSchema withColumnSeparator(char sep) {
+        return new CsvSchema(_columns, _useHeader, sep, _quoteChar,
+                _escapeChar, _lineSeparator, _columnsByName);
+    }
+
+    public CsvSchema withQuoteChar(char c) {
+        return new CsvSchema(_columns, _useHeader, _columnSeparator, c,
+                _escapeChar, _lineSeparator, _columnsByName);
+    }
+    
+    public CsvSchema withEscapeChar(char c) {
+        return new CsvSchema(_columns, _useHeader, _columnSeparator, _quoteChar,
+                c, _lineSeparator, _columnsByName);
+    }
+
+    public CsvSchema withoutEscapeChar() {
+        return new CsvSchema(_columns, _useHeader, _columnSeparator, _quoteChar,
+                -1, _lineSeparator, _columnsByName);
+    }
+
+    public CsvSchema withLineSeparator(String sep) {
+        return new CsvSchema(_columns, _useHeader, _columnSeparator, _quoteChar,
+                _escapeChar, sep.toCharArray(), _columnsByName);
+    }
+    
     public static CsvSchema emptySchema() {
         return builder().build();
     }

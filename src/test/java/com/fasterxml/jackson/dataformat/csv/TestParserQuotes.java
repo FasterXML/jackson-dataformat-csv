@@ -37,7 +37,7 @@ public class TestParserQuotes extends ModuleTestBase
         mapper.disable(CsvParser.Feature.WRAP_AS_ARRAY);
         CsvSchema schema = mapper.schemaFor(AgeName.class);
         MappingIterator<AgeName> it = mapper.reader(schema).withType(AgeName.class).readValues(
-                "-3,\"\"\"Unknown\"\"\"\n13  ,\"Joe \"\"Sixpack\"\" Paxson\"");
+                "-3,\"\"\"Unknown\"\"\"\n\"13\"  ,\"Joe \"\"Sixpack\"\" Paxson\"");
         assertTrue(it.hasNext());
         AgeName user = it.nextValue();
         assertEquals(-3, user.age);
