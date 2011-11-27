@@ -183,12 +183,12 @@ public class CsvSchema
             _columns.set(index, _columns.get(index).withType(type));
         }
 
-        public Builder removeColumns() {
+        public Builder clearColumns() {
             _columns.clear();
             return this;
         }
 
-        public int getColumnCount() {
+        public int size() {
             return _columns.size();
         }
 
@@ -339,12 +339,34 @@ public class CsvSchema
     public static Builder builder() {
         return new Builder();
     }
+
+    /**
+     * Accessor for creating a "default" CSV schema instance, with following
+     * settings:
+     *<ul>
+     * <li>Does NOT use header line
+     *  </li>
+     * <li>Uses double quotes ('"') for quoting of field values (if necessary)
+     *  </li>
+     * <li>Uses comma (',') as the field separator
+     *  </li>
+     * <li>Uses Unix linefeed ('\n') as row separator
+     *  </li>
+     * <li>Does NOT use any escape characters
+     *  </li>
+     * <li>Does NOT have any columns defined
+     *  </li>
+     * </ul>
+     */
+    public static CsvSchema emptySchema() {
+        return builder().build();
+    }
     
     /**
      * Helper method for constructing Builder that can be used to create modified
      * schema.
      */
-    public Builder modify() {
+    public Builder rebuild() {
         return new Builder(this);
     }
 
@@ -398,9 +420,10 @@ public class CsvSchema
         return new CsvSchema(_columns, _useHeader, _columnSeparator, _quoteChar,
                 _escapeChar, sep.toCharArray(), _columnsByName);
     }
-    
-    public static CsvSchema emptySchema() {
-        return builder().build();
+
+    public CsvSchema withoutColumns() {
+        return new CsvSchema(NO_COLUMNS, _useHeader, _columnSeparator, _quoteChar,
+                _escapeChar, _lineSeparator, _columnsByName);
     }
     
     /*
@@ -480,8 +503,10 @@ public class CsvSchema
         StringBuilder sb = new StringBuilder(150);
         sb.append("[CsvSchema: ")
             .append("columns=");
+        boolean first = true;
         for (Column col : _columns) {
-            if (sb.length() == 0) {
+            if (first) {
+                first = false;
                 sb.append('[');
             } else {
                 sb.append(',');

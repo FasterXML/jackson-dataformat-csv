@@ -58,6 +58,11 @@ public class CsvGenerator extends JsonGeneratorBase
     /**********************************************************
      */
 
+    private final static CsvSchema EMPTY_SCHEMA;
+    static {
+        EMPTY_SCHEMA = CsvSchema.emptySchema();
+    }
+    
     final protected IOContext _ioContext;
 
     /**
@@ -70,7 +75,7 @@ public class CsvGenerator extends JsonGeneratorBase
     /**
      * Definition of columns being written, if available.
      */
-    protected CsvSchema _schema;
+    protected CsvSchema _schema = EMPTY_SCHEMA;
 
     protected final CsvWriter _writer;
     

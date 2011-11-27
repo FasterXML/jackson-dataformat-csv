@@ -362,6 +362,12 @@ public class CsvParser
      */
 
     @Override
+    public String getCurrentName() throws IOException, JsonParseException
+    {
+        return _currentName;
+    }
+    
+    @Override
     public JsonToken nextToken() throws IOException, JsonParseException
     {
         _binaryValue = null;
@@ -390,12 +396,23 @@ public class CsvParser
         }
     }
 
+    /*
+    /**********************************************************
+    /* Parsing, helper methods
+    /**********************************************************
+     */
+    
     /**
      * Method called to handle details of initializing things to return
      * the very first token.
      */
     protected JsonToken _handleStartDoc() throws IOException, JsonParseException
     {
+        // First things first: are we expecting header line? If so, read, process
+        if (_schema.useHeader()) {
+            _readHeaderLine();
+        }
+        
         /* Only one real complication, actually; empy documents (zero bytes).
          * Those have no entries. Should be easy enough to detect like so:
          */
@@ -478,11 +495,49 @@ public class CsvParser
         ++_columnIndex;
         return JsonToken.VALUE_STRING;
     }
-    
-    @Override
-    public String getCurrentName() throws IOException, JsonParseException
+
+    /**
+     * Method called to process the expected header line
+     */
+    protected void _readHeaderLine() throws IOException, JsonParseException
     {
-        return _currentName;
+        /* Two separate cases:
+         * 
+         * (a) We already have a Schema with columns; if so, header will be skipped
+         * (b) Otherwise, need to find column definitions; empty one is not acceptable
+         */
+
+        if (_schema.size() > 0) { // case (a); skip all/any
+            while (_reader.nextString() != null) {
+                ;
+            }
+            return;
+        }
+        // case (b); read all
+        String name;
+        // base setting on existing schema, but drop columns
+        CsvSchema.Builder builder = _schema.rebuild().clearColumns();
+        
+        while ((name = _reader.nextString()) != null) {
+            // See if "old" schema defined type; if so, use that type...
+            CsvSchema.Column prev = _schema.column(name);
+            if (prev != null) {
+                builder.addColumn(name, prev.getType());
+            } else {
+                builder.addColumn(name);
+            }
+        }
+        // Ok: did we get any  columns?
+        CsvSchema newSchema = builder.build();
+        int size = newSchema.size();
+        if (size < 2) { // 1 just because we may get 'empty' header name
+            String first = (size == 0) ? "" : newSchema.column(0).getName().trim();
+            if (first.length() == 0) {
+                _reportError("Empty header line: can not bind data");
+            }
+        }
+        // otherwise we will use what we got
+        setSchema(builder.build());
     }
     
     /*

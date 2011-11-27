@@ -9,7 +9,6 @@ import org.codehaus.jackson.format.InputAccessor;
 import org.codehaus.jackson.format.MatchStrength;
 import org.codehaus.jackson.io.IOContext;
 
-import com.fasterxml.jackson.dataformat.csv.impl.CsvParserBootstrapper;
 import com.fasterxml.jackson.dataformat.csv.impl.UTF8Writer;
 
 public class CsvFactory extends JsonFactory
