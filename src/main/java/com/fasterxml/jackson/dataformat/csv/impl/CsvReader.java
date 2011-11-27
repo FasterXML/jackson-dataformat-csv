@@ -540,6 +540,10 @@ public class CsvReader
                     _inputPtr = ptr;
                     return _textBuffer.finishAndReturn(outPtr, _trimSpaces);
                 }
+                if (c == _escapeChar) {
+                    --ptr;
+                    break;
+                }
             }
             outBuf[outPtr++] = (char) c;
         }
@@ -617,8 +621,13 @@ public class CsvReader
                         _pendingLF = c;
                         break main_loop;
                     }
+                    if (c == _escapeChar) {
+                        _inputPtr = ptr;
+                        outBuf[outPtr++] = _unescape();
+                        // May have passed input boundary, need to re-set
+                        continue main_loop;
+                    }
                 }
-                ++ptr;
                 outBuf[outPtr++] = (char) c;
             }
             _inputPtr = ptr;
