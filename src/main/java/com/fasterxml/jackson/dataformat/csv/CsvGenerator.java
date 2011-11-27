@@ -81,6 +81,13 @@ public class CsvGenerator extends JsonGeneratorBase
      */
 
     /**
+     * Flag that indicates that we need to write header line, if
+     * one is needed. Used because schema may be specified after
+     * instance is constructed.
+     */
+    protected boolean _handleFirstLine = true;
+    
+    /**
      * Index of column that we will be getting next, based on
      * field name call that was made.
      */
@@ -531,6 +538,9 @@ public class CsvGenerator extends JsonGeneratorBase
         if (status == JsonWriteContext.STATUS_EXPECT_NAME) {
             _reportError("Can not "+typeMsg+", expecting field name");
         }
+        if (_handleFirstLine) {
+            _handleFirstLine();
+        }
     }
 
     @Override
@@ -559,9 +569,24 @@ public class CsvGenerator extends JsonGeneratorBase
      * will flush possibly buffered column values, append linefeed
      * and reset state appropriately.
      */
-    protected void finishRow()  throws IOException, JsonGenerationException
+    protected void finishRow() throws IOException, JsonGenerationException
     {
         _writer.endRow();
         _nextColumnByName = -1;
+    }
+
+    protected void _handleFirstLine() throws IOException, JsonGenerationException
+    {
+        _handleFirstLine = false;
+        if (_schema.useHeader()) {
+            int count = _schema.size();
+            if (count == 0) { 
+                _reportError("Schema specified that header line is to be written; but contains no column names");
+            }
+            for (CsvSchema.Column column : _schema) {
+                _writer.writeColumnName(column.getName());
+            }
+            _writer.endRow();
+        }
     }
 }

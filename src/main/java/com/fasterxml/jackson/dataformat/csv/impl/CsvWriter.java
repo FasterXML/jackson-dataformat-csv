@@ -222,6 +222,12 @@ public final class CsvWriter
         _buffer(columnIndex, BufferedValue.buffered(value));
     }
     
+    public void writeColumnName(String name) throws IOException
+    {
+        appendValue(name);
+        ++_nextColumnToWrite;
+    }
+
     public void endRow() throws IOException
     {
         // First things first; any buffered?
