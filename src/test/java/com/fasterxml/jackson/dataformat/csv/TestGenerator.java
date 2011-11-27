@@ -30,6 +30,23 @@ public class TestGenerator extends ModuleTestBase
         _testSimpleWithAutoSchema(true);
     }
 
+    public void testWriteHeaders() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        CsvSchema schema = mapper.schemaFor(FiveMinuteUser.class).withHeader();
+        FiveMinuteUser user = new FiveMinuteUser("Barbie", "Benton", false, Gender.FEMALE, null);
+        String result = mapper.writer(schema).writeValueAsString(user);        
+        assertEquals("firstName,lastName,gender,verified,userImage\n"
+                +"Barbie,Benton,FEMALE,false,\n", result);
+        
+    }
+    
+    /*
+    /**********************************************************************
+    /* Secondary test methods
+    /**********************************************************************
+     */
+    
     private void _testSimpleWithAutoSchema(boolean wrapAsArray) throws Exception
     {
         CsvMapper mapper = mapperForCsv();

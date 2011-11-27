@@ -349,27 +349,48 @@ public class CsvSchema
     }
 
     public CsvSchema withUseHeader(boolean state) {
-        return new CsvSchema(_columns, state, _columnSeparator, _quoteChar,
+        return (_useHeader == state) ? this
+                : new CsvSchema(_columns, true, _columnSeparator, _quoteChar,
                 _escapeChar, _lineSeparator, _columnsByName);
     }
 
+    /**
+     * Helper method for construcing and returning schema instance that
+     * is similar to this one, except that it will be using header line.
+     */
+    public CsvSchema withHeader() {
+        return withUseHeader(true);
+    }
+
+    /**
+     * Helper method for construcing and returning schema instance that
+     * is similar to this one, except that it will not be using header line.
+     */
+    public CsvSchema withoutHeader() {
+        return withUseHeader(false);
+    }
+    
     public CsvSchema withColumnSeparator(char sep) {
-        return new CsvSchema(_columns, _useHeader, sep, _quoteChar,
+        return (_columnSeparator == sep) ? this :
+            new CsvSchema(_columns, _useHeader, sep, _quoteChar,
                 _escapeChar, _lineSeparator, _columnsByName);
     }
 
     public CsvSchema withQuoteChar(char c) {
-        return new CsvSchema(_columns, _useHeader, _columnSeparator, c,
+        return (_quoteChar == c) ? this :
+            new CsvSchema(_columns, _useHeader, _columnSeparator, c,
                 _escapeChar, _lineSeparator, _columnsByName);
     }
     
     public CsvSchema withEscapeChar(char c) {
-        return new CsvSchema(_columns, _useHeader, _columnSeparator, _quoteChar,
+        return (_escapeChar == c) ? this
+                : new CsvSchema(_columns, _useHeader, _columnSeparator, _quoteChar,
                 c, _lineSeparator, _columnsByName);
     }
 
     public CsvSchema withoutEscapeChar() {
-        return new CsvSchema(_columns, _useHeader, _columnSeparator, _quoteChar,
+        return (_escapeChar == -1) ? this
+                : new CsvSchema(_columns, _useHeader, _columnSeparator, _quoteChar,
                 -1, _lineSeparator, _columnsByName);
     }
 
