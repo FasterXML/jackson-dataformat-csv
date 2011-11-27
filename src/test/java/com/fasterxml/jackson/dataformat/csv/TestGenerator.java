@@ -1,6 +1,5 @@
 package com.fasterxml.jackson.dataformat.csv;
 
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import com.fasterxml.jackson.dataformat.csv.ModuleTestBase.FiveMinuteUser.Gender;
@@ -27,11 +26,23 @@ public class TestGenerator extends ModuleTestBase
 
     public void testSimpleWithAutoSchema() throws Exception
     {
+        _testSimpleWithAutoSchema(false);
+        _testSimpleWithAutoSchema(true);
+    }
+
+    private void _testSimpleWithAutoSchema(boolean wrapAsArray) throws Exception
+    {
         CsvMapper mapper = mapperForCsv();
         CsvSchema schema = mapper.schemaFor(FiveMinuteUser.class);
         FiveMinuteUser user = new FiveMinuteUser("Veltto", "Virtanen", true, Gender.MALE,
                 new byte[] { 3, 1 });
-        String result = mapper.writer(schema).writeValueAsString(user);        
+        String result;
+        // having virtual root-level array should make no difference:
+        if (wrapAsArray) {
+            result = mapper.writer(schema).writeValueAsString(new FiveMinuteUser[] { user });        
+        } else {
+            result = mapper.writer(schema).writeValueAsString(user);        
+        }
         assertEquals("Veltto,Virtanen,MALE,true,AwE=\n", result);
     }
 }

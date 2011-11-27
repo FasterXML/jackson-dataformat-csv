@@ -11,7 +11,7 @@ public abstract class ModuleTestBase extends junit.framework.TestCase
     /**
      * Slightly modified sample class from Jackson tutorial ("JacksonInFiveMinutes")
      */
-    @JsonPropertyOrder({"firstName, lastName,gender,verified,userImage"})
+    @JsonPropertyOrder({"firstName", "lastName", "gender" ,"verified", "userImage"})
     protected static class FiveMinuteUser {
         public enum Gender { MALE, FEMALE };
 
