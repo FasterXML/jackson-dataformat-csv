@@ -418,6 +418,7 @@ public class CsvParser
          */
         if (!_reader.hasMoreInput()) {
             _state = STATE_DOC_END;
+            // but even empty sequence must still be wrapped in logical array
             if (isEnabled(Feature.WRAP_AS_ARRAY)) {
                 _parsingContext = _reader.childArrayContext(_parsingContext);
                 return JsonToken.START_ARRAY;
@@ -426,6 +427,7 @@ public class CsvParser
         }
         
         if (isEnabled(Feature.WRAP_AS_ARRAY)) {
+            _parsingContext = _reader.childArrayContext(_parsingContext);
             _state = STATE_RECORD_START;
             return JsonToken.START_ARRAY;
         }
@@ -453,7 +455,8 @@ public class CsvParser
         String next = _reader.nextString();
         if (next == null) { // end of record or input...
             _parsingContext = _parsingContext.getParent();
-            if (_reader.reachedEOF()) { // end of whole thing...
+            // let's handle EOF or linefeed
+            if (!_reader.startNewLine()) {
                 _state = STATE_DOC_END;
             } else {
                 // no, just end of record
@@ -482,7 +485,7 @@ public class CsvParser
         String next = _reader.nextString();
         if (next == null) { // end of record or input...
             _parsingContext = _parsingContext.getParent();
-            if (_reader.reachedEOF()) { // end of whole thing...
+            if (!_reader.startNewLine()) { // end of whole thing...
                 _state = STATE_DOC_END;
             } else {
                 // no, just end of record

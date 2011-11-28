@@ -77,7 +77,7 @@ public class CsvMapper extends ObjectMapper
     
     /*
     /**********************************************************************
-    /* CsvSchema construction
+    /* CsvSchema construction; overrides, new methods
     /**********************************************************************
      */
 
@@ -103,8 +103,9 @@ public class CsvMapper extends ObjectMapper
     /**
      * Method that can be used to determine a CSV schema to use for given
      * POJO type, using default serialization settings including ordering.
-     * Definition will not be strictly typed (that is, all columns are
-     * just defined to be exposed as String tokens).
+     * Definition WILL be strictly typed: that is, code will try to 
+     * determine type limitations which may make parsing more efficient
+     * (especially for numeric types like java.lang.Integer).
      */
     public CsvSchema typedSchemaFor(JavaType pojoType)
     {
@@ -118,6 +119,86 @@ public class CsvMapper extends ObjectMapper
     public final CsvSchema typedSchemaFor(TypeReference<?> pojoTypeRef) {
         return _schemaFor(constructType(pojoTypeRef.getType()), _typedSchemas, true);
     }
+    
+    @Override
+    public ObjectReader reader(FormatSchema schema)
+    {
+        if ((schema != null) && !(schema instanceof CsvSchema)) {
+            throw new IllegalArgumentException("Schema to set must be of type CsvSchema");
+        }
+        return super.reader(schema);
+    }
+
+    @Override
+    public ObjectWriter writer(FormatSchema schema)
+    {
+        if ((schema != null) && !(schema instanceof CsvSchema)) {
+            throw new IllegalArgumentException("Schema to set must be of type CsvSchema");
+        }
+        return super.writer(schema);
+    }
+
+    /**
+     * Convenience method which is functionally equivalent to:
+     *<pre>
+     *  reader(pojoType).withSchema(schemaFor(pojoType));
+     *</pre>
+     * that is, constructs a {@link ObjectReader} which both binds to
+     * specified type and uses "loose" {@link CsvSchema} introspected from
+     * specified type (one without strict inferred typing).
+     *<p>
+     * @param pojoType Type used both for data-binding (result type) and for
+     *   schema introspection. NOTE: must NOT be an array or Collection type, since
+     *   these only make sense for data-binding (like arrays of objects to bind),
+     *   but not for schema construction (no CSV types can be mapped to arrays
+     *   or Collections)
+     */
+    public ObjectReader readerWithSchemaFor(Class<?> pojoType)
+    {
+        JavaType type = constructType(pojoType);
+        /* sanity check: not useful for structured types, since
+         * schema type will need to differ from data-bind type
+         */
+        if (type.isArrayType() || type.isCollectionLikeType()) {
+            throw new IllegalArgumentException("Type can NOT be a Collection or array type");
+        }
+        return reader(type).withSchema(schemaFor(type));
+    }
+
+    /**
+     * Convenience method which is functionally equivalent to:
+     *<pre>
+     *  reader(pojoType).withSchema(typedSchemaFor(pojoType));
+     *</pre>
+     * that is, constructs a {@link ObjectReader} which both binds to
+     * specified type and uses "strict" {@link CsvSchema} introspected from
+     * specified type (one where typing is inferred).
+     */
+    public ObjectReader readerWithTypedSchemaFor(Class<?> pojoType)
+    {
+        JavaType type = constructType(pojoType);
+        /* sanity check: not useful for structured types, since
+         * schema type will need to differ from data-bind type
+         */
+        if (type.isArrayType() || type.isCollectionLikeType()) {
+            throw new IllegalArgumentException("Type can NOT be a Collection or array type");
+        }
+        return reader(type).withSchema(typedSchemaFor(type));
+    }
+    
+    // deprecated, but need to override
+    @Override
+    public ObjectReader schemaBasedReader(FormatSchema schema) { return reader(schema); }
+
+    // deprecated, but need to override
+    @Override
+    public ObjectWriter schemaBasedWriter(FormatSchema schema) { return writer(schema); }
+
+    /*
+    /**********************************************************************
+    /* Internal methods
+    /**********************************************************************
+     */
 
     protected CsvSchema _schemaFor(JavaType pojoType, LRUMap<JavaType,CsvSchema> schemas, boolean typed)
     {
@@ -145,35 +226,6 @@ public class CsvMapper extends ObjectMapper
         }
         return result;
     }
-    
-    @Override
-    public ObjectReader reader(FormatSchema schema)
-    {
-        if ((schema != null) && !(schema instanceof CsvSchema)) {
-            throw new IllegalArgumentException("Schema to set must be of type CsvSchema");
-        }
-        return super.reader(schema);
-    }
-
-    @Override
-    public ObjectWriter writer(FormatSchema schema)
-    {
-        if ((schema != null) && !(schema instanceof CsvSchema)) {
-            throw new IllegalArgumentException("Schema to set must be of type CsvSchema");
-        }
-        return super.writer(schema);
-    }
-
-    // deprecated:
-    public ObjectReader schemaBasedReader(FormatSchema schema) { return reader(schema); }
-    // deprecated:
-    public ObjectWriter schemaBasedWriter(FormatSchema schema) { return writer(schema); }
-
-    /*
-    /**********************************************************************
-    /* Internal methods
-    /**********************************************************************
-     */
     
     // should not be null since couldSerialize() returned true, so:
     protected CsvSchema.ColumnType _determineType(Class<?> propType)

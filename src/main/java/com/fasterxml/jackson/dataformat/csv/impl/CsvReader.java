@@ -465,8 +465,27 @@ public class CsvReader
         return loadMore();
     }
 
-    public boolean reachedEOF() {
-        return (_inputSource == null);
+    /**
+     * Method called to handle details of starting a new line, which may
+     * include skipping a linefeed.
+     * 
+     * @return True if there is a new data line to handle; false if not
+     */
+    public boolean startNewLine() throws IOException, JsonParseException
+    {
+        // first: if pending LF, skip it
+        if (_pendingLF != 0) {
+            if (_inputSource == null) {
+                return false;
+            }
+            _handleLF();
+        }
+        /* For now, we will only require that there is SOME data
+         * following linefeed -- even spaces will do.
+         * In future we may want to use better heuristics to possibly
+         * skip trailing empty line?
+         */
+        return (_inputPtr < _inputEnd || loadMore());
     }
     
     /**
