@@ -66,11 +66,11 @@ public class TestParserTrimSpaces extends ModuleTestBase
         assertNotNull(entry = it.nextValue());
         assertEquals("1", entry.a);
         assertEquals("2", entry.b);
-        assertEquals("3", entry.c);
+        assertEquals(" 3", entry.c); // note: space within quotes is preserved
 
         assertTrue(it.hasNext());
         assertNotNull(entry = it.nextValue());
-        assertEquals("ab", entry.a);
+        assertEquals("ab\t", entry.a);
         assertEquals("c", entry.b);
         assertEquals("", entry.c);
         

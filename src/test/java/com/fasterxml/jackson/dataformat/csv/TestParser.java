@@ -11,7 +11,6 @@ import com.fasterxml.jackson.dataformat.csv.ModuleTestBase.FiveMinuteUser.Gender
 
 public class TestParser extends ModuleTestBase
 {
-    /*
     public void testSimpleExplicit() throws Exception
     {
         ObjectMapper mapper = mapperForCsv();
@@ -43,7 +42,6 @@ public class TestParser extends ModuleTestBase
         assertTrue(user.isVerified());
         assertArrayEquals(new byte[] { 3, 1 }, user.getUserImage());
     }
-    */
 
     /**
      * Test to verify that we can mix "untyped" access as Maps

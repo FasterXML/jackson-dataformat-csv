@@ -33,6 +33,10 @@ public class CsvParser
          * Feature determines whether spaces around separator characters
          * (commas) are to be automatically trimmed before being reported
          * or not.
+         * Note that this does NOT force trimming of possible white space from
+         * within double-quoted values, but only those surrounding unquoted
+         * values (white space outside of double-quotes is never included regardless
+         * of trimming).
          *<p>
          * Default value is false, as per <a href="http://tools.ietf.org/html/rfc4180">RFC-4180</a>.
          */

@@ -1,7 +1,7 @@
 package com.fasterxml.jackson.dataformat.csv.impl;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.util.LinkedList;
 
 import org.codehaus.jackson.util.BufferRecycler;
 
@@ -57,7 +57,7 @@ public final class TextBuffer
     /**
      * List of segments prior to currently active segment.
      */
-    private ArrayList<char[]> _segments;
+    private LinkedList<char[]> _segments;
 
     /**
      * Flag that indicates whether _seqments is non-empty
@@ -281,8 +281,7 @@ public final class TextBuffer
                         StringBuilder sb = new StringBuilder(segLen + currLen);
                         // First stored segments
                         if (_segments != null) {
-                            for (int i = 0, len = _segments.size(); i < len; ++i) {
-                                char[] curr = _segments.get(i);
+                            for (char[] curr : _segments) {
                                 sb.append(curr, 0, curr.length);
                             }
                         }
@@ -411,13 +410,40 @@ public final class TextBuffer
      */
     public String finishAndReturn(int lastSegmentEnd, boolean trimTrailingSpaces)
     {
-        _currentSize = lastSegmentEnd;
         if (trimTrailingSpaces) {
-            // !!! TODO
+            // First, see if it's enough to trim end of current segment:
+            int ptr = lastSegmentEnd-1;
+            if (_currentSegment[ptr] <= 0x0020) {
+                return _doTrim(ptr);
+            }
         }
+        _currentSize = lastSegmentEnd;
         return contentsAsString();
     }
 
+    private String _doTrim(int ptr)
+    {
+        while (true) {
+            final char[] curr = _currentSegment;
+            while (--ptr >= 0) {
+                if (curr[ptr] > 0x0020) { // found the ending non-space char, all done:
+                    _currentSize = ptr+1;
+                    return contentsAsString();
+                }
+            }
+            // nope: need to handle previous segment; if there is one:
+            if (_segments == null || _segments.isEmpty()) {
+                break;
+            }
+            _currentSegment = _segments.removeLast();
+            ptr = _currentSegment.length;
+        }
+        // we get here if everything was trimmed, so:
+        _currentSize = 0;
+        _hasSegments = false;
+        return contentsAsString();
+    }
+    
     /*
     public void finish(int lastSegmentEnd, boolean trimTrailingSpaces)
     {
@@ -431,7 +457,7 @@ public final class TextBuffer
     public char[] finishCurrentSegment()
     {
         if (_segments == null) {
-            _segments = new ArrayList<char[]>();
+            _segments = new LinkedList<char[]>();
         }
         _hasSegments = true;
         _segments.add(_currentSegment);
@@ -496,7 +522,7 @@ public final class TextBuffer
     {
         // First, let's move current segment to segment list:
         if (_segments == null) {
-            _segments = new ArrayList<char[]>();
+            _segments = new LinkedList<char[]>();
         }
         char[] curr = _currentSegment;
         _hasSegments = true;
@@ -536,8 +562,7 @@ public final class TextBuffer
             int offset = 0;
             result = _charArray(size);
             if (_segments != null) {
-                for (int i = 0, len = _segments.size(); i < len; ++i) {
-                    char[] curr = (char[]) _segments.get(i);
+                for (char[] curr : _segments) {
                     int currLen = curr.length;
                     System.arraycopy(curr, 0, result, offset, currLen);
                     offset += currLen;
