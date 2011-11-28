@@ -2,10 +2,7 @@ package com.fasterxml.jackson.dataformat.csv;
 
 import java.util.List;
 
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
 import org.codehaus.jackson.map.MappingIterator;
-
-import com.fasterxml.jackson.dataformat.csv.TestParserSequences.Entry;
 
 /**
  * Test to verify that CSV content can be parsed without schema
