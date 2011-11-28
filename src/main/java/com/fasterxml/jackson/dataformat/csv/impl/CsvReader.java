@@ -370,9 +370,16 @@ public class CsvReader
 
     public JsonLocation getCurrentLocation()
     {
-        int col = _inputPtr - _currInputRowStart + 1; // 1-based
+        int ptr = _inputPtr;
+        /* One twist: when dealing with a "pending LF", need to
+         * go back one position when calculating location
+         */
+        if (_pendingLF > 1) { // 1 is used as marker for end-of-input
+            --ptr;
+        }
+        int col = ptr - _currInputRowStart + 1; // 1-based
         return new JsonLocation(_inputSource,
-                _currInputProcessed + _inputPtr - 1, _currInputRow, col);
+                _currInputProcessed + ptr - 1, _currInputRow, col);
     }
     
     /*
@@ -502,8 +509,8 @@ public class CsvReader
 
         if (_pendingLF > 0) { // either pendingLF, or closed
             if (_inputSource != null) { // if closed, we just need to return null
-                _pendingLF = 0;
                 _handleLF();
+                _pendingLF = 0;
             }
             return null;
         }
@@ -519,7 +526,6 @@ public class CsvReader
         }
         if (i == INT_CR || i == INT_LF) { // end-of-line means end of record; but also need to handle LF later on
             _pendingLF = i;
-            --_inputPtr; // push back to keep column number correct
             return "";
         }
         // two modes: quoted, unquoted
@@ -613,7 +619,7 @@ public class CsvReader
     {
         int c;
         final char[] inputBuffer = _inputBuffer;
-
+        
         main_loop:
         while (true) {
             int ptr = _inputPtr;
