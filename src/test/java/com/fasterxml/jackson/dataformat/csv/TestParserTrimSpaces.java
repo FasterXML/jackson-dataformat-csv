@@ -1,0 +1,79 @@
+package com.fasterxml.jackson.dataformat.csv;
+
+import org.codehaus.jackson.annotate.JsonPropertyOrder;
+import org.codehaus.jackson.map.MappingIterator;
+
+public class TestParserTrimSpaces extends ModuleTestBase
+{
+    /*
+    /**********************************************************************
+    /* Helper types
+    /**********************************************************************
+     */
+
+    @JsonPropertyOrder({"a", "b", "c"})
+    protected static class Entry {
+        public String a, b, c;
+    }
+
+    /*
+    /**********************************************************************
+    /* Test methods
+    /**********************************************************************
+     */
+
+    // Test to verify default behavior of not trimming spaces
+    public void testNonTrimming() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        mapper.disable(CsvParser.Feature.TRIM_SPACES);
+        MappingIterator<Entry> it = mapper.readerWithSchemaFor(Entry.class).readValues(
+                "a,  b,  c  \n 1,2,\"3 \"\n"
+                );
+        Entry entry;
+        
+        assertTrue(it.hasNext());
+        assertNotNull(entry = it.nextValue());
+        assertEquals("a", entry.a);
+        assertEquals("  b", entry.b);
+        assertEquals("  c  ", entry.c);
+
+        assertTrue(it.hasNext());
+        assertNotNull(entry = it.nextValue());
+        assertEquals(" 1", entry.a);
+        assertEquals("2", entry.b);
+        assertEquals("3 ", entry.c);
+
+        assertFalse(it.hasNext());
+    }
+
+    public void testTrimming() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        mapper.enable(CsvParser.Feature.TRIM_SPACES);
+        MappingIterator<Entry> it = mapper.readerWithSchemaFor(Entry.class).readValues(
+                "a,  b,  c\t\n 1,2,\" 3\" \n\"ab\t\" ,\"c\",  \n"
+                );
+        Entry entry;
+        
+        assertTrue(it.hasNext());
+        assertNotNull(entry = it.nextValue());
+        assertEquals("a", entry.a);
+        assertEquals("b", entry.b);
+        assertEquals("c", entry.c);
+
+        assertTrue(it.hasNext());
+        assertNotNull(entry = it.nextValue());
+        assertEquals("1", entry.a);
+        assertEquals("2", entry.b);
+        assertEquals("3", entry.c);
+
+        assertTrue(it.hasNext());
+        assertNotNull(entry = it.nextValue());
+        assertEquals("ab", entry.a);
+        assertEquals("c", entry.b);
+        assertEquals("", entry.c);
+        
+        assertFalse(it.hasNext());
+    }
+}
