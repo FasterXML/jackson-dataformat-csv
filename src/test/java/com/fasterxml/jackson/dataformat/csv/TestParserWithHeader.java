@@ -1,5 +1,7 @@
 package com.fasterxml.jackson.dataformat.csv;
 
+import org.codehaus.jackson.JsonToken;
+
 public class TestParserWithHeader extends ModuleTestBase
 {
     /*
@@ -20,6 +22,22 @@ public class TestParserWithHeader extends ModuleTestBase
     /**********************************************************************
      */
 
+    public void testSimpleHeader() throws Exception
+    {
+        CsvParser parser = (CsvParser) new CsvFactory().createJsonParser(
+                "name, age,  other\nfoo,2,xyz\n");
+        // need to enable first-line-as-schema handling:
+        parser.setSchema(CsvSchema.emptySchema().withHeader());
+        assertToken(JsonToken.START_OBJECT, parser.nextToken());
+        CsvSchema schema = (CsvSchema) parser.getSchema();
+        assertEquals(3, schema.size());
+
+        // verify that names from first line are trimmed:
+        assertEquals("name", schema.column(0).getName());
+        assertEquals("age", schema.column(1).getName());
+        assertEquals("other", schema.column(2).getName());
+    }
+    
     public void testSimpleQuotes() throws Exception
     {
         CsvMapper mapper = mapperForCsv();
