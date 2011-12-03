@@ -5,14 +5,61 @@ import java.util.*;
 import org.codehaus.jackson.FormatSchema;
 
 /**
- * Simple {@link FormatSchema} sub-type which supports simple
- * (non-nested) tabular data format, where data consists of rows
- * of homogenous data, where typing is positional.
- * This schema can be used as basetype for many simple tabular
- * data format; for example CSV schema can be based on this.
- * Names for columns are optional; and while types are not optional
- * it is possible to use basic {@link java.lang.Object} as placeholder
- * if more specific typ is not available.
+ * Simple {@link FormatSchema} sub-type that defines properties of
+ * a CSV document to read or write.
+ * Properties supported currently are:
+ *<ul>
+ * <li>columns (List of ColumnDef) [default: empty List]: Ordered list of columns (which may be empty, see below).
+ *   Each column has name (mandatory)  as well as type (optional; if not
+ *   defined, defaults to "String").
+ *   Note that
+ *  </li>
+ * <li>useHeader (boolean) [default: false]: whether the first line of physical document defines
+ *    column names (true) or not (false): if enabled, parser will take
+ *    first-line values to define column names; and generator will output
+ *    column names as the first line
+ *  </li>
+ * <li>quoteChar (char) [default: double-quote ('")]: character used for quoting values
+ *   that contain quote characters or linefeeds.
+ *  </li>
+ * <li>columnSeparator (char) [default: comma (',')]: character used to separate values.
+ *     Other commonly used values include tab ('\t') and pipe ('|')
+ *  </li>
+ * <li>lineSeparator (String) [default: "\n"]: character used to separate data rows.
+ *    Only used by generator; parser accepts three standard linefeeds ("\r", "\r\n", "\n").
+ *  </li>
+ * <li>escapeChar (int) [default: -1 meaning "none"]: character, if any, used to
+ *   escape values. Most commonly defined as backslash ('\'). Only used by parser;
+ *   generator only uses quoting, including doubling up of quotes to indicate quote char
+ *   itself.
+ *  </li>
+ * <li>skipFirstDataRow (boolean) [default: false]: whether the first data line (either
+ *    first line of the document, if useHeader=false, or second, if useHeader=true)
+ *    should be completely ignored by parser. Needed to support CSV-like file formats
+ *    that include additional non-data content before real data begins (specifically
+ *    some database dumps do this)
+ *  </li>
+ * </ul>
+ *<p>
+ * Note that schemas without any columns are legal, but if no columns
+ * are added, behavior of parser/generator is usually different and
+ * content will be exposed as logical Arrays instead of Objects.
+ *<p>
+ * There are 4 ways to create <code>CsvSchema</code> instances:
+ *<ul>
+ * <li>Manually build one, using {@link Builder}
+ *  </li>
+ * <li>Modify existing schema (using <code>withXxx</code> methods
+ *    or {@link #rebuild} for creating {@link Builder})
+ *  </li>
+ * <li>Create schema based on a POJO definition (Class), using
+ *    {@link CsvMapper} methods like {@link CsvMapper#schemaFor(java.lang.Class)}.
+ *  </li>
+ * <li>Request that {@link CsvParser} reads schema from the first line:
+ *    enable "useHeader" property for the initial schema, and let parser
+ *    read column names from the document itself.
+ *  </li>
+ *</ul>
  *
  * @since 1.9
  */
@@ -44,7 +91,9 @@ public class CsvSchema
      * By default we do NOT expect the first line to be header.
      */
     public final static boolean DEFAULT_USE_HEADER = false;
-    
+
+    public final static boolean DEFAULT_SKIP_FIRST_DATA_ROW = false;
+
     /*
     /**********************************************************************
     /* Helper classes
@@ -131,6 +180,8 @@ public class CsvSchema
 
         protected boolean _useHeader = DEFAULT_USE_HEADER;
 
+        protected boolean _skipFirstDataRow = DEFAULT_SKIP_FIRST_DATA_ROW;
+        
         protected char _columnSeparator = DEFAULT_COLUMN_SEPARATOR;
 
         protected char _quoteChar = DEFAULT_QUOTE_CHAR;
@@ -156,6 +207,7 @@ public class CsvSchema
             _quoteChar = src._quoteChar;
             _escapeChar = src._escapeChar;
             _lineSeparator = src._lineSeparator;
+            _skipFirstDataRow = src._skipFirstDataRow;
         }
         
         public Builder addColumn(String name) {
@@ -205,7 +257,12 @@ public class CsvSchema
             _useHeader = b;
             return this;
         }
-        
+
+        public Builder setSkipFirstDataRow(boolean b) {
+            _skipFirstDataRow = b;
+            return this;
+        }
+
         /**
          * Method for specifying character used to separate column
          * values.
@@ -259,7 +316,8 @@ public class CsvSchema
         {
             Column[] cols = _columns.toArray(new Column[_columns.size()]);
             return new CsvSchema(cols,
-                    _useHeader, _columnSeparator, _quoteChar, _escapeChar, _lineSeparator);
+                    _useHeader, _skipFirstDataRow,
+                    _columnSeparator, _quoteChar, _escapeChar, _lineSeparator);
         }
 
         protected void _checkIndex(int index) {
@@ -285,6 +343,8 @@ public class CsvSchema
 
     protected final boolean _useHeader;
 
+    protected final boolean _skipFirstDataRow;
+
     protected final char _columnSeparator;
 
     protected final char _quoteChar;
@@ -294,7 +354,8 @@ public class CsvSchema
     protected final char[] _lineSeparator;
     
     public CsvSchema(Column[] columns,
-            boolean useHeader, char columnSeparator, char quoteChar, int escapeChar,
+            boolean useHeader, boolean skipFirstDataRow,
+            char columnSeparator, char quoteChar, int escapeChar,
             char[] lineSeparator)
     {
         if (columns == null) {
@@ -302,6 +363,7 @@ public class CsvSchema
         }
         _columns = columns;
         _useHeader = useHeader;
+        _skipFirstDataRow = skipFirstDataRow;
         _columnSeparator = columnSeparator;
         _quoteChar = quoteChar;
         _escapeChar = escapeChar;
@@ -323,12 +385,14 @@ public class CsvSchema
      * <code>withXxx()</code> methods.
      */
     protected CsvSchema(Column[] columns,
-            boolean useHeader, char columnSeparator, char quoteChar, int escapeChar,
+            boolean useHeader, boolean skipFirstDataRow,
+            char columnSeparator, char quoteChar, int escapeChar,
             char[] lineSeparator,
             Map<String,Column> columnsByName)
     {
         _columns = columns;
         _useHeader = useHeader;
+        _skipFirstDataRow = skipFirstDataRow;
         _columnSeparator = columnSeparator;
         _quoteChar = quoteChar;
         _escapeChar = escapeChar;
@@ -372,8 +436,9 @@ public class CsvSchema
 
     public CsvSchema withUseHeader(boolean state) {
         return (_useHeader == state) ? this
-                : new CsvSchema(_columns, true, _columnSeparator, _quoteChar,
-                _escapeChar, _lineSeparator, _columnsByName);
+                : new CsvSchema(_columns, state, _skipFirstDataRow,
+                    _columnSeparator, _quoteChar,
+                    _escapeChar, _lineSeparator, _columnsByName);
     }
 
     /**
@@ -391,39 +456,46 @@ public class CsvSchema
     public CsvSchema withoutHeader() {
         return withUseHeader(false);
     }
+
+    public CsvSchema withSkipFirstDataRow(boolean state) {
+        return (_skipFirstDataRow == state) ? this
+                : new CsvSchema(_columns, _useHeader, state,
+                    _columnSeparator, _quoteChar,
+                    _escapeChar, _lineSeparator, _columnsByName);
+    }
     
     public CsvSchema withColumnSeparator(char sep) {
         return (_columnSeparator == sep) ? this :
-            new CsvSchema(_columns, _useHeader, sep, _quoteChar,
-                _escapeChar, _lineSeparator, _columnsByName);
+            new CsvSchema(_columns, _useHeader, _skipFirstDataRow,
+                    sep, _quoteChar, _escapeChar, _lineSeparator, _columnsByName);
     }
 
     public CsvSchema withQuoteChar(char c) {
         return (_quoteChar == c) ? this :
-            new CsvSchema(_columns, _useHeader, _columnSeparator, c,
-                _escapeChar, _lineSeparator, _columnsByName);
+            new CsvSchema(_columns, _useHeader, _skipFirstDataRow,
+                    _columnSeparator, c, _escapeChar, _lineSeparator, _columnsByName);
     }
     
     public CsvSchema withEscapeChar(char c) {
         return (_escapeChar == c) ? this
-                : new CsvSchema(_columns, _useHeader, _columnSeparator, _quoteChar,
-                c, _lineSeparator, _columnsByName);
+                : new CsvSchema(_columns, _useHeader, _skipFirstDataRow,
+                        _columnSeparator, _quoteChar, c, _lineSeparator, _columnsByName);
     }
 
     public CsvSchema withoutEscapeChar() {
         return (_escapeChar == -1) ? this
-                : new CsvSchema(_columns, _useHeader, _columnSeparator, _quoteChar,
-                -1, _lineSeparator, _columnsByName);
+                : new CsvSchema(_columns, _useHeader, _skipFirstDataRow,
+                        _columnSeparator, _quoteChar, -1, _lineSeparator, _columnsByName);
     }
 
     public CsvSchema withLineSeparator(String sep) {
-        return new CsvSchema(_columns, _useHeader, _columnSeparator, _quoteChar,
-                _escapeChar, sep.toCharArray(), _columnsByName);
+        return new CsvSchema(_columns, _useHeader, _skipFirstDataRow,
+                _columnSeparator, _quoteChar, _escapeChar, sep.toCharArray(), _columnsByName);
     }
 
     public CsvSchema withoutColumns() {
-        return new CsvSchema(NO_COLUMNS, _useHeader, _columnSeparator, _quoteChar,
-                _escapeChar, _lineSeparator, _columnsByName);
+        return new CsvSchema(NO_COLUMNS, _useHeader, _skipFirstDataRow,
+                _columnSeparator, _quoteChar, _escapeChar, _lineSeparator, _columnsByName);
     }
     
     /*
@@ -444,6 +516,7 @@ public class CsvSchema
      */
 
     public boolean useHeader() { return _useHeader; }
+    public boolean skipFirstDataRow() { return _skipFirstDataRow; }
     public char getColumnSeparator() { return _columnSeparator; }
     public char getQuoteChar() { return _quoteChar; }
     public int getEscapeChar() { return _escapeChar; }

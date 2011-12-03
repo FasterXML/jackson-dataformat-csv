@@ -1,5 +1,6 @@
 package com.fasterxml.jackson.dataformat.csv;
 
+import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import com.fasterxml.jackson.dataformat.csv.ModuleTestBase.FiveMinuteUser.Gender;
@@ -39,6 +40,23 @@ public class TestGenerator extends ModuleTestBase
         assertEquals("firstName,lastName,gender,verified,userImage\n"
                 +"Barbie,Benton,FEMALE,false,\n", result);
         
+    }
+
+    /**
+     * Test that verifies that if a header line is needed, configured schema
+     * MUST contain at least one column
+     */
+    public void testFailedWriteHeaders() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        CsvSchema schema = CsvSchema.builder().setUseHeader(true).build();
+        FiveMinuteUser user = new FiveMinuteUser("Barbie", "Benton", false, Gender.FEMALE, null);
+        try {
+            mapper.writer(schema).writeValueAsString(user);        
+            fail("Should fail without columns");
+        } catch (JsonGenerationException e) {
+            verifyException(e, "contains no column names");
+        }
     }
     
     /*
