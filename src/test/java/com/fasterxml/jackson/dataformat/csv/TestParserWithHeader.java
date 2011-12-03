@@ -1,6 +1,8 @@
 package com.fasterxml.jackson.dataformat.csv;
 
 import org.codehaus.jackson.JsonToken;
+import org.codehaus.jackson.annotate.JsonPropertyOrder;
+import org.codehaus.jackson.map.MappingIterator;
 
 public class TestParserWithHeader extends ModuleTestBase
 {
@@ -10,6 +12,7 @@ public class TestParserWithHeader extends ModuleTestBase
     /**********************************************************************
      */
 
+    @JsonPropertyOrder({ "age", "name", "cute" })
     protected static class Entry {
         public int age;
         public String name;
@@ -59,5 +62,21 @@ public class TestParserWithHeader extends ModuleTestBase
         } catch (Exception e) {
             verifyException(e, "Empty header line");
         }
+    }
+
+    public void testSkipFirstDataLine() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        mapper.disable(CsvParser.Feature.WRAP_AS_ARRAY);
+        CsvSchema schema = mapper.schemaFor(Entry.class).withSkipFirstDataRow(true);
+        MappingIterator<Entry> it = mapper.reader(Entry.class).withSchema(schema).readValues(
+                "12354\n6,Lila,true");
+        Entry entry;
+        
+        assertTrue(it.hasNext());
+        assertNotNull(entry = it.next());
+        assertEquals(6, entry.age);
+        assertEquals("Lila", entry.name);
+        assertFalse(it.hasNext());        
     }
 }

@@ -427,6 +427,10 @@ public class CsvParser
         if (_schema.useHeader()) {
             _readHeaderLine();
         }
+        // and if we are to skip the first data line, skip it
+        if (_schema.skipFirstDataRow()) {
+            _reader.skipLine();
+        }
         
         /* Only one real complication, actually; empy documents (zero bytes).
          * Those have no entries. Should be easy enough to detect like so:
@@ -468,6 +472,7 @@ public class CsvParser
     {
         // NOTE: only called when we do have real Schema
         String next = _reader.nextString();
+        
         if (next == null) { // end of record or input...
             _parsingContext = _parsingContext.getParent();
             // let's handle EOF or linefeed
