@@ -332,6 +332,17 @@ public class CsvParser
     public boolean isEnabled(Feature f) {
         return (_csvFeatures & f.getMask()) != 0;
     }
+
+    /**
+     * Accessor for getting active schema definition: it may be
+     * "empty" (no column definitions), but will never be null
+     * since it defaults to an empty schema (and default configuration)
+     *<p>
+     * NOTE: should be part of JsonParser, will be for 2.0.
+     */
+    public CsvSchema getSchema() {
+        return _schema;
+    }
     
     /*
     /**********************************************************
@@ -416,6 +427,10 @@ public class CsvParser
         if (_schema.useHeader()) {
             _readHeaderLine();
         }
+        // and if we are to skip the first data line, skip it
+        if (_schema.skipFirstDataRow()) {
+            _reader.skipLine();
+        }
         
         /* Only one real complication, actually; empy documents (zero bytes).
          * Those have no entries. Should be easy enough to detect like so:
@@ -457,6 +472,7 @@ public class CsvParser
     {
         // NOTE: only called when we do have real Schema
         String next = _reader.nextString();
+        
         if (next == null) { // end of record or input...
             _parsingContext = _parsingContext.getParent();
             // let's handle EOF or linefeed
@@ -526,6 +542,9 @@ public class CsvParser
         CsvSchema.Builder builder = _schema.rebuild().clearColumns();
         
         while ((name = _reader.nextString()) != null) {
+            // one more thing: always trim names, regardless of config settings
+            name = name.trim();
+            
             // See if "old" schema defined type; if so, use that type...
             CsvSchema.Column prev = _schema.column(name);
             if (prev != null) {

@@ -494,6 +494,26 @@ public class CsvReader
          */
         return (_inputPtr < _inputEnd || loadMore());
     }
+
+    public boolean skipLine() throws IOException, JsonParseException
+    {
+        if (_pendingLF != 0) {
+            if (_inputSource == null) {
+                return false;
+            }
+            _handleLF();
+        }
+        while (_inputPtr < _inputEnd || loadMore()) {
+            char c = _inputBuffer[_inputPtr++];
+            if (c == '\r' || c == '\n') {
+                // important: handle trailing linefeed now, so caller need not bother
+                _pendingLF = c;
+                _handleLF();
+                return true;
+            }
+        }
+        return false;
+    }
     
     /**
      * Method called to parse the next token when we don't have any type
@@ -506,11 +526,10 @@ public class CsvReader
     public String nextString() throws IOException, JsonParseException
     {
         _numTypesValid = NR_UNKNOWN;
-
+        
         if (_pendingLF > 0) { // either pendingLF, or closed
             if (_inputSource != null) { // if closed, we just need to return null
                 _handleLF();
-                _pendingLF = 0;
             }
             return null;
         }
@@ -746,7 +765,7 @@ public class CsvReader
     
     protected final void _handleLF() throws IOException, JsonParseException
     {
-        // already skipped past first part of potentiall two-char linefeed:
+        // already skipped past first part; but may get \r\n so skip the other char too?
         if (_pendingLF == INT_CR) {
             if (_inputPtr < _inputEnd || loadMore()) {
                 if (_inputBuffer[_inputPtr] == '\n') {
@@ -754,6 +773,7 @@ public class CsvReader
                 }
             }
         }
+        _pendingLF = 0;
         ++_currInputRow;
         _currInputRowStart = _inputPtr;
     }

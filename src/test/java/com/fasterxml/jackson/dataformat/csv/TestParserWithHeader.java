@@ -1,5 +1,9 @@
 package com.fasterxml.jackson.dataformat.csv;
 
+import org.codehaus.jackson.JsonToken;
+import org.codehaus.jackson.annotate.JsonPropertyOrder;
+import org.codehaus.jackson.map.MappingIterator;
+
 public class TestParserWithHeader extends ModuleTestBase
 {
     /*
@@ -8,6 +12,7 @@ public class TestParserWithHeader extends ModuleTestBase
     /**********************************************************************
      */
 
+    @JsonPropertyOrder({ "age", "name", "cute" })
     protected static class Entry {
         public int age;
         public String name;
@@ -20,6 +25,22 @@ public class TestParserWithHeader extends ModuleTestBase
     /**********************************************************************
      */
 
+    public void testSimpleHeader() throws Exception
+    {
+        CsvParser parser = (CsvParser) new CsvFactory().createJsonParser(
+                "name, age,  other\nfoo,2,xyz\n");
+        // need to enable first-line-as-schema handling:
+        parser.setSchema(CsvSchema.emptySchema().withHeader());
+        assertToken(JsonToken.START_OBJECT, parser.nextToken());
+        CsvSchema schema = (CsvSchema) parser.getSchema();
+        assertEquals(3, schema.size());
+
+        // verify that names from first line are trimmed:
+        assertEquals("name", schema.column(0).getName());
+        assertEquals("age", schema.column(1).getName());
+        assertEquals("other", schema.column(2).getName());
+    }
+    
     public void testSimpleQuotes() throws Exception
     {
         CsvMapper mapper = mapperForCsv();
@@ -41,5 +62,21 @@ public class TestParserWithHeader extends ModuleTestBase
         } catch (Exception e) {
             verifyException(e, "Empty header line");
         }
+    }
+
+    public void testSkipFirstDataLine() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        mapper.disable(CsvParser.Feature.WRAP_AS_ARRAY);
+        CsvSchema schema = mapper.schemaFor(Entry.class).withSkipFirstDataRow(true);
+        MappingIterator<Entry> it = mapper.reader(Entry.class).withSchema(schema).readValues(
+                "12354\n6,Lila,true");
+        Entry entry;
+        
+        assertTrue(it.hasNext());
+        assertNotNull(entry = it.next());
+        assertEquals(6, entry.age);
+        assertEquals("Lila", entry.name);
+        assertFalse(it.hasNext());        
     }
 }
