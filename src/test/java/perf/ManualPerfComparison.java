@@ -1,50 +1,63 @@
 package perf;
 
 import java.io.*;
+import java.util.*;
+
+import org.codehaus.jackson.JsonGenerator;
+import org.codehaus.jackson.map.*;
+
+import com.fasterxml.jackson.dataformat.csv.*;
 
 /**
  * Simple manual performance micro-benchmark that compares compress and
  * decompress speeds of this LZF implementation with other codecs.
  */
-public final class PerfComparison
+public final class ManualPerfComparison
 {
-    private int size = 0;
+    private ObjectMapper jsonMapper;
 
-    private final static class Entry
+    private ObjectReader csvReader;
+
+    private ObjectWriter csvWriter;
+    
+    public ManualPerfComparison()
     {
+        jsonMapper = new ObjectMapper();
+        CsvMapper mapper = new CsvMapper();
+        CsvSchema schema = mapper.schemaFor(RequestEntry.class)
+            .withColumnSeparator('|')
+            .withUseHeader(true)
+            .withSkipFirstDataRow(true)
+            ;
         
-    }
-
-    final static class BogusOutputStream extends OutputStream
-    {
-        protected int _bytes;
-        
-        public void write(byte[] buf) { write(buf, 0, buf.length); }
-        public void write(byte[] buf, int offset, int len) {
-            _bytes += len;
-        }
-
-        @Override
-        public void write(int b) throws IOException {
-            _bytes++;
-        }
-
-        public int length() { return _bytes; }
+        csvReader = mapper.reader(RequestEntry.class).withSchema(schema);
+        csvWriter = mapper.writer(schema);
     }
     
-    private Entry[] readCsv(byte[] csvInput) throws IOException
+    private RequestEntry[] readCsv(byte[] csvInput) throws IOException
     {
-        return null;
+        ArrayList<RequestEntry> entries = new ArrayList<RequestEntry>();
+        Iterator<RequestEntry> it = csvReader.readValues(new ByteArrayInputStream(csvInput));
+        while (it.hasNext()) {
+            entries.add(it.next());
+        }
+        return entries.toArray(new RequestEntry[entries.size()]);
     }
 
-    private byte[] writeAsJson(Entry[] entries) throws IOException
+    private byte[] writeAsJson(RequestEntry[] entries) throws IOException
     {
-        return null;
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream(256 + entries.length * 100);
+        JsonGenerator jgen = jsonMapper.getJsonFactory().createJsonGenerator(bytes);
+        for (RequestEntry entry : entries) {
+            jsonMapper.writeValue(jgen, entry);
+        }
+        jgen.close();
+        return bytes.toByteArray();
     }
     
     private void test(byte[] csvInput) throws IOException
     {
-        final Entry[] entries = readCsv(csvInput);
+        final RequestEntry[] entries = readCsv(csvInput);
         final byte[] jsonInput = writeAsJson(entries);
         
         // Let's try to guestimate suitable size... to get to 10 megs to process
@@ -91,46 +104,52 @@ public final class PerfComparison
             if (lf) {
                 System.out.println();
             }
-            System.out.println("Test '"+msg+"' ["+size+" bytes] -> "+msecs+" msecs");
+            System.out.println("Test '"+msg+"' -> "+msecs+" msecs");
         }
     }
 
     private final long testJsonRead(int REPS, byte[] input) throws IOException
     {
         long start = System.currentTimeMillis();
-        byte[] comp = null;
         while (--REPS >= 0) {
+            Iterator<RequestEntry> it = jsonMapper.reader(RequestEntry.class).readValues(
+                    new ByteArrayInputStream(input));
+            while (it.hasNext()) {
+                it.next();
+            }
         }
-        size = comp.length;
         return System.currentTimeMillis() - start;
     }
 
     private final long testCsvRead(int REPS, byte[] input) throws IOException
     {
         long start = System.currentTimeMillis();
-        byte[] comp = null;
         while (--REPS >= 0) {
-        }
-        size = comp.length;
-        return System.currentTimeMillis() - start;
-    }
-    
-    private final long testJsonWrite(int REPS, Entry[] entries) throws IOException
-    {
-        long start = System.currentTimeMillis();
-        while (--REPS >= 0) {
-            BogusOutputStream bogus = new BogusOutputStream();
-            size = bogus.length();
+            Iterator<RequestEntry> it = csvReader.readValues(
+                    new ByteArrayInputStream(input));
+            while (it.hasNext()) {
+                it.next();
+            }
         }
         return System.currentTimeMillis() - start;
     }
     
-    private final long testCsvWrite(int REPS, Entry[] entries) throws IOException
+    private final long testJsonWrite(int REPS, RequestEntry[] entries) throws IOException
     {
         long start = System.currentTimeMillis();
         while (--REPS >= 0) {
             BogusOutputStream bogus = new BogusOutputStream();
-            size = bogus.length();
+            jsonMapper.writeValue(bogus, entries);
+        }
+        return System.currentTimeMillis() - start;
+    }
+    
+    private final long testCsvWrite(int REPS, RequestEntry[] entries) throws IOException
+    {
+        long start = System.currentTimeMillis();
+        while (--REPS >= 0) {
+            BogusOutputStream bogus = new BogusOutputStream();
+            csvWriter.writeValue(bogus, entries);
         }
         return System.currentTimeMillis() - start;
     }
@@ -141,7 +160,7 @@ public final class PerfComparison
             System.err.println("Usage: java ... [file]");
             System.exit(1);
         }
-        new PerfComparison().test(readAll(args[0]));
+        new ManualPerfComparison().test(readAll(args[0]));
     }
 
     public static byte[] readAll(String filename) throws IOException
