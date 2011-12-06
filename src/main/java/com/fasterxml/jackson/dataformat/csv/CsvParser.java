@@ -531,9 +531,7 @@ public class CsvParser
          */
 
         if (_schema.size() > 0) { // case (a); skip all/any
-            while (_reader.nextString() != null) {
-                ;
-            }
+            while (_reader.nextString() != null) { }
             return;
         }
         // case (b); read all

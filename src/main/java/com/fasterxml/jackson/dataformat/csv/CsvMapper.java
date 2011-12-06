@@ -74,6 +74,29 @@ public class CsvMapper extends ObjectMapper
         ((CsvFactory)_jsonFactory).disable(f);
         return this;
     }
+
+    /*
+    /**********************************************************************
+    /* Additional typed accessors
+    /**********************************************************************
+     */
+
+    /**
+     * Overridden with more specific type, since factory we have
+     * is always of type {@link CsvFactory}
+     */
+    @Override
+    public CsvFactory getJsonFactory() {
+        return getCsvFactory();
+    }
+
+    /**
+     * Type-safe accessor for accessing underlying CSV-specific
+     * {@link JsonFactory} implementation
+     */
+    public CsvFactory getCsvFactory() {
+        return (CsvFactory) _jsonFactory;
+    }
     
     /*
     /**********************************************************************

@@ -569,7 +569,7 @@ public class CsvReader
         final int end;
         
         {
-            int max = Math.min(_inputEnd - ptr, outBuf.length);
+            int max = Math.min(_inputEnd - ptr, outBuf.length - outPtr);
             end = ptr + max;
         }
 

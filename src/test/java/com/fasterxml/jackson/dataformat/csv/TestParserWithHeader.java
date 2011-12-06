@@ -1,5 +1,7 @@
 package com.fasterxml.jackson.dataformat.csv;
 
+import java.util.*;
+
 import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 import org.codehaus.jackson.map.MappingIterator;
@@ -21,7 +23,7 @@ public class TestParserWithHeader extends ModuleTestBase
 
     /*
     /**********************************************************************
-    /* Test methods
+    /* Test methods, success
     /**********************************************************************
      */
 
@@ -53,17 +55,6 @@ public class TestParserWithHeader extends ModuleTestBase
         assertTrue(entry.cute);
     }
 
-    public void testInvalidMissingHeader() throws Exception
-    {
-        CsvMapper mapper = mapperForCsv();
-        try {
-            mapper.reader(Entry.class).withSchema(CsvSchema.emptySchema().withHeader()).readValue("  \nJoseph,57,false");
-            fail("Should have failed with exception");
-        } catch (Exception e) {
-            verifyException(e, "Empty header line");
-        }
-    }
-
     public void testSkipFirstDataLine() throws Exception
     {
         CsvMapper mapper = mapperForCsv();
@@ -79,4 +70,87 @@ public class TestParserWithHeader extends ModuleTestBase
         assertEquals("Lila", entry.name);
         assertFalse(it.hasNext());        
     }
+
+    public void testLongHeader() throws Exception
+    {
+        StringBuilder sb = new StringBuilder(650);
+        ArrayList<String> names = new ArrayList<String>();
+        
+        do {
+            if (sb.length() > 0) {
+                sb.append(',');
+            }
+            String name = "COLUMN"+names.size();
+            names.add(name);
+            sb.append(name);
+        } while (sb.length() < 600);
+        sb.append("\nabc\n");
+        final String CSV = sb.toString();
+
+
+        // Ok, then, first let's try reading columns:        
+        
+        CsvMapper mapper = mapperForCsv();
+        mapper.disable(CsvParser.Feature.WRAP_AS_ARRAY);
+        CsvSchema schema = CsvSchema.emptySchema().withHeader();
+        CsvParser p = (CsvParser) mapper.getCsvFactory().createJsonParser(CSV);
+        p.setSchema(schema);
+        // need to read something to ensure header line is processed
+        assertEquals(JsonToken.START_OBJECT, p.nextToken());
+        CsvSchema actual = p.getSchema();
+        
+        assertEquals(names.size(), actual.size());
+        for (int i = 0, len = names.size(); i < len; ++i) {
+            CsvSchema.Column col = actual.column(i);
+            assertEquals(names.get(i), col.getName());
+        }
+        p.close();
+    }
+
+    public void testLongColumnName() throws Exception
+    {
+        StringBuilder sb = new StringBuilder(650);
+
+        sb.append("COLUMN");
+        
+        for (int i = 0; i < 600; ++i) {
+            sb.append((char) ('0' + i%10));
+        }
+        final String COLUMN = sb.toString();
+        sb.append("\nabc\n");
+        final String CSV = sb.toString();
+
+        // Ok, then, first let's try reading columns:        
+        
+        CsvMapper mapper = mapperForCsv();
+        mapper.disable(CsvParser.Feature.WRAP_AS_ARRAY);
+        CsvSchema schema = CsvSchema.emptySchema().withHeader();
+        CsvParser p = (CsvParser) mapper.getCsvFactory().createJsonParser(CSV);
+        p.setSchema(schema);
+        // need to read something to ensure header line is processed
+        assertEquals(JsonToken.START_OBJECT, p.nextToken());
+        CsvSchema actual = p.getSchema();
+        
+        assertEquals(1, actual.size());
+        assertEquals(COLUMN, actual.column(0).getName());
+        p.close();
+    }
+    
+    /*
+    /**********************************************************************
+    /* Test methods, fail
+    /**********************************************************************
+     */
+
+    public void testInvalidMissingHeader() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        try {
+            mapper.reader(Entry.class).withSchema(CsvSchema.emptySchema().withHeader()).readValue("  \nJoseph,57,false");
+            fail("Should have failed with exception");
+        } catch (Exception e) {
+            verifyException(e, "Empty header line");
+        }
+    }
+
 }
