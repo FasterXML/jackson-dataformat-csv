@@ -531,7 +531,7 @@ public class CsvReader
             if (_inputSource != null) { // if closed, we just need to return null
                 _handleLF();
             }
-            return null;
+            return null; // end of line without new value
         }
         int i;
         
@@ -566,13 +566,18 @@ public class CsvReader
             }
             ptr = _inputPtr;
         }
-        final int max = Math.min(_inputEnd, (ptr + outBuf.length));
+        final int end;
+        
+        {
+            int max = Math.min(_inputEnd - ptr, outBuf.length);
+            end = ptr + max;
+        }
 
         // handle unquoted case locally if it can be handled without
         // crossing buffer boundary...
         char[] inputBuffer = _inputBuffer;
 
-        while (ptr < max) {
+        while (ptr < end) {
             char c = inputBuffer[ptr++];
             if (c <= _maxSpecialChar) {
                 if (c == _separatorChar) { // end of value, yay!
@@ -647,6 +652,7 @@ public class CsvReader
                     _inputPtr = ptr;
                     break main_loop;
                 }
+                ptr = _inputPtr;
             }
             if (outPtr >= outBuf.length) {
                 outBuf = _textBuffer.finishCurrentSegment();
@@ -660,7 +666,7 @@ public class CsvReader
                         _inputPtr = ptr;
                         break main_loop;
                     }
-                    if (c == '\r' || c == '\n') {
+                    if (c == '\r' || c == '\n') { // end of line is end of value as well
                         _inputPtr = ptr;
                         _pendingLF = c;
                         break main_loop;

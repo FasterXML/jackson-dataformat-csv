@@ -1,7 +1,10 @@
 package com.fasterxml.jackson.dataformat.csv;
 
+import java.io.*;
+import java.util.*;
+
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
-import org.codehaus.jackson.map.MappingIterator;
+import org.codehaus.jackson.map.*;
 
 /**
  * Tests for verifying behavior of enclosing input stream as
@@ -18,6 +21,21 @@ public class TestParserSequences extends ModuleTestBase
     @JsonPropertyOrder({"x", "y"})
     protected static class Entry {
         public int x, y;
+
+        public Entry() { }
+        public Entry(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        public boolean equals(Entry e) { // simplified just for testing
+            return e.x == this.x && e.y == this.y;
+        }
+
+        @Override
+        public String toString() {
+            return "["+x+","+y+"]";
+        }
     }
 
     /*
@@ -26,9 +44,7 @@ public class TestParserSequences extends ModuleTestBase
     /**********************************************************************
      */
 
-    /**
-     * Test using non-wrapped sequence of entries
-     */
+    // Test using non-wrapped sequence of entries
     public void testAsSequence() throws Exception
     {
         CsvMapper mapper = mapperForCsv();
@@ -52,9 +68,7 @@ public class TestParserSequences extends ModuleTestBase
         assertFalse(it.hasNext());
     }
 
-    /**
-     * Test using sequence of entries wrapped in a logical array.
-     */
+    // Test using sequence of entries wrapped in a logical array.
     public void testAsWrappedArray() throws Exception
     {
         CsvMapper mapper = mapperForCsv();
@@ -69,4 +83,72 @@ public class TestParserSequences extends ModuleTestBase
         assertEquals(123, entries[2].x);
         assertEquals(123456789, entries[2].y);
     }
+
+    // Test for teasing out buffer-edge conditions...
+    public void testLongerUnwrapped() throws Exception
+    {
+        // how many? about 10-20 bytes per entry, so try to get at ~100k -> about 10k entries
+        List<Entry> entries = generateEntries(9999);
+        CsvMapper mapper = mapperForCsv();
+        CsvSchema schema = mapper.schemaFor(Entry.class);
+        ObjectWriter writer = mapper.writer(schema);
+        mapper.disable(CsvParser.Feature.WRAP_AS_ARRAY);
+
+        // First, using bytes; note
+        byte[] bytes = writer.writeValueAsBytes(entries);
+        // ... we just happen to know this is expected length...
+        final int EXPECTED_BYTES = 97640;
+        assertEquals(EXPECTED_BYTES, bytes.length);
+
+        MappingIterator<Entry> it = mapper.reader(Entry.class).withSchema(schema).readValues(bytes, 0, bytes.length);
+        verifySame(it, entries);
+        bytes = null;
+        
+        // and then chars: NOTE: ASCII, so bytes == chars
+        String text = writer.writeValueAsString(entries);
+        assertEquals(EXPECTED_BYTES, text.length());
+
+        it = mapper.reader(Entry.class).withSchema(schema).readValues(text);
+        verifySame(it, entries);
+    
+    }
+
+    /*
+    /**********************************************************************
+    /* Helper methods
+    /**********************************************************************
+     */
+
+    private List<Entry> generateEntries(int count) throws IOException
+    {
+        Random rnd = new Random(count);
+        ArrayList<Entry> entries = new ArrayList<Entry>(count);
+        while (--count >= 0) {
+            entries.add(new Entry(rnd.nextInt() % 9876, 50 - (rnd.nextInt() % 987)));
+        }
+        return entries;
+    }
+
+    private void verifySame(Iterator<Entry> it, List<Entry> exp)
+    {
+        Iterator<Entry> expIt = exp.iterator();
+        int count = 0;
+        
+        while (it.hasNext()) {
+            if (!expIt.hasNext()) {
+                fail("Expected "+exp.size()+" entries; got more");
+            }
+            Entry expEntry = expIt.next();
+            Entry actualEntry = it.next();
+            if (!expEntry.equals(actualEntry)) {
+                fail("Entry at "+count+" (of "+exp.size()+") differs: exp = "+expEntry+", actual = "+actualEntry);
+            }
+            ++count;
+        }
+        
+        if (expIt.hasNext()) {
+            fail("Expected "+exp.size()+" entries; got only "+count);
+        }
+    }
 }
+
