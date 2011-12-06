@@ -472,7 +472,7 @@ public class CsvParser
     {
         // NOTE: only called when we do have real Schema
         String next = _reader.nextString();
-        
+
         if (next == null) { // end of record or input...
             _parsingContext = _parsingContext.getParent();
             // let's handle EOF or linefeed

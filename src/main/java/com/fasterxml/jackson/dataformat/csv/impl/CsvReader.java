@@ -535,6 +535,11 @@ public class CsvReader
         }
         int i;
         
+        // First, need to ensure we know the starting location of token
+        _tokenInputTotal = _currInputProcessed + _inputPtr - 1;
+        _tokenInputRow = _currInputRow;
+        _tokenInputCol = _inputPtr - _currInputRowStart - 1;
+
         if (_trimSpaces) {
             i = _skipLeadingSpace();
         } else {
@@ -819,11 +824,6 @@ public class CsvReader
     
     protected int _skipLeadingSpace() throws IOException, JsonParseException
     {
-        // First, need to ensure we know the starting location of token
-        _tokenInputTotal = _currInputProcessed + _inputPtr - 1;
-        _tokenInputRow = _currInputRow;
-        _tokenInputCol = _inputPtr - _currInputRowStart - 1;
-
         while (true) {
             if (_inputPtr >= _inputEnd) {
                 if (!loadMore()) {
