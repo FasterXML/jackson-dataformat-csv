@@ -20,6 +20,8 @@ public final class UTF8Reader
     private final IOContext _ioContext;
     
     private InputStream _inputSource;
+
+    private final boolean _autoClose;
     
     protected byte[] _inputBuffer;
 
@@ -56,7 +58,8 @@ public final class UTF8Reader
     /**********************************************************************
      */
 
-    public UTF8Reader(IOContext ctxt, InputStream in, byte[] buf, int ptr, int len)
+    public UTF8Reader(IOContext ctxt, InputStream in, boolean autoClose,
+            byte[] buf, int ptr, int len)
     {
         super(in);
         _ioContext = ctxt;
@@ -64,16 +67,38 @@ public final class UTF8Reader
         _inputBuffer = buf;
         _inputPtr = ptr;
         _inputEnd = ptr+len;
+        _autoClose = autoClose; 
     }
 
-    public UTF8Reader(IOContext ctxt, InputStream in)
+    public UTF8Reader(IOContext ctxt, byte[] buf, int ptr, int len)
+    {
+        super(bogusStream());
+        _ioContext = ctxt;
+        _inputSource = null;
+        _inputBuffer = buf;
+        _inputPtr = ptr;
+        _inputEnd = ptr+len;
+        _autoClose = true;
+    }
+    
+    public UTF8Reader(IOContext ctxt, InputStream in, boolean autoClose)
     {
         super(in);
         _ioContext = ctxt;
         _inputSource = in;
         _inputBuffer = ctxt.allocReadIOBuffer();
         _inputPtr = 0;
-        _inputEnd = _inputBuffer.length;
+        _inputEnd = 0;
+        _autoClose = autoClose; 
+    }
+
+    private static InputStream bogusStream() {
+        return new InputStream() {
+            @Override
+            public int read() throws IOException {
+                return -1;
+            }
+        };
     }
     
     /**
@@ -98,9 +123,11 @@ public final class UTF8Reader
 
         if (in != null) {
             _inputSource = null;
-            freeBuffers();
-            in.close();
+            if (_autoClose) {
+                in.close();
+            }
         }
+        freeBuffers();
     }
 
     private char[] _tmpBuffer = null;
@@ -132,18 +159,10 @@ public final class UTF8Reader
     public int read(char[] cbuf, int start, int len)
         throws IOException
     {
-        // Let's first ensure there's enough room...
-        if (start < 0 || (start+len) > cbuf.length) {
-            reportBounds(cbuf, start, len);
-        }
         // Already EOF?
         if (_inputBuffer == null) {
             return -1;
         }
-        if (len < 1) { // dummy call?
-            return 0;
-        }
-
         len += start;
         int outPtr = start;
 
@@ -177,9 +196,9 @@ public final class UTF8Reader
                 }
             }
         }
-        byte[] buf = _inputBuffer;
+        final byte[] buf = _inputBuffer;
         int inPtr = _inputPtr;
-        int inBufLen = _inputEnd;
+        final int inBufLen = _inputEnd;
 
         main_loop:
         while (outPtr < len) {
@@ -201,8 +220,8 @@ public final class UTF8Reader
                     if (inPtr >= inEnd) {
                         break main_loop;
                     }
-                    c = ((int) buf[inPtr++]) & 0xFF;
-                    if (c > 0x7F) { // or multi-byte
+                    c = buf[inPtr++];
+                    if (c < 0) { // or multi-byte
                         break ascii_loop;
                     }
                     cbuf[outPtr++] = (char) c;
@@ -435,8 +454,8 @@ public final class UTF8Reader
              */
             int count = readBytes();
             if (count < 1) {
+                freeBuffers(); // to help GC?
                 if (count < 0) { // -1
-                    freeBuffers(); // to help GC?
                     return false;
                 }
                 // 0 count is no good; let's err out

@@ -9,6 +9,7 @@ import org.codehaus.jackson.format.InputAccessor;
 import org.codehaus.jackson.format.MatchStrength;
 import org.codehaus.jackson.io.IOContext;
 
+import com.fasterxml.jackson.dataformat.csv.impl.UTF8Reader;
 import com.fasterxml.jackson.dataformat.csv.impl.UTF8Writer;
 
 public class CsvFactory extends JsonFactory
@@ -297,7 +298,7 @@ public class CsvFactory extends JsonFactory
     protected CsvParser _createJsonParser(byte[] data, int offset, int len, IOContext ctxt)
         throws IOException, JsonParseException
     {
-        Reader r = _createReader(new ByteArrayInputStream(data, offset, len), null, ctxt);
+        Reader r = _createReader(data, offset, len, null, ctxt);
         return new CsvParser(ctxt, _getBufferRecycler(), _parserFeatures, _csvParserFeatures,
                 _objectCodec, r);
     }
@@ -344,9 +345,26 @@ public class CsvFactory extends JsonFactory
     protected Reader _createReader(InputStream in, JsonEncoding enc, IOContext ctxt) throws IOException
     {
         // default to UTF-8 if encoding missing
-        if (enc == null || enc == JsonEncoding.UTF8) { // !!! TODO: custom UTF-8 reader
-            return new InputStreamReader(in, UTF8);
+        if (enc == null || enc == JsonEncoding.UTF8) {
+            /* 06-Dec-2011, tatu: Custom UTF-8 reader isn't faster at this point
+             *   (nor measurably slower); should figure out why not, make it faster :)
+             * 
+             */
+//            return new InputStreamReader(in, UTF8);
+            boolean autoClose = ctxt.isResourceManaged() || this.isEnabled(JsonParser.Feature.AUTO_CLOSE_SOURCE);
+            return new UTF8Reader(ctxt, in, autoClose);
         }
-        return new InputStreamReader(in, "enc");
+        return new InputStreamReader(in, enc.getJavaName());
+    }
+
+    protected Reader _createReader(byte[] data, int offset, int len,
+            JsonEncoding enc, IOContext ctxt) throws IOException
+    {
+        // default to UTF-8 if encoding missing
+        if (enc == null || enc == JsonEncoding.UTF8) {
+            return new UTF8Reader(null, data, offset, len);
+        }
+        ByteArrayInputStream in = new ByteArrayInputStream(data, offset, len);
+        return new InputStreamReader(in, enc.getJavaName());
     }
 }

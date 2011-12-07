@@ -433,9 +433,9 @@ public class CsvReader
         
         if (_inputSource != null) {
             int count = _inputSource.read(_inputBuffer, 0, _inputBuffer.length);
+            _inputEnd = count;
             if (count > 0) {
                 _inputPtr = 0;
-                _inputEnd = count;
                 return true;
             }
             /* End of input; close here --  but note, do NOT yet call releaseBuffers()

@@ -72,8 +72,9 @@ public final class ManualPerfComparison
         while (true) {
             try {  Thread.sleep(100L); } catch (InterruptedException ie) { }
             int round = (i++ % 4);
-//            int round = 1;
 
+// if (true) round = 0;
+            
             String msg;
             boolean lf = (round == 0);
 
@@ -82,20 +83,20 @@ public final class ManualPerfComparison
             switch (round) {
 
             case 0:
-                msg = "JSON, read";
-                msecs = testJsonRead(REPS, jsonInput);
-                break;
-            case 1:
-                msg = "JSON, write";
-                msecs = testJsonWrite(REPS, entries);
-                break;
-            case 2:
                 msg = "CSV, read";
                 msecs = testCsvRead(REPS, csvInput);
                 break;
-            case 3:
+            case 1:
                 msg = "CSV, write";
                 msecs = testCsvWrite(REPS, entries);
+                break;
+            case 2:
+                msg = "JSON, read";
+                msecs = testJsonRead(REPS, jsonInput);
+                break;
+            case 3:
+                msg = "JSON, write";
+                msecs = testJsonWrite(REPS, entries);
                 break;
             default:
                 throw new Error();
@@ -113,7 +114,7 @@ public final class ManualPerfComparison
         long start = System.currentTimeMillis();
         while (--REPS >= 0) {
             Iterator<RequestEntry> it = jsonMapper.reader(RequestEntry.class).readValues(
-                    new ByteArrayInputStream(input));
+                    input, 0, input.length);
             while (it.hasNext()) {
                 it.next();
             }
@@ -125,8 +126,7 @@ public final class ManualPerfComparison
     {
         long start = System.currentTimeMillis();
         while (--REPS >= 0) {
-            Iterator<RequestEntry> it = csvReader.readValues(
-                    new ByteArrayInputStream(input));
+            Iterator<RequestEntry> it = csvReader.readValues(input, 0, input.length);
             while (it.hasNext()) {
                 it.next();
             }
@@ -137,9 +137,12 @@ public final class ManualPerfComparison
     private final long testJsonWrite(int REPS, RequestEntry[] entries) throws IOException
     {
         long start = System.currentTimeMillis();
+        @SuppressWarnings("unused")
+        int size = 0;
         while (--REPS >= 0) {
             BogusOutputStream bogus = new BogusOutputStream();
             jsonMapper.writeValue(bogus, entries);
+            size = bogus.length();
         }
         return System.currentTimeMillis() - start;
     }
@@ -147,9 +150,12 @@ public final class ManualPerfComparison
     private final long testCsvWrite(int REPS, RequestEntry[] entries) throws IOException
     {
         long start = System.currentTimeMillis();
+        @SuppressWarnings("unused")
+        int size = 0;
         while (--REPS >= 0) {
             BogusOutputStream bogus = new BogusOutputStream();
             csvWriter.writeValue(bogus, entries);
+            size = bogus.length();
         }
         return System.currentTimeMillis() - start;
     }
