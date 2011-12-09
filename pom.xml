@@ -7,7 +7,7 @@
   </parent>
   <groupId>com.fasterxml.jackson</groupId>
   <artifactId>jackson-dataformat-csv</artifactId>
-  <name>JacksonDataFormatCSV</name>
+  <name>Jackson-dataformat-CSV</name>
   <version>0.5.0-SNAPSHOT</version>
   <packaging>bundle</packaging>
   <description>Support for reading and writing CSV-encoded data via Jackson
