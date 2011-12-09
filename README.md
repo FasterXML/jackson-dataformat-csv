@@ -91,3 +91,9 @@ This is easy to use; in fact, if you ignore everything to do with Schema from ab
 In addition to reading things as root-level Objects or arrays, you can also force use of virtual 
 
 (NEED TO ADD AN EXAMPLE)
+
+# Download, docs etc
+
+Check out [Wiki].
+
+[Wiki]: https://github.com/FasterXML/jackson-dataformat-csv/wiki
