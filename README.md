@@ -17,6 +17,18 @@ What is missing:
  * Measurements, performance
  * Extensive tests for various "exotic" CSV
 
+## Maven dependency
+
+To use this extension on Maven-based projects, use following dependency:
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-csv</artifactId>
+      <version>1.9.4</version>
+    </dependency>
+
+(or whatever version is most up-to-date at the moment)
+
 # Usage
 
 ## CSV Schema: what is that?
