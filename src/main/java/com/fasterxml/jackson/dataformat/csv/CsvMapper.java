@@ -1,9 +1,10 @@
 package com.fasterxml.jackson.dataformat.csv;
 
-import org.codehaus.jackson.*;
-import org.codehaus.jackson.map.*;
-import org.codehaus.jackson.type.JavaType;
-import org.codehaus.jackson.type.TypeReference;
+import com.fasterxml.jackson.core.*;
+
+import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import com.fasterxml.jackson.dataformat.csv.impl.LRUMap;
 
@@ -208,14 +209,6 @@ public class CsvMapper extends ObjectMapper
         }
         return reader(type).withSchema(typedSchemaFor(type));
     }
-    
-    // deprecated, but need to override
-    @Override
-    public ObjectReader schemaBasedReader(FormatSchema schema) { return reader(schema); }
-
-    // deprecated, but need to override
-    @Override
-    public ObjectWriter schemaBasedWriter(FormatSchema schema) { return writer(schema); }
 
     /*
     /**********************************************************************

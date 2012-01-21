@@ -3,8 +3,7 @@ package perf;
 import java.io.*;
 import java.util.*;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.MappingIterator;
+import com.fasterxml.jackson.databind.MappingIterator;
 
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;

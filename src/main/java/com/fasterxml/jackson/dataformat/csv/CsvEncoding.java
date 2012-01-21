@@ -1,6 +1,6 @@
 package com.fasterxml.jackson.dataformat.csv;
 
-import org.codehaus.jackson.JsonEncoding;
+import com.fasterxml.jackson.core.JsonEncoding;
 
 /**
  * Enumeration that defines commond encodings that can be used

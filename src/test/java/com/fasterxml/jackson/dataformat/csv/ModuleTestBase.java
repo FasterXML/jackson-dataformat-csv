@@ -3,8 +3,8 @@ package com.fasterxml.jackson.dataformat.csv;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.codehaus.jackson.*;
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 public abstract class ModuleTestBase extends junit.framework.TestCase
 {

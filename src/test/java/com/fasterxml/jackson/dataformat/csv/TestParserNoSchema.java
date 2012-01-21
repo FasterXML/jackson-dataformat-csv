@@ -2,7 +2,7 @@ package com.fasterxml.jackson.dataformat.csv;
 
 import java.util.List;
 
-import org.codehaus.jackson.map.MappingIterator;
+import com.fasterxml.jackson.databind.MappingIterator;
 
 /**
  * Test to verify that CSV content can be parsed without schema

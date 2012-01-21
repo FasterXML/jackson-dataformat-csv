@@ -1,7 +1,8 @@
 package com.fasterxml.jackson.dataformat.csv;
 
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
-import org.codehaus.jackson.map.MappingIterator;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
+import com.fasterxml.jackson.databind.*;
 
 public class TestParserQuotes extends ModuleTestBase
 {

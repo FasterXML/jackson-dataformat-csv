@@ -2,8 +2,7 @@ package com.fasterxml.jackson.dataformat.csv;
 
 import java.util.*;
 
-import org.codehaus.jackson.map.MappingIterator;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.*;
 
 import static org.junit.Assert.assertArrayEquals;
 

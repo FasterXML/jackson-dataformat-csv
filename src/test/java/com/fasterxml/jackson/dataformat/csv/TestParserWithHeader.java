@@ -2,9 +2,10 @@ package com.fasterxml.jackson.dataformat.csv;
 
 import java.util.*;
 
-import org.codehaus.jackson.JsonToken;
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
-import org.codehaus.jackson.map.MappingIterator;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.core.JsonToken;
+
+import com.fasterxml.jackson.databind.MappingIterator;
 
 public class TestParserWithHeader extends ModuleTestBase
 {

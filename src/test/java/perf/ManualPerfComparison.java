@@ -3,8 +3,9 @@ package perf;
 import java.io.*;
 import java.util.*;
 
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.map.*;
+import com.fasterxml.jackson.core.JsonGenerator;
+
+import com.fasterxml.jackson.databind.*;
 
 import com.fasterxml.jackson.dataformat.csv.*;
 

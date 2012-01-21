@@ -2,7 +2,7 @@ package com.fasterxml.jackson.dataformat.csv.impl;
 
 import java.io.*;
 
-import org.codehaus.jackson.io.IOContext;
+import com.fasterxml.jackson.core.io.IOContext;
 
 /**
  * Efficient UTF-8 backed writer.

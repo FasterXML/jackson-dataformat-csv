@@ -2,12 +2,12 @@ package com.fasterxml.jackson.dataformat.csv.impl;
 
 import java.io.*;
 
-import org.codehaus.jackson.*;
-import org.codehaus.jackson.format.InputAccessor;
-import org.codehaus.jackson.format.MatchStrength;
-import org.codehaus.jackson.io.IOContext;
-import org.codehaus.jackson.io.MergedStream;
-import org.codehaus.jackson.io.UTF32Reader;
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.format.InputAccessor;
+import com.fasterxml.jackson.core.format.MatchStrength;
+import com.fasterxml.jackson.core.io.IOContext;
+import com.fasterxml.jackson.core.io.MergedStream;
+import com.fasterxml.jackson.core.io.UTF32Reader;
 
 import com.fasterxml.jackson.dataformat.csv.CsvParser;
 
@@ -220,7 +220,7 @@ public final class CsvParserBootstrapper
             ObjectCodec codec)
         throws IOException, JsonParseException
     {
-        JsonEncoding enc = detectEncoding();
+//        JsonEncoding enc = detectEncoding();
         // would we want to use optimized UTF-8 parser? Maybe later...
         /*
         return new CsvParser(_context, baseFeatures, csvFeatures, codec,
@@ -240,8 +240,6 @@ public final class CsvParserBootstrapper
      * ({@link org.codehaus.jackson.impl.ByteSourceBootstrapper}); 
      * supports UTF-8, for example. But it should work, for now, and can
      * be improved as necessary.
-     * 
-     * @since 1.8
      */
     public static MatchStrength hasCSVFormat(InputAccessor acc,
             char quoteChar, char separatorChar)

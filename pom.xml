@@ -8,7 +8,7 @@
   <groupId>com.fasterxml.jackson.dataformat</groupId>
   <artifactId>jackson-dataformat-csv</artifactId>
   <name>Jackson-dataformat-CSV</name>
-  <version>1.9.5-SNAPSHOT</version>
+  <version>2.0.0-SNAPSHOT</version>
   <packaging>bundle</packaging>
   <description>Support for reading and writing CSV-encoded data via Jackson
 abstractions.
@@ -50,14 +50,14 @@ abstractions.
   <dependencies>
     <!-- Extends Jackson core; but also has slight dep to mapper -->
     <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-core-asl</artifactId>
-      <version>1.9.4</version>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>2.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-mapper-asl</artifactId>
-      <version>1.9.4</version>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.0.0-SNAPSHOT</version>
     </dependency>
 
      <!-- and for testing, JUnit (or TestNG?) is needed -->
@@ -65,7 +65,13 @@ abstractions.
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.8.2</version>
-      <!-- <scope>test</scope> -->
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+      <version>2.0.0-SNAPSHOT</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
@@ -135,14 +141,15 @@ abstractions.
               <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
               <Bundle-Vendor>fasterml.com</Bundle-Vendor>
               <Import-Package>
-org.codehaus.jackson,
-org.codehaus.jackson.format,
-org.codehaus.jackson.impl,
-org.codehaus.jackson.io,
-org.codehaus.jackson.map,
-org.codehaus.jackson.map.introspect,
-org.codehaus.jackson.type,
-org.codehaus.jackson.util
+com.fasterxml.jackson.core,
+com.fasterxml.jackson.core.base,
+com.fasterxml.jackson.core.format,
+com.fasterxml.jackson.core.io,
+com.fasterxml.jackson.core.json,
+com.fasterxml.jackson.core.type,
+com.fasterxml.jackson.core.util,
+com.fasterxml.jackson.databind,
+com.fasterxml.jackson.databind.introspect,
 </Import-Package>
               <Private-Package>
 com.fasterxml.jackson.dataformat.csv.impl

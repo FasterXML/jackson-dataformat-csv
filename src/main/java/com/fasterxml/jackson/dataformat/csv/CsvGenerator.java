@@ -5,15 +5,14 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import org.codehaus.jackson.*;
-import org.codehaus.jackson.impl.JsonGeneratorBase;
-import org.codehaus.jackson.impl.JsonWriteContext;
-import org.codehaus.jackson.io.IOContext;
-import org.codehaus.jackson.io.SerializedString;
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.base.GeneratorBase;
+import com.fasterxml.jackson.core.json.JsonWriteContext;
+import com.fasterxml.jackson.core.io.IOContext;
 
 import com.fasterxml.jackson.dataformat.csv.impl.CsvWriter;
 
-public class CsvGenerator extends JsonGeneratorBase
+public class CsvGenerator extends GeneratorBase
 {
     /**
      * Enumeration that defines all togglable features for CSV writers
@@ -176,17 +175,6 @@ public class CsvGenerator extends JsonGeneratorBase
             _reportError("Can not write a field name, expecting a value");
         }
         _writeFieldName(name);
-    }
-    
-    @Override
-    public final void writeFieldName(SerializedString name)
-        throws IOException, JsonGenerationException
-    {
-        // Object is a value, need to verify it's allowed
-        if (_writeContext.writeFieldName(name.getValue()) == JsonWriteContext.STATUS_EXPECT_VALUE) {
-            _reportError("Can not write a field name, expecting a value");
-        }
-        _writeFieldName(name.getValue());
     }
 
     @Override

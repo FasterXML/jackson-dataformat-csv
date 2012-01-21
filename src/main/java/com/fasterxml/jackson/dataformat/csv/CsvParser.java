@@ -4,12 +4,12 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import org.codehaus.jackson.*;
-import org.codehaus.jackson.impl.JsonParserMinimalBase;
-import org.codehaus.jackson.impl.JsonReadContext;
-import org.codehaus.jackson.io.IOContext;
-import org.codehaus.jackson.util.BufferRecycler;
-import org.codehaus.jackson.util.ByteArrayBuilder;
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.base.ParserMinimalBase;
+import com.fasterxml.jackson.core.io.IOContext;
+import com.fasterxml.jackson.core.json.JsonReadContext;
+import com.fasterxml.jackson.core.util.BufferRecycler;
+import com.fasterxml.jackson.core.util.ByteArrayBuilder;
 
 import com.fasterxml.jackson.dataformat.csv.impl.CsvReader;
 import com.fasterxml.jackson.dataformat.csv.impl.TextBuffer;
@@ -23,7 +23,7 @@ import com.fasterxml.jackson.dataformat.csv.impl.TextBuffer;
  * using {@link CsvReader}.
  */
 public class CsvParser
-    extends JsonParserMinimalBase
+    extends ParserMinimalBase
 {
     /**
      * Enumeration that defines all togglable features for Smile generators.
@@ -603,6 +603,11 @@ public class CsvParser
      */
 
     @Override
+    public Object getEmbeddedObject() throws IOException, JsonParseException {
+        return null;
+    }
+    
+    @Override
     public byte[] getBinaryValue(Base64Variant variant) throws IOException, JsonParseException
     {
         if (_binaryValue == null) {
@@ -704,5 +709,4 @@ public class CsvParser
         }
         return _byteArrayBuilder;
     }
-
 }

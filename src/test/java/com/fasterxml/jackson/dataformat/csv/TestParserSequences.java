@@ -3,8 +3,10 @@ package com.fasterxml.jackson.dataformat.csv;
 import java.io.*;
 import java.util.*;
 
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
-import org.codehaus.jackson.map.*;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
+import com.fasterxml.jackson.databind.MappingIterator;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 /**
  * Tests for verifying behavior of enclosing input stream as

@@ -4,10 +4,10 @@ import java.io.*;
 import java.net.URL;
 import java.nio.charset.Charset;
 
-import org.codehaus.jackson.*;
-import org.codehaus.jackson.format.InputAccessor;
-import org.codehaus.jackson.format.MatchStrength;
-import org.codehaus.jackson.io.IOContext;
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.format.InputAccessor;
+import com.fasterxml.jackson.core.format.MatchStrength;
+import com.fasterxml.jackson.core.io.IOContext;
 
 import com.fasterxml.jackson.dataformat.csv.impl.UTF8Reader;
 import com.fasterxml.jackson.dataformat.csv.impl.UTF8Writer;

@@ -1,6 +1,6 @@
 package perf;
 
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * POJO representing data from form F-5500

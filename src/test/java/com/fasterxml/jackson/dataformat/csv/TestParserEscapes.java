@@ -1,6 +1,6 @@
 package com.fasterxml.jackson.dataformat.csv;
 
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 public class TestParserEscapes extends ModuleTestBase
 {

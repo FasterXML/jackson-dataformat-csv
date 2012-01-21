@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Arrays;
 
-import org.codehaus.jackson.*;
-import org.codehaus.jackson.io.IOContext;
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.io.IOContext;
 
 /**
  * Low-level helper class that handles actual output of CSV, purely
