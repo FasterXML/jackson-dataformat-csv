@@ -244,6 +244,23 @@ public class CsvParser
                 isEnabled(Feature.TRIM_SPACES));
     }
 
+    /*                                                                                       
+    /**********************************************************                              
+    /* Versioned                                                                             
+    /**********************************************************                              
+     */
+
+    @Override
+    public Version version() {
+        return ModuleVersion.instance.version();
+    }
+
+    /*
+    /**********************************************************                              
+    /* Overridden methods
+    /**********************************************************                              
+     */
+    
     @Override
     public ObjectCodec getCodec() {
         return _objectCodec;

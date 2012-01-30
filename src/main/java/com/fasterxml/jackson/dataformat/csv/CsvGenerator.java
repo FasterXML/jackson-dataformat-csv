@@ -112,7 +112,18 @@ public class CsvGenerator extends GeneratorBase
         _csvFeatures = csvFeatures;
         _writer = new CsvWriter(ctxt, out, columnSeparator, quoteChar, linefeed);
     }
-    
+
+    /*                                                                                       
+    /**********************************************************                              
+    /* Versioned                                                                             
+    /**********************************************************                              
+     */
+
+    @Override
+    public Version version() {
+        return ModuleVersion.instance.version();
+    }
+
     /*
     /**********************************************************
     /* Overridden methods, configuration

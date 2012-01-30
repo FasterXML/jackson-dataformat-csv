@@ -71,6 +71,17 @@ public class CsvFactory extends JsonFactory
 
     public CsvFactory(ObjectCodec oc) { super(oc); }
     
+    /*                                                                                       
+    /**********************************************************                              
+    /* Versioned                                                                             
+    /**********************************************************                              
+     */
+
+    @Override
+    public Version version() {
+        return ModuleVersion.instance.version();
+    }
+    
     /*
     /**********************************************************
     /* Format detection functionality (since 1.8)
