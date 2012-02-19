@@ -3,7 +3,7 @@ package com.fasterxml.jackson.dataformat.csv;
 import com.fasterxml.jackson.core.*;
 
 import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import com.fasterxml.jackson.dataformat.csv.impl.LRUMap;

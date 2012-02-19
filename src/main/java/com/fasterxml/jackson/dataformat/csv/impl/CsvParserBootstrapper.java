@@ -53,7 +53,7 @@ public final class CsvParserBootstrapper
      * Flag that indicates whether buffer above is to be recycled
      * after being used or not.
      */
-    private final boolean _bufferRecyclable;
+//    private final boolean _bufferRecyclable;
 
     /*
     /**********************************************************
@@ -94,7 +94,7 @@ public final class CsvParserBootstrapper
         _inputBuffer = ctxt.allocReadIOBuffer();
         _inputEnd = _inputPtr = 0;
         _inputProcessed = 0;
-        _bufferRecyclable = true;
+//        _bufferRecyclable = true;
     }
 
     public CsvParserBootstrapper(IOContext ctxt, char quoteChar,
@@ -107,7 +107,7 @@ public final class CsvParserBootstrapper
         _inputEnd = (inputStart + inputLen);
         // Need to offset this for correct location info
         _inputProcessed = -inputStart;
-        _bufferRecyclable = false;
+//        _bufferRecyclable = false;
     }
 
     /*
