@@ -398,6 +398,12 @@ public class CsvParser
     {
         return _currentName;
     }
+
+    @Override
+    public void overrideCurrentName(String name)
+    {
+        _currentName = name;
+    }
     
     @Override
     public JsonToken nextToken() throws IOException, JsonParseException
