@@ -236,9 +236,9 @@ public final class CsvParserBootstrapper
      */
 
     /**
-     * Current implementation is not as thorough as other functionality
-     * ({@link org.codehaus.jackson.impl.ByteSourceBootstrapper}); 
-     * supports UTF-8, for example. But it should work, for now, and can
+     * Current implementation is not as thorough as one used by
+     * other data formats like JSON.
+     * But it should work, for now, and can
      * be improved as necessary.
      */
     public static MatchStrength hasCSVFormat(InputAccessor acc,

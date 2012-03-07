@@ -186,7 +186,7 @@ public class CsvMapper extends ObjectMapper
         if (type.isArrayType() || type.isCollectionLikeType()) {
             throw new IllegalArgumentException("Type can NOT be a Collection or array type");
         }
-        return reader(type).withSchema(schemaFor(type));
+        return reader(type).with(schemaFor(type));
     }
 
     /**
@@ -207,7 +207,7 @@ public class CsvMapper extends ObjectMapper
         if (type.isArrayType() || type.isCollectionLikeType()) {
             throw new IllegalArgumentException("Type can NOT be a Collection or array type");
         }
-        return reader(type).withSchema(typedSchemaFor(type));
+        return reader(type).with(typedSchemaFor(type));
     }
 
     /*

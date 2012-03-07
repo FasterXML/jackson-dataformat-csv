@@ -157,7 +157,7 @@ public class CsvFactory extends JsonFactory
 
     /**
      * Method for enabling or disabling specified generator feature
-     * (check {@link org.codehaus.jackson.JsonGenerator.Feature} for list of features)
+     * (check {@link CsvGenerator.Feature} for list of features)
      *
      * @since 1.2
      */
@@ -173,7 +173,7 @@ public class CsvFactory extends JsonFactory
 
     /**
      * Method for enabling specified generator features
-     * (check {@link org.codehaus.jackson.JsonGenerator.Feature} for list of features)
+     * (check {@link CsvGenerator.Feature} for list of features)
      */
     public CsvFactory enable(CsvGenerator.Feature f) {
         _csvGeneratorFeatures |= f.getMask();
@@ -182,7 +182,7 @@ public class CsvFactory extends JsonFactory
 
     /**
      * Method for disabling specified generator feature
-     * (check {@link org.codehaus.jackson.JsonGenerator.Feature} for list of features)
+     * (check {@link CsvGenerator.Feature} for list of features)
      */
     public CsvFactory disable(CsvGenerator.Feature f) {
         _csvGeneratorFeatures &= ~f.getMask();

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.JsonEncoding;
 /**
  * Enumeration that defines commond encodings that can be used
  * for CSV content; similar to how
- * {@link org.codehaus.jackson.JsonEncoding} defines encodings
+ * {@link com.fasterxml.jackson.core.JsonEncoding} defines encodings
  * for JSON.
  * Note, however, that there is no specification on encodings that
  * CSV files can take; and most commonly only UTF-8 or Latin-1

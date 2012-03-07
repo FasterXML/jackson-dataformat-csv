@@ -102,7 +102,7 @@ public class TestParserSequences extends ModuleTestBase
         final int EXPECTED_BYTES = 97640;
         assertEquals(EXPECTED_BYTES, bytes.length);
 
-        MappingIterator<Entry> it = mapper.reader(Entry.class).withSchema(schema).readValues(bytes, 0, bytes.length);
+        MappingIterator<Entry> it = mapper.reader(Entry.class).with(schema).readValues(bytes, 0, bytes.length);
         verifySame(it, entries);
         bytes = null;
         
@@ -110,7 +110,7 @@ public class TestParserSequences extends ModuleTestBase
         String text = writer.writeValueAsString(entries);
         assertEquals(EXPECTED_BYTES, text.length());
 
-        it = mapper.reader(Entry.class).withSchema(schema).readValues(text);
+        it = mapper.reader(Entry.class).with(schema).readValues(text);
         verifySame(it, entries);
     
     }

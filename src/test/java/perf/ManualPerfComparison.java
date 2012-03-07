@@ -31,7 +31,7 @@ public final class ManualPerfComparison
             .withSkipFirstDataRow(true)
             ;
         
-        csvReader = mapper.reader(RequestEntry.class).withSchema(schema);
+        csvReader = mapper.reader(RequestEntry.class).with(schema);
         csvWriter = mapper.writer(schema);
     }
     

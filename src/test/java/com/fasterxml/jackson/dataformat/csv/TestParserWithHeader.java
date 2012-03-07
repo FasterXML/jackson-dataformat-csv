@@ -49,7 +49,7 @@ public class TestParserWithHeader extends ModuleTestBase
         CsvMapper mapper = mapperForCsv();
         mapper.disable(CsvParser.Feature.WRAP_AS_ARRAY);
         CsvSchema schema = CsvSchema.emptySchema().withHeader();
-        Entry entry = mapper.reader(Entry.class).withSchema(schema).readValue(
+        Entry entry = mapper.reader(Entry.class).with(schema).readValue(
                 "name,age,\"cute\"   \nLeo,4,true\n");
         assertEquals("Leo", entry.name);
         assertEquals(4, entry.age);
@@ -61,7 +61,7 @@ public class TestParserWithHeader extends ModuleTestBase
         CsvMapper mapper = mapperForCsv();
         mapper.disable(CsvParser.Feature.WRAP_AS_ARRAY);
         CsvSchema schema = mapper.schemaFor(Entry.class).withSkipFirstDataRow(true);
-        MappingIterator<Entry> it = mapper.reader(Entry.class).withSchema(schema).readValues(
+        MappingIterator<Entry> it = mapper.reader(Entry.class).with(schema).readValues(
                 "12354\n6,Lila,true");
         Entry entry;
         
@@ -147,7 +147,7 @@ public class TestParserWithHeader extends ModuleTestBase
     {
         CsvMapper mapper = mapperForCsv();
         try {
-            mapper.reader(Entry.class).withSchema(CsvSchema.emptySchema().withHeader()).readValue("  \nJoseph,57,false");
+            mapper.reader(Entry.class).with(CsvSchema.emptySchema().withHeader()).readValue("  \nJoseph,57,false");
             fail("Should have failed with exception");
         } catch (Exception e) {
             verifyException(e, "Empty header line");

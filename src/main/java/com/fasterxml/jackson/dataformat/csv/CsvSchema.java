@@ -102,7 +102,8 @@ public class CsvSchema
     
     /**
      * Enumeration that defines optional type indicators that can be passed
-     * with schema. If used type is used to determine type of {@link JsonToken}
+     * with schema. If used type is used to determine type of
+     * {@link com.fasterxml.jackson.core.JsonToken}
      * that column values are exposed as.
      */
     public enum ColumnType

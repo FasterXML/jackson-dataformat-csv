@@ -52,12 +52,12 @@ abstractions.
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>
-      <version>${project.version}</version>
+      <version>2.0.0-RC2</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>${project.version}</version>
+      <version>2.0.0-RC2</version>
     </dependency>
 
      <!-- and for testing, JUnit (or TestNG?) is needed -->
@@ -70,7 +70,7 @@ abstractions.
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-      <version>${project.version}</version>
+      <version>2.0.0-RC2</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

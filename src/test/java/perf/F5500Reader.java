@@ -49,7 +49,7 @@ public final class F5500Reader
             .build();
 
         MappingIterator<T> it = mapper.reader(cls)
-            .withSchema(schema).readValues(inputFile);
+            .with(schema).readValues(inputFile);
         while (it.hasNext()) {
             @SuppressWarnings("unused")
             T row = it.nextValue();
