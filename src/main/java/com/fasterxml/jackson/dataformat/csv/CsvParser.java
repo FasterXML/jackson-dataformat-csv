@@ -510,7 +510,21 @@ public class CsvParser
         _state = STATE_NAMED_VALUE;
         _currentValue = next;
         if (_columnIndex >= _columnCount) {
-            _reportError("Too many entries: expected at most "+_columnCount+" (value ("+next.length()+" chars) \""+next+"\")");
+            _currentName = null;
+            /* 14-Mar-2012, tatu: As per [Issue-1], let's allow one specific
+             *  case of extra: if we get just one all-whitespace entry, that
+             *  can be just skipped
+             */
+            if (_columnIndex == _columnCount) {
+                next = next.trim();
+                if (next.length() == 0) {
+                    /* if so, need to verify we then get the end-of-record;
+                     * easiest to do by just calling ourselves again...
+                     */
+                    return _handleNextEntry();                   
+                }
+            }
+            _reportError("Too many entries: expected at most "+_columnCount+" (value #"+_columnCount+" ("+next.length()+" chars) \""+next+"\")");
         }
         _currentName = _schema.column(_columnIndex).getName();
         return JsonToken.FIELD_NAME;

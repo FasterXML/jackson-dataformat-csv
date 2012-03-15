@@ -45,7 +45,7 @@ public class TestParserNoSchema extends ModuleTestBase
 
         assertFalse(it.hasNext());
     }
-
+    
     public void testUntypedAsArray() throws Exception
     {
         CsvMapper mapper = mapperForCsv();
@@ -71,4 +71,33 @@ public class TestParserNoSchema extends ModuleTestBase
         assertEquals("true", row.get(0));
         assertEquals("", row.get(1));
     }
+
+    /* Let's also allow varying number of columns, if no
+     * schema has been defined.
+     */
+    public void testUntypedAsSequenceVarLengths() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        mapper.disable(CsvParser.Feature.WRAP_AS_ARRAY);
+        MappingIterator<Object[]> it = mapper.reader(Object[].class).readValues(
+            "1,2\n1,2,3,4\n");
+
+        Object[] row;
+        assertTrue(it.hasNext());
+        row = it.next();
+        assertEquals(2, row.length);
+        assertEquals("1", row[0]);
+        assertEquals("2", row[1]);
+
+        assertTrue(it.hasNext());
+        row = it.next();
+        assertEquals(4, row.length);
+        assertEquals("1", row[0]);
+        assertEquals("2", row[1]);
+        assertEquals("3", row[2]);
+        assertEquals("4", row[3]);
+
+        assertFalse(it.hasNext());
+    }
+
 }
