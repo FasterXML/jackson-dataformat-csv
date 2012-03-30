@@ -1,21 +1,16 @@
 # Overview
 
-This projects aims at adding [Jackson](http://http://wiki.fasterxml.com/JacksonHome) extension component to allow reading and writing [CSV](http://en.wikipedia.org/wiki/Comma-separated_values) encoded data.
+This project adds [Jackson](http://http://wiki.fasterxml.com/JacksonHome) extension component to allow reading and writing [CSV](http://en.wikipedia.org/wiki/Comma-separated_values) encoded data, either as "raw" data (sequence of String arrays), or via data binding to/from Java Objects (POJOs).
 
 # Status
 
-Implementation has started, and currently following features work:
-
- * Basic writing of CSV and serializating POJOs
- * Basic reading of CSV and deserializating POJOs
- * Construction of `CsvSchema` instances using `CsvMapper` (schemas are needed for reading and writing)
- * Reading `CsvSchema` from the first line of CSV document (just names)
+With version 2.0.0, implementation is complete and ready to be used for "real work". Unit tests cover basic usage patterns; and there is even a small performance benchmark for evaluating approximate performance (which is within factor of 2x from equivalent JSON parsing).
 
 What is missing:
 
- * Optimizations to make number handling as efficient as from JSON
- * Measurements, performance
- * Extensive tests for various "exotic" CSV
+ * Optimizations to make number handling as efficient as from JSON (but note: even with existing code, performance is typically limited by I/O and NOT parsing or generation)
+ * Extensive performance measurements
+ * Tests for various "exotic" CSV -- while basic escaping and quoting are tested, CSV is notoriously vaguely specified.
 
 ## Maven dependency
 
@@ -24,10 +19,8 @@ To use this extension on Maven-based projects, use following dependency:
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-csv</artifactId>
-      <version>1.9.4</version>
+      <version>2.0.0</version>
     </dependency>
-
-(or whatever version is most up-to-date at the moment)
 
 # Usage
 
@@ -104,8 +97,9 @@ In addition to reading things as root-level Objects or arrays, you can also forc
 
 (NEED TO ADD AN EXAMPLE)
 
-# Download, docs etc
+# Documentation
 
-Check out [Wiki].
+* [Javadocs](/jackson-dataformat-csv/wiki/JavaDocs)
+* External articles:
+ * [CSV with Jackson 2.0](http://www.cowtowncoder.com/blog/archives/2012/03/entry_468.html)
 
-[Wiki]: https://github.com/FasterXML/jackson-dataformat-csv/wiki
