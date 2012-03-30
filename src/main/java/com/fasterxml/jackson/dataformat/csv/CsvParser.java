@@ -26,7 +26,7 @@ public class CsvParser
     extends ParserMinimalBase
 {
     /**
-     * Enumeration that defines all togglable features for Smile generators.
+     * Enumeration that defines all togglable features for CSV parsers
      */
     public enum Feature {
         /**
@@ -350,12 +350,12 @@ public class CsvParser
         return (_csvFeatures & f.getMask()) != 0;
     }
 
+    // SHOULD have been in 2.0; but is only in 2.1 for JsonParser:
+    //@Override
     /**
      * Accessor for getting active schema definition: it may be
      * "empty" (no column definitions), but will never be null
      * since it defaults to an empty schema (and default configuration)
-     *<p>
-     * NOTE: should be part of JsonParser, will be for 2.0.
      */
     public CsvSchema getSchema() {
         return _schema;
