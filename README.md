@@ -101,7 +101,7 @@ In addition to reading things as root-level Objects or arrays, you can also forc
 
 # Documentation
 
-* [Documentation](/jackson-dataformat-csv/wiki/Documentation) (includes javadocs)
+* [Documentation](jackson-dataformat-csv/wiki/Documentation) (includes javadocs)
 * External articles:
  * [CSV with Jackson 2.0](http://www.cowtowncoder.com/blog/archives/2012/03/entry_468.html)
 
