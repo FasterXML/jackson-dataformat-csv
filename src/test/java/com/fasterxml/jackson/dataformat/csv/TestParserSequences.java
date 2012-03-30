@@ -14,12 +14,6 @@ import com.fasterxml.jackson.databind.ObjectWriter;
  */
 public class TestParserSequences extends ModuleTestBase
 {
-    /*
-    /**********************************************************************
-    /* Helper types
-    /**********************************************************************
-     */
-
     @JsonPropertyOrder({"x", "y"})
     protected static class Entry {
         public int x, y;
