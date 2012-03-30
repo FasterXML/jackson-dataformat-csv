@@ -2,6 +2,8 @@
 
 This project adds [Jackson](http://http://wiki.fasterxml.com/JacksonHome) extension component to allow reading and writing [CSV](http://en.wikipedia.org/wiki/Comma-separated_values) encoded data, either as "raw" data (sequence of String arrays), or via data binding to/from Java Objects (POJOs).
 
+Project is licensed under [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt).
+
 # Status
 
 With version 2.0.0, implementation is complete and ready to be used for "real work". Unit tests cover basic usage patterns; and there is even a small performance benchmark for evaluating approximate performance (which is within factor of 2x from equivalent JSON parsing).
