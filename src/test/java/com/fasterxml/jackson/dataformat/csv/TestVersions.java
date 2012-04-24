@@ -38,7 +38,7 @@ public class TestVersions extends ModuleTestBase
         assertEquals(MAJOR_VERSION, v.getMajorVersion());
         assertEquals(MINOR_VERSION, v.getMinorVersion());
         // Check patch level initially, comment out for maint versions
-        assertEquals(0, v.getPatchLevel());
+	//        assertEquals(0, v.getPatchLevel());
         assertEquals(GROUP_ID, v.getGroupId());
         assertEquals(ARTIFACT_ID, v.getArtifactId());
     }
