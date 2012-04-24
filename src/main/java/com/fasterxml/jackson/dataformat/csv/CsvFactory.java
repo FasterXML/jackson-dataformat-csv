@@ -257,8 +257,7 @@ public class CsvFactory extends JsonFactory
     }
 
     /**
-     * Since Csv format always uses UTF-8 internally, no encoding need
-     * to be passed to this method.
+     * This method assumes use of UTF-8 for encoding.
      */
     @Override
     public CsvGenerator createJsonGenerator(OutputStream out) throws IOException
