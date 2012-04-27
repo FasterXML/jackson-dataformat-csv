@@ -1,5 +1,6 @@
 package com.fasterxml.jackson.dataformat.csv;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonGenerationException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,9 +9,35 @@ import com.fasterxml.jackson.dataformat.csv.ModuleTestBase.FiveMinuteUser.Gender
 
 public class TestGenerator extends ModuleTestBase
 {
+    @JsonPropertyOrder({"id", "amount"})
+    static class Entry {
+        public String id;
+        public double amount;
+
+        public Entry(String id, double amount) {
+            this.id = id;
+            this.amount = amount;
+        }
+    }
+
+    @JsonPropertyOrder({"id", "desc"})
+    static class IdDesc {
+        public String id, desc;
+
+        public IdDesc(String id, String desc) {
+            this.id = id;
+            this.desc = desc;
+        }
+    }
+    
+    /*
+    /**********************************************************************
+    /* Unit tests
+    /**********************************************************************
+     */
+
     public void testSimpleExplicit() throws Exception
     {
-            
         ObjectMapper mapper = mapperForCsv();
         CsvSchema schema = CsvSchema.builder()
             .addColumn("firstName")
@@ -58,6 +85,31 @@ public class TestGenerator extends ModuleTestBase
         } catch (JsonGenerationException e) {
             verifyException(e, "contains no column names");
         }
+    }
+
+    public void testExplicitWithDouble() throws Exception
+    {
+        ObjectMapper mapper = mapperForCsv();
+        CsvSchema schema = CsvSchema.builder()
+            .addColumn("id")
+            .addColumn("amount")
+            .build();
+
+        String result = mapper.writer(schema).writeValueAsString(new Entry("abc", 1.25));
+        assertEquals("abc,1.25\n", result);
+    }
+
+    public void testExplicitWithQupted() throws Exception
+    {
+        ObjectMapper mapper = mapperForCsv();
+        CsvSchema schema = CsvSchema.builder()
+            .addColumn("id")
+            .addColumn("desc")
+            .build();
+        
+        String result = mapper.writer(schema).writeValueAsString(new IdDesc("id", "Some \"stuff\""));
+        // MUST use doubling for quotes!
+        assertEquals("id,\"Some \"\"stuff\"\"\"\n", result);
     }
     
     /*

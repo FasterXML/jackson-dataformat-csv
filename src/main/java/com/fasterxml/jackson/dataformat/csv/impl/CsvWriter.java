@@ -315,8 +315,7 @@ public final class CsvWriter
         if (_nextColumnToWrite > 0) {
             _outputBuffer[_outputTail++] = _cfgColumnSeparator;
         }
-        System.arraycopy(value, 0, _outputBuffer, _outputTail, len);
-        _outputTail += len;
+        writeRaw(str);
     }
 
     protected void appendValue(boolean value) throws IOException
@@ -352,13 +351,15 @@ public final class CsvWriter
     public void _writeQuoted(String text) throws IOException
     {
         // !!! TODO: implement properly
-        if (_nextColumnToWrite > 0) {
-            _outputBuffer[_outputTail++] = ',';
+        if (_outputTail >= _outputEnd) {
+            _flushBuffer();
         }
+        _outputBuffer[_outputTail++] = _cfgQuoteCharacter;
         writeRaw(text);
-        if (_nextColumnToWrite > 0) {
-            _outputBuffer[_outputTail++] = ',';
+        if (_outputTail >= _outputEnd) {
+            _flushBuffer();
         }
+        _outputBuffer[_outputTail++] = _cfgQuoteCharacter;
     }
     
     public void writeRaw(String text) throws IOException

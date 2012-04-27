@@ -1,15 +1,22 @@
-Version: 2.0.1
+Version: 2.0.2
 
 Release date:
-  25-Mar-2012
+  xx-Apr-2012
 
 Description:
-  First 2.0 patch release. No fixes, features, dependency upgrade to
-  rely on other 2.0.1 component.
+  Second 2.0 patch release.
+
+Fixes:
+
+* Issue-5: Writing of double values failing
 
 ------------------------------------------------------------------------
 === History: ===
 ------------------------------------------------------------------------
+
+2.0.1 [23-Apr-2012]
+  Maintenance release to keep version numbers in sync with other components
+  (depend on 2.0.1 core etc)
 
 2.0.0 [25-Mar-2012]
   The official 2.0 release of Jackson.
