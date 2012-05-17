@@ -1,14 +1,16 @@
 Version: 2.0.2
 
 Release date:
-  14-May-2012
+  16-May-2012
 
 Description:
   Second 2.0 patch release.
 
 Fixes:
 
+
 * Issue-5: Writing of double values failing
+* Issue-6: Generator not doubling up double-quotes as expected
 
 ------------------------------------------------------------------------
 === History: ===

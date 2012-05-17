@@ -90,7 +90,7 @@ public final class CsvWriter
     protected char[] _outputBuffer;
 
     /**
-     * Flag that indicates whether the <code>_outputBuffer</code> is recycable (and
+     * Flag that indicates whether the <code>_outputBuffer</code> is recyclable (and
      * needs to be returned to recycler once we are done) or not.
      */
     protected boolean _bufferRecyclable;
@@ -350,12 +350,46 @@ public final class CsvWriter
 
     public void _writeQuoted(String text) throws IOException
     {
-        // !!! TODO: implement properly
         if (_outputTail >= _outputEnd) {
             _flushBuffer();
         }
-        _outputBuffer[_outputTail++] = _cfgQuoteCharacter;
-        writeRaw(text);
+        final char q = _cfgQuoteCharacter;
+        _outputBuffer[_outputTail++] = q;
+        // simple case: if we have enough room, no need for boundary checks
+        final int len = text.length();
+        if ((_outputTail + len + len) >= _outputEnd) {
+            _writeLongQuoted(text);
+            return;
+        }
+        for (int i = 0; i < len; ++i) {
+            char c = text.charAt(i);
+            if (c == q) { // double up
+                _outputBuffer[_outputTail++] = _cfgQuoteCharacter;
+                if (_outputTail >= _outputEnd) {
+                    _flushBuffer();
+                }
+            }
+            _outputBuffer[_outputTail++] = c;
+        }
+        _outputBuffer[_outputTail++] = q;
+    }
+    
+    private final void _writeLongQuoted(String text) throws IOException
+    {
+        final int len = text.length();
+        for (int i = 0; i < len; ++i) {
+            if (_outputTail >= _outputEnd) {
+                _flushBuffer();
+            }
+            char c = text.charAt(i);
+            if (i == _cfgQuoteCharacter) { // double up
+                _outputBuffer[_outputTail++] = _cfgQuoteCharacter;
+                if (_outputTail >= _outputEnd) {
+                    _flushBuffer();
+                }
+            }
+            _outputBuffer[_outputTail++] = c;
+        }
         if (_outputTail >= _outputEnd) {
             _flushBuffer();
         }
