@@ -109,7 +109,6 @@ public class TestGenerator extends ModuleTestBase
         
         String result = mapper.writer(schema).writeValueAsString(new IdDesc("id", "Some \"stuff\""));
         // MUST use doubling for quotes!
-System.err.println("DEBUG: result = "+result);
         assertEquals("id,\"Some \"\"stuff\"\"\"\n", result);
     }
     

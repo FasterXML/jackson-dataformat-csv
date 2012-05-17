@@ -16,8 +16,12 @@ public class CsvGenerator extends GeneratorBase
 {
     /**
      * Enumeration that defines all togglable features for CSV writers
+     * (if any: currently none)
      */
     public enum Feature {
+        /**
+         * Placeholder until we have actual features
+         */
         BOGUS(false) // placeholder
         ;
 
@@ -66,7 +70,7 @@ public class CsvGenerator extends GeneratorBase
 
     /**
      * Bit flag composed of bits that indicate which
-     * {@link org.codehaus.jackson.smile.SmileGenerator.Feature}s
+     * {@link CsvGenerator.Feature}s
      * are enabled.
      */
     protected int _csvFeatures;
