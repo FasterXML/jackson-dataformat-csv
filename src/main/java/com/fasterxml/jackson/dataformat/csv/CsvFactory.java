@@ -2,7 +2,6 @@ package com.fasterxml.jackson.dataformat.csv;
 
 import java.io.*;
 import java.net.URL;
-import java.nio.charset.Charset;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.format.InputAccessor;
@@ -158,8 +157,6 @@ public class CsvFactory extends JsonFactory
     /**
      * Method for enabling or disabling specified generator feature
      * (check {@link CsvGenerator.Feature} for list of features)
-     *
-     * @since 1.2
      */
     public final CsvFactory configure(CsvGenerator.Feature f, boolean state) {
         if (state) {
@@ -350,16 +347,13 @@ public class CsvFactory extends JsonFactory
         return gen;
     }
 
-    protected final Charset UTF8 = Charset.forName("UTF-8");
+//    protected final Charset UTF8 = Charset.forName("UTF-8");
     
     protected Reader _createReader(InputStream in, JsonEncoding enc, IOContext ctxt) throws IOException
     {
         // default to UTF-8 if encoding missing
         if (enc == null || enc == JsonEncoding.UTF8) {
-            /* 06-Dec-2011, tatu: Custom UTF-8 reader isn't faster at this point
-             *   (nor measurably slower); should figure out why not, make it faster :)
-             * 
-             */
+            // 28-May-2012, tatu: Custom UTF8 reader should be faster, esp for small input:
 //            return new InputStreamReader(in, UTF8);
             boolean autoClose = ctxt.isResourceManaged() || this.isEnabled(JsonParser.Feature.AUTO_CLOSE_SOURCE);
             return new UTF8Reader(ctxt, in, autoClose);

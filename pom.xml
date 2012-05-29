@@ -39,8 +39,9 @@ abstractions.
   </scm>
 
   <properties>
-    <javac.src.version>1.5</javac.src.version>
-    <javac.target.version>1.5</javac.target.version>
+    <!-- CSV plug-in is 1.6 only -->
+    <javac.src.version>1.6</javac.src.version>
+    <javac.target.version>1.6</javac.target.version>
     <!--
      | Configuration properties for the OSGi maven-bundle-plugin
     -->
