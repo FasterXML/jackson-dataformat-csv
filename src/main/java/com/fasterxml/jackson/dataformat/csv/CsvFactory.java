@@ -206,21 +206,21 @@ public class CsvFactory extends JsonFactory
     public CsvParser createJsonParser(File f)
         throws IOException, JsonParseException
     {
-        return _createJsonParser(new FileInputStream(f), _createContext(f, true));
+        return _createParser(new FileInputStream(f), _createContext(f, true));
     }
 
     @Override
     public CsvParser createJsonParser(URL url)
         throws IOException, JsonParseException
     {
-        return _createJsonParser(_optimizedStreamFromURL(url), _createContext(url, true));
+        return _createParser(_optimizedStreamFromURL(url), _createContext(url, true));
     }
 
     @Override
     public CsvParser createJsonParser(InputStream in)
         throws IOException, JsonParseException
     {
-        return _createJsonParser(in, _createContext(in, false));
+        return _createParser(in, _createContext(in, false));
     }
 
     //public JsonParser createJsonParser(Reader r)
@@ -229,14 +229,14 @@ public class CsvFactory extends JsonFactory
     public CsvParser createJsonParser(byte[] data)
         throws IOException, JsonParseException
     {
-        return _createJsonParser(data, 0, data.length, _createContext(data, true));
+        return _createParser(data, 0, data.length, _createContext(data, true));
     }
     
     @Override
     public CsvParser createJsonParser(byte[] data, int offset, int len)
         throws IOException, JsonParseException
     {
-        return _createJsonParser(data, offset, len, _createContext(data, true));
+        return _createParser(data, offset, len, _createContext(data, true));
     }
 
     /*
@@ -264,7 +264,7 @@ public class CsvFactory extends JsonFactory
     {
         // false -> we won't manage the stream unless explicitly directed to
         IOContext ctxt = _createContext(out, false);
-        return _createJsonGenerator(ctxt, _createWriter(out, JsonEncoding.UTF8, ctxt));
+        return _createGenerator(ctxt, _createWriter(out, JsonEncoding.UTF8, ctxt));
     }
     
     /*
@@ -280,7 +280,7 @@ public class CsvFactory extends JsonFactory
      * parser.
      */
     @Override
-    protected CsvParser _createJsonParser(InputStream in, IOContext ctxt)
+    protected CsvParser _createParser(InputStream in, IOContext ctxt)
         throws IOException, JsonParseException
     {
         Reader r = _createReader(in, null, ctxt);
@@ -293,7 +293,7 @@ public class CsvFactory extends JsonFactory
      * parser.
      */
     @Override
-    protected JsonParser _createJsonParser(Reader r, IOContext ctxt)
+    protected JsonParser _createParser(Reader r, IOContext ctxt)
         throws IOException, JsonParseException
     {
         return new CsvParser(ctxt, _getBufferRecycler(), _parserFeatures, _csvParserFeatures,
@@ -305,7 +305,7 @@ public class CsvFactory extends JsonFactory
      * parser.
      */
     @Override
-    protected CsvParser _createJsonParser(byte[] data, int offset, int len, IOContext ctxt)
+    protected CsvParser _createParser(byte[] data, int offset, int len, IOContext ctxt)
         throws IOException, JsonParseException
     {
         Reader r = _createReader(data, offset, len, null, ctxt);
@@ -318,10 +318,10 @@ public class CsvFactory extends JsonFactory
      * generator.
      */
     @Override
-    protected JsonGenerator _createJsonGenerator(Writer out, IOContext ctxt)
+    protected JsonGenerator _createGenerator(Writer out, IOContext ctxt)
         throws IOException
     {
-        return _createJsonGenerator(ctxt, out);
+        return _createGenerator(ctxt, out);
     }
 
     @Override
@@ -339,7 +339,7 @@ public class CsvFactory extends JsonFactory
     /**********************************************************
      */
     
-    protected CsvGenerator _createJsonGenerator(IOContext ctxt, Writer out)
+    protected CsvGenerator _createGenerator(IOContext ctxt, Writer out)
         throws IOException
     {
         int feats = _csvGeneratorFeatures;
