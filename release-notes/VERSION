@@ -1,20 +1,25 @@
-Version: 2.0.2
+Version: 2.0.4
 
 Release date:
-  16-May-2012
+  26-Jun-2012
 
 Description:
-  Second 2.0 patch release.
+  Another patch release for 2.0.0.
 
-Fixes:
-
-
-* Issue-5: Writing of double values failing
-* Issue-6: Generator not doubling up double-quotes as expected
+No fixes or changes, released along with other core components
 
 ------------------------------------------------------------------------
 === History: ===
 ------------------------------------------------------------------------
+
+(note: skipped 2.0.3 -- only some modules used that version)
+
+2.0.2 (16-May-2012)
+
+Fixes:
+
+* Issue-5: Writing of double values failing
+* Issue-6: Generator not doubling up double-quotes as expected
 
 2.0.1 [23-Apr-2012]
   Maintenance release to keep version numbers in sync with other components
