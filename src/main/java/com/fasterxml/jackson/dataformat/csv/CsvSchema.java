@@ -290,7 +290,7 @@ public class CsvSchema
          * Default is "not used", meaning that no escaping used.
          */
         public Builder setEscapeChar(char c) {
-            _escapeChar = (int) c;
+            _escapeChar = c;
             return this;
         }
 

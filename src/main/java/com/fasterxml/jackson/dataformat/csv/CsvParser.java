@@ -273,7 +273,7 @@ public class CsvParser
     
     @Override
     public boolean canUseSchema(FormatSchema schema) {
-        return (schema instanceof FormatSchema);
+        return (schema instanceof CsvSchema);
     }
 
     @Override
@@ -357,6 +357,7 @@ public class CsvParser
      * "empty" (no column definitions), but will never be null
      * since it defaults to an empty schema (and default configuration)
      */
+    @Override
     public CsvSchema getSchema() {
         return _schema;
     }

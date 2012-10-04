@@ -190,16 +190,16 @@ public class CsvReader
     final static BigDecimal BD_MIN_INT = new BigDecimal(Long.MIN_VALUE);
     final static BigDecimal BD_MAX_INT = new BigDecimal(Long.MAX_VALUE);
 
-    final static long MIN_INT_L = (long) Integer.MIN_VALUE;
-    final static long MAX_INT_L = (long) Integer.MAX_VALUE;
+    final static long MIN_INT_L = Integer.MIN_VALUE;
+    final static long MAX_INT_L = Integer.MAX_VALUE;
 
     // These are not very accurate, but have to do... (for bounds checks)
 
-    final static double MIN_LONG_D = (double) Long.MIN_VALUE;
-    final static double MAX_LONG_D = (double) Long.MAX_VALUE;
+    final static double MIN_LONG_D = Long.MIN_VALUE;
+    final static double MAX_LONG_D = Long.MAX_VALUE;
 
-    final static double MIN_INT_D = (double) Integer.MIN_VALUE;
-    final static double MAX_INT_D = (double) Integer.MAX_VALUE;
+    final static double MIN_INT_D = Integer.MIN_VALUE;
+    final static double MAX_INT_D = Integer.MAX_VALUE;
     
     
     // Digits, numeric
@@ -599,7 +599,7 @@ public class CsvReader
                     break;
                 }
             }
-            outBuf[outPtr++] = (char) c;
+            outBuf[outPtr++] = c;
         }
         // ok, either input or output across buffer boundary, offline
         _inputPtr = ptr;
@@ -1107,7 +1107,7 @@ public class CsvReader
         if ((_numTypesValid & NR_LONG) != 0) {
             // Let's verify it's lossless conversion by simple roundtrip
             int result = (int) _numberLong;
-            if (((long) result) != _numberLong) {
+            if (result != _numberLong) {
                 _reportError("Numeric value ("+getText()+") out of range of int");
             }
             _numberInt = result;
@@ -1137,7 +1137,7 @@ public class CsvReader
         throws IOException, JsonParseException
     {
         if ((_numTypesValid & NR_INT) != 0) {
-            _numberLong = (long) _numberInt;
+            _numberLong = _numberInt;
         } else if ((_numTypesValid & NR_BIGINT) != 0) {
             // !!! Should check for range...
             _numberLong = _numberBigInt.longValue();
@@ -1192,9 +1192,9 @@ public class CsvReader
         } else if ((_numTypesValid & NR_BIGINT) != 0) {
             _numberDouble = _numberBigInt.doubleValue();
         } else if ((_numTypesValid & NR_LONG) != 0) {
-            _numberDouble = (double) _numberLong;
+            _numberDouble = _numberLong;
         } else if ((_numTypesValid & NR_INT) != 0) {
-            _numberDouble = (double) _numberInt;
+            _numberDouble = _numberInt;
         } else {
             _throwInternal(); // should never get here
         }
@@ -1222,7 +1222,7 @@ public class CsvReader
         } else if ((_numTypesValid & NR_LONG) != 0) {
             _numberBigDecimal = BigDecimal.valueOf(_numberLong);
         } else if ((_numTypesValid & NR_INT) != 0) {
-            _numberBigDecimal = BigDecimal.valueOf((long) _numberInt);
+            _numberBigDecimal = BigDecimal.valueOf(_numberInt);
         } else {
             _throwInternal(); // should never get here
         }

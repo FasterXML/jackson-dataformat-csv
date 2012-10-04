@@ -52,8 +52,8 @@ public class CsvGenerator extends GeneratorBase
         public int getMask() { return _mask; }
     };
 
-    protected final static long MIN_INT_AS_LONG = (long) Integer.MIN_VALUE;
-    protected final static long MAX_INT_AS_LONG = (long) Integer.MAX_VALUE;
+    protected final static long MIN_INT_AS_LONG = Integer.MIN_VALUE;
+    protected final static long MAX_INT_AS_LONG = Integer.MAX_VALUE;
     
     /*
     /**********************************************************
@@ -160,7 +160,7 @@ public class CsvGenerator extends GeneratorBase
 
     @Override
     public boolean canUseSchema(FormatSchema schema) {
-        return (schema instanceof FormatSchema);
+        return (schema instanceof CsvSchema);
     }
     
     @Override
@@ -507,7 +507,7 @@ public class CsvGenerator extends GeneratorBase
     public void writeNumber(float f) throws IOException, JsonGenerationException
     {
         _verifyValueWrite("write number");
-        _writer.write(_columnIndex(), (double) f);
+        _writer.write(_columnIndex(), f);
     }
 
     @Override

@@ -4,6 +4,13 @@ Release date:
   xx-Jun-2012
 
 Description:
+  A new minor release that works with core 2.1 version.
+
+Changes:
+
+* Due to core changes, `readValues()` method of `CsvMapper` and `ObjectReader`
+  instances will work slightly differently, for specific case of "unwrapped"
+  Object[] binding: see unit tests for correct usage.
 
 ------------------------------------------------------------------------
 === History: ===

@@ -293,7 +293,7 @@ public final class CsvParserBootstrapper
     private final static int skipSpace(InputAccessor acc, byte b) throws IOException
     {
         while (true) {
-            int ch = (int) b & 0xFF;
+            int ch = b & 0xFF;
             if (!(ch == ' ' || ch == '\r' || ch == '\n' || ch == '\t')) {
                 return ch;
             }
@@ -301,7 +301,7 @@ public final class CsvParserBootstrapper
                 return -1;
             }
             b = acc.nextByte();
-            ch = (int) b & 0xFF;
+            ch = b & 0xFF;
         }
     }
     
