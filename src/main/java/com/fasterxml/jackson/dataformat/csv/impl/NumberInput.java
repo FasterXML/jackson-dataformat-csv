@@ -119,7 +119,7 @@ public final class NumberInput
         // Note: caller must ensure length is [10, 18]
         int len1 = len-9;
         long val = parseInt(digitChars, offset, len1) * L_BILLION;
-        return val + (long) parseInt(digitChars, offset+len1, 9);
+        return val + parseInt(digitChars, offset+len1, 9);
     }
 
     public final static long parseLong(String str)
@@ -129,7 +129,7 @@ public final class NumberInput
          */
         int length = str.length();
         if (length <= 9) {
-            return (long) parseInt(str);
+            return parseInt(str);
         }
         // !!! TODO: implement efficient 2-int parsing...
         return Long.parseLong(str);

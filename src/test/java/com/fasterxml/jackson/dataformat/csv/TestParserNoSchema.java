@@ -22,8 +22,15 @@ public class TestParserNoSchema extends ModuleTestBase
     {
         CsvMapper mapper = mapperForCsv();
         mapper.disable(CsvParser.Feature.WRAP_AS_ARRAY);
-        MappingIterator<Object[]> it = mapper.reader(Object[].class).readValues(
-            "1,null\nfoobar\n7,true\n");
+
+        /* 04-Oct-2012, tatu: Due to changes to 2.1, this is the one case
+         *   that does NOT work automatically via ObjectMapper/-Reader, but
+         *   instead we must manually create the reader
+         */
+        final String CSV = "1,null\nfoobar\n7,true\n";
+        CsvParser cp = mapper.getFactory().createParser(CSV);
+        
+        MappingIterator<Object[]> it = mapper.reader(Object[].class).readValues(cp);
 
         Object[] row;
         assertTrue(it.hasNext());
@@ -44,6 +51,8 @@ public class TestParserNoSchema extends ModuleTestBase
         assertEquals("true", row[1]);
 
         assertFalse(it.hasNext());
+
+        cp.close();
     }
     
     public void testUntypedAsArray() throws Exception
@@ -79,8 +88,15 @@ public class TestParserNoSchema extends ModuleTestBase
     {
         CsvMapper mapper = mapperForCsv();
         mapper.disable(CsvParser.Feature.WRAP_AS_ARRAY);
-        MappingIterator<Object[]> it = mapper.reader(Object[].class).readValues(
-            "1,2\n1,2,3,4\n");
+
+        /* 04-Oct-2012, tatu: Due to changes to 2.1, this is the one case
+         *   that does NOT work automatically via ObjectMapper/-Reader, but
+         *   instead we must manually create the reader
+         */
+        final String CSV = "1,2\n1,2,3,4\n";
+        CsvParser cp = mapper.getFactory().createParser(CSV);
+        
+        MappingIterator<Object[]> it = mapper.reader(Object[].class).readValues(cp);
 
         Object[] row;
         assertTrue(it.hasNext());
@@ -98,6 +114,8 @@ public class TestParserNoSchema extends ModuleTestBase
         assertEquals("4", row[3]);
 
         assertFalse(it.hasNext());
+
+        cp.close();
     }
 
 }

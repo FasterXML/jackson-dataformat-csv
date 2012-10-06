@@ -116,8 +116,8 @@ public final class UTF8Reader
     /**********************************************************************
      */
 
-    public void close()
-        throws IOException
+    @Override
+    public void close() throws IOException
     {
         InputStream in = _inputSource;
 
@@ -203,7 +203,7 @@ public final class UTF8Reader
         main_loop:
         while (outPtr < len) {
             // At this point we have at least one byte available
-            int c = (int) buf[inPtr++];
+            int c = buf[inPtr++];
 
             // Let's first do the quickie loop for common case; 7-bit ASCII
             if (c >= 0) { // ASCII? can probably loop, then
@@ -256,7 +256,7 @@ public final class UTF8Reader
                 break main_loop;
             }
 
-            int d = (int) buf[inPtr++];
+            int d = buf[inPtr++];
             if ((d & 0xC0) != 0x080) {
                 reportInvalidOther(d & 0xFF, outPtr-start);
             }

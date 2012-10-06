@@ -35,7 +35,7 @@ public class TestParserWithHeader extends ModuleTestBase
         // need to enable first-line-as-schema handling:
         parser.setSchema(CsvSchema.emptySchema().withHeader());
         assertToken(JsonToken.START_OBJECT, parser.nextToken());
-        CsvSchema schema = (CsvSchema) parser.getSchema();
+        CsvSchema schema = parser.getSchema();
         assertEquals(3, schema.size());
 
         // verify that names from first line are trimmed:

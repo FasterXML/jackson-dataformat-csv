@@ -8,7 +8,7 @@ import java.io.IOException;
  */
 public abstract class BufferedValue
 {
-    private BufferedValue() { }
+    protected BufferedValue() { }
     
     public abstract void write(CsvWriter w) throws IOException;
     
@@ -24,6 +24,7 @@ public abstract class BufferedValue
         
         public TextValue(String v) { _value = v; }
 
+        @Override
         public void write(CsvWriter w) throws IOException {
             w.appendValue(_value);
         }
@@ -35,6 +36,7 @@ public abstract class BufferedValue
         
         public IntValue(int v) { _value = v; }
 
+        @Override
         public void write(CsvWriter w) throws IOException {
             w.appendValue(_value);
         }
@@ -46,6 +48,7 @@ public abstract class BufferedValue
         
         public LongValue(long v) { _value = v; }
 
+        @Override
         public void write(CsvWriter w) throws IOException {
             w.appendValue(_value);
         }
@@ -57,6 +60,7 @@ public abstract class BufferedValue
         
         public DoubleValue(double v) { _value = v; }
 
+        @Override
         public void write(CsvWriter w) throws IOException {
             w.appendValue(_value);
         }
@@ -68,6 +72,7 @@ public abstract class BufferedValue
         
         public BooleanValue(boolean v) { _value = v; }
 
+        @Override
         public void write(CsvWriter w) throws IOException {
             w.appendValue(_value);
         }
