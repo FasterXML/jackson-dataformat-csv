@@ -16,21 +16,23 @@ Changes:
 === History: ===
 ------------------------------------------------------------------------
 
-2.0.2 [16-May-2012]
+2.0.4 (26-Jun-2012)
+
+No fixes or changes, released along with other core components
+
+2.0.2 (16-May-2012)
 
 Fixes:
 
 * Issue-5: Writing of double values failing
 * Issue-6: Generator not doubling up double-quotes as expected
 
-2.0.1 [23-Apr-2012]
+2.0.1 (23-Apr-2012)
   Maintenance release to keep version numbers in sync with other components
   (depend on 2.0.1 core etc)
 
-2.0.0 [25-Mar-2012]
+2.0.0 (25-Mar-2012)
   The official 2.0 release of Jackson.
   No new features; upgraded to work with core 2.0.0.
-
-  (all fixes up until 1.9.6)
 
 [entries for versions 1.x and earlier not retained; refer to earlier releases)
