@@ -109,6 +109,29 @@ public class TestParserSequences extends ModuleTestBase
     
     }
 
+    // Verify that code sample from the page works:
+    public void testRawObjectArrays() throws Exception
+    {
+        CsvMapper mapper = new CsvMapper();
+        mapper.enable(CsvParser.Feature.WRAP_AS_ARRAY);
+        final String CSV = "a,b\nc,d\ne,f\n";
+        MappingIterator<Object[]> it = mapper.reader(Object[].class).readValues(CSV);
+
+        assertTrue(it.hasNext());
+        Object[] row = it.next();
+        assertEquals(2, row.length);
+        assertEquals("a", row[0]);
+        assertEquals("b", row[1]);
+        assertTrue(it.hasNext());
+        it.next();
+        assertTrue(it.hasNext());
+        row = it.next();
+        assertEquals(2, row.length);
+        assertEquals("e", row[0]);
+        assertEquals("f", row[1]);
+        assertFalse(it.hasNext());
+    }
+    
     /*
     /**********************************************************************
     /* Helper methods

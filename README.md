@@ -21,7 +21,7 @@ To use this extension on Maven-based projects, use following dependency:
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-csv</artifactId>
-      <version>2.0.0</version>
+      <version>2.1.0</version>
     </dependency>
 
 # Usage
@@ -83,21 +83,45 @@ The most common method for reading CSV data, then, is:
 
 ## Data-binding without schema
 
-But even if you do not know (or care) about column names you can read/write CSV documents. The main difference is that in this case data is exposed as a sequence of "JSON" Arrays, not Objects.
+But even if you do not know (or care) about column names you can read/write CSV documents. The main difference is that in this case data is exposed as a sequence of ("JSON") Arrays, not Objects, as "raw" tabular data.
+
+So let's consider following CSV input:
+
+    a,b
+    c,d
+    e,f
+
+By default, Jackson `CsvParser` would see it as equivalent to following JSON:
+
+    ["a","b"]
+    ["c","d"]
+    ["e","f"]
+
 
 This is easy to use; in fact, if you ignore everything to do with Schema from above examples, you get working code. For example:
 
     CsvMapper mapper = new CsvMapper();
-    MappingIterator<Object[]> it = mapper.reader(Object[].class).read(json);
+    // important: we need "array wrapping" (see next section) here:
+    mapper.enable(CsvParser.Feature.WRAP_AS_ARRAY);
+    File csvFile = new File("input.csv"); // or from String, URL etc
+    MappingIterator<Object[]> it = mapper.reader(Object[].class).readValues(csvFile);
     while (it.hasNext()) {
       Object[] row = it.next();
     }
 
 ## Adding virtual Array wrapping
 
-In addition to reading things as root-level Objects or arrays, you can also force use of virtual 
+In addition to reading things as root-level Objects or arrays, you can also force use of virtual "array wrapping".
 
-(NEED TO ADD AN EXAMPLE)
+This means that using earlier CSV data example, parser would instead expose it similar to following JSON:
+
+    [
+      ["a","b"]
+      ["c","d"]
+      ["e","f"]
+    ]
+
+This is useful if functionality expects a single ("JSON") Array; this was the case for example when using `ObjectReader.readValues()` functionality.
 
 # Documentation
 
