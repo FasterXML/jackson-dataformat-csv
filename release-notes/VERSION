@@ -1,20 +1,18 @@
-Version: 2.1.0
+Version: 2.1.1 (12-Nov-2012)
 
-Release date:
-  08-Oct-2012
+No functional changes
 
-Description:
-  A new minor release that works with core 2.1 version.
+------------------------------------------------------------------------
+=== History: ===
+------------------------------------------------------------------------
+
+2.1.0 (08-Oct-2012)
 
 Changes:
 
 * Due to core changes, `readValues()` method of `CsvMapper` and `ObjectReader`
   instances will work slightly differently, for specific case of "unwrapped"
   Object[] binding: see unit tests for correct usage.
-
-------------------------------------------------------------------------
-=== History: ===
-------------------------------------------------------------------------
 
 2.0.4 (26-Jun-2012)
 
