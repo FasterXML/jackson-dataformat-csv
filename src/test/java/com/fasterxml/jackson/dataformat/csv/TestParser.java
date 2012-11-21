@@ -64,4 +64,53 @@ public class TestParser extends ModuleTestBase
 
         assertFalse(it.hasNextValue());
     }
+
+    // Test for [Issue#10]
+    public void testMapsWithLinefeeds() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        String CSV = "A,B,C\n"
+                +"data11,data12\n"
+                +"data21,data22,data23\r\n"
+               +"data31,\"data32 data32\ndata32 data32\",data33\n"
+                +"data41,\"data42 data42\r\ndata42\",data43\n";
+       
+        CsvSchema cs = CsvSchema.emptySchema().withHeader();
+        ObjectReader or = mapper.reader(HashMap.class).with(cs);
+        
+        System.out.println("quote [" + cs.getQuoteChar() + "]");
+        
+        MappingIterator<Map<String,String>> mi = or.readValues(CSV);
+
+        assertTrue(mi.hasNext());
+        Map<String,String> map = mi.nextValue();
+        assertNotNull(map);
+        assertEquals("data11", map.get("A"));
+        assertEquals("data12", map.get("B"));
+        assertEquals(2, map.size());
+
+        assertTrue(mi.hasNext());
+        map = mi.nextValue();
+        assertNotNull(map);
+        assertEquals(3, map.size());
+
+        // then entries with linefeeds
+        assertTrue(mi.hasNext());
+        map = mi.nextValue();
+        assertNotNull(map);
+        assertEquals(3, map.size());
+        assertEquals("data31", map.get("A"));
+        assertEquals("data32 data32\ndata32 data32", map.get("B"));
+        assertEquals("data33", map.get("C"));
+
+        assertTrue(mi.hasNext());
+        map = mi.nextValue();
+        assertNotNull(map);
+        assertEquals(3, map.size());
+        assertEquals("data41", map.get("A"));
+        assertEquals("data42 data42\r\ndata42", map.get("B"));
+        assertEquals("data43", map.get("C"));
+
+        assertFalse(mi.hasNext());
+    }
 }

@@ -280,8 +280,12 @@ public class CsvReader
     /**********************************************************************
      */
 
+    /* 21-Nov-2012, tatu: Should be resolved; is only included to retain
+     *   number-handling code (copied from other parsers), but not
+     *   working as expected.
+     */
     // !!!! Only to allow compilation to succeed; remove once done!
-    JsonToken _currToken = null;
+    protected JsonToken _currToken = null;
     
     public CsvReader(CsvParser owner, IOContext ctxt, Reader r, CsvSchema schema, TextBuffer textBuffer,
             boolean autoCloseInput, boolean trimSpaces)
@@ -696,6 +700,7 @@ public class CsvReader
         int outPtr = 0;
 
         final char[] inputBuffer = _inputBuffer;
+        boolean checkLF = false; // marker for split CR+LF
 
         main_loop:
         while (true) {
@@ -705,6 +710,12 @@ public class CsvReader
                     _owner._reportCsvError("Missing closing quote for value"); // should indicate start position?
                 }
                 ptr = _inputPtr;
+                if (checkLF && inputBuffer[ptr] == '\n') {
+                    // undo earlier advancement, to keep line number correct
+                    --_currInputRow;
+                }
+            }
+            if (checkLF) { // had a "hanging" CR in parse loop; check now
             }
             if (outPtr >= outBuf.length) {
                 outBuf = _textBuffer.finishCurrentSegment();
@@ -720,12 +731,21 @@ public class CsvReader
                         _inputPtr = ptr;
                         break;
                     }
-                    if (c == '\r' || c == '\n') {
-                        _inputPtr = ptr;
-                        _pendingLF = c;
-                        return _textBuffer.finishAndReturn(outPtr, false);
-                    }
-                    if (c == _escapeChar) {
+                    // Embedded linefeeds are fine
+                    if (c == '\r') {
+                        // bit crappy check but has to do:
+                        if (ptr >= max) {
+                            checkLF = true; // will need to be checked in beginning of next loop
+                            ++_currInputRow;
+                            _currInputRowStart = ptr;
+                        } else if (inputBuffer[ptr] != '\n') {
+                            ++_currInputRow;
+                            _currInputRowStart = ptr;
+                        }
+                    } else if (c == '\n') {
+                        ++_currInputRow;
+                        _currInputRowStart = ptr;
+                    } else if (c == _escapeChar) {
                         _inputPtr = ptr;
                         c = _unescape();
                         outBuf[outPtr++] = c;
@@ -847,7 +867,7 @@ public class CsvReader
     /* Numeric accessors for CsvParser
     /**********************************************************************
      */
-    
+
     public Number getNumberValue() throws IOException, JsonParseException
     {
         if (_numTypesValid == NR_UNKNOWN) {
@@ -868,9 +888,8 @@ public class CsvReader
             return _numberBigDecimal;
         }
     
-        /* And then floating point types. But here optimal type
-         * needs to be big decimal, to avoid losing any data?
-         */
+        // And then floating point types. But here optimal type
+        // needs to be big decimal, to avoid losing any data?
         if ((_numTypesValid & NR_BIGDECIMAL) != 0) {
             return _numberBigDecimal;
         }
@@ -895,12 +914,10 @@ public class CsvReader
             return NumberType.BIG_INTEGER;
         }
     
-        /* And then floating point types. Here optimal type
-         * needs to be big decimal, to avoid losing any data?
-         * However... using BD is slow, so let's allow returning
-         * double as type if no explicit call has been made to access
-         * data as BD?
-         */
+        // And then floating point types. Here optimal type
+        // needs to be big decimal, to avoid losing any data?
+        // However... using BD is slow, so let's allow returning
+        // double as type if no explicit call has been made to access data as BD?
         if ((_numTypesValid & NR_BIGDECIMAL) != 0) {
             return NumberType.BIG_DECIMAL;
         }
@@ -949,9 +966,7 @@ public class CsvReader
     public float getFloatValue() throws IOException, JsonParseException
     {
         double value = getDoubleValue();
-        /* Bounds/range checks would be tricky
-         * here, so let's not bother even trying...
-         */
+        // Bounds/range checks would be tricky here, so let's not bother...
         return (float) value;
     }
     
