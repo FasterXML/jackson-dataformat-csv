@@ -18,11 +18,13 @@ What is missing:
 
 To use this extension on Maven-based projects, use following dependency:
 
-    <dependency>
-      <groupId>com.fasterxml.jackson.dataformat</groupId>
-      <artifactId>jackson-dataformat-csv</artifactId>
-      <version>2.1.1</version>
-    </dependency>
+```xml
+<dependency>
+  <groupId>com.fasterxml.jackson.dataformat</groupId>
+  <artifactId>jackson-dataformat-csv</artifactId>
+  <version>2.1.1</version>
+</dependency>
+```
 
 # Usage
 
@@ -45,22 +47,24 @@ So how do you get a CSV Schema instance to use? There are 3 ways:
 
 Here is code for above cases:
 
-    // Schema from POJO (usually has @JsonPropertyOrder annotation)
-    CsvSchema schema = mapper.schemaFor(Pojo.class);
+```java
+// Schema from POJO (usually has @JsonPropertyOrder annotation)
+CsvSchema schema = mapper.schemaFor(Pojo.class);
 
-    // Manually-built schema: one with type, others default to "STRING"
-    CsvSchema schema = CsvSchema.builder()
-            .addColumn("firstName")
-            .addColumn("lastName")
-            .addColumn("age", CsvSchema.ColumnType.NUMBER)
-            .build();
+// Manually-built schema: one with type, others default to "STRING"
+CsvSchema schema = CsvSchema.builder()
+        .addColumn("firstName")
+        .addColumn("lastName")
+        .addColumn("age", CsvSchema.ColumnType.NUMBER)
+        .build();
 
-    // Read schema from the first line; start with bootstrap instance
-    // to enable reading of schema from the first line
-    // NOTE: reads schema and uses it for binding
-    CsvSchema bootstrap = CsvSchema.emptySchema().withHeader();
-    ObjectMapper mapper = new CsvMapper();
-    mapper.reader(Pojo.class).withSchema(bootstrap).readValue(json);     
+// Read schema from the first line; start with bootstrap instance
+// to enable reading of schema from the first line
+// NOTE: reads schema and uses it for binding
+CsvSchema bootstrap = CsvSchema.emptySchema().withHeader();
+ObjectMapper mapper = new CsvMapper();
+mapper.reader(Pojo.class).withSchema(bootstrap).readValue(json);
+```
 
 It is important to note that the schema object is needed to ensure correct ordering of columns; schema instances are immutable and fully reusable (as are `ObjectWriter` instances).
 
@@ -75,11 +79,13 @@ When creating parser/generator directly, you will need to explicitly call `setSc
 
 The most common method for reading CSV data, then, is:
 
-    CsvMapper mapper = new CsvMapper();
-    Pojo value = ...;
-    CsvSchema schema = mapper.schemaFor(Pojo.class); // schema from 'Pojo' definition
-    String csv = mapper.writer(schema).writeValueAsString();
-    Pojo result = mapper.reader(Pojo.class).withSchema(schema).read(csv);
+```java
+CsvMapper mapper = new CsvMapper();
+Pojo value = ...;
+CsvSchema schema = mapper.schemaFor(Pojo.class); // schema from 'Pojo' definition
+String csv = mapper.writer(schema).writeValueAsString();
+Pojo result = mapper.reader(Pojo.class).withSchema(schema).read(csv);
+```
 
 ## Data-binding without schema
 
@@ -87,27 +93,33 @@ But even if you do not know (or care) about column names you can read/write CSV 
 
 So let's consider following CSV input:
 
-    a,b
-    c,d
-    e,f
+```
+a,b
+c,d
+e,f
+```
 
 By default, Jackson `CsvParser` would see it as equivalent to following JSON:
 
-    ["a","b"]
-    ["c","d"]
-    ["e","f"]
+```json
+["a","b"]
+["c","d"]
+["e","f"]
+```
 
 
 This is easy to use; in fact, if you ignore everything to do with Schema from above examples, you get working code. For example:
 
-    CsvMapper mapper = new CsvMapper();
-    // important: we need "array wrapping" (see next section) here:
-    mapper.enable(CsvParser.Feature.WRAP_AS_ARRAY);
-    File csvFile = new File("input.csv"); // or from String, URL etc
-    MappingIterator<Object[]> it = mapper.reader(Object[].class).readValues(csvFile);
-    while (it.hasNext()) {
-      Object[] row = it.next();
-    }
+```java
+CsvMapper mapper = new CsvMapper();
+// important: we need "array wrapping" (see next section) here:
+mapper.enable(CsvParser.Feature.WRAP_AS_ARRAY);
+File csvFile = new File("input.csv"); // or from String, URL etc
+MappingIterator<Object[]> it = mapper.reader(Object[].class).readValues(csvFile);
+while (it.hasNext()) {
+  Object[] row = it.next();
+}
+```
 
 ## Adding virtual Array wrapping
 
@@ -115,11 +127,13 @@ In addition to reading things as root-level Objects or arrays, you can also forc
 
 This means that using earlier CSV data example, parser would instead expose it similar to following JSON:
 
-    [
-      ["a","b"]
-      ["c","d"]
-      ["e","f"]
-    ]
+```json
+[
+  ["a","b"]
+  ["c","d"]
+  ["e","f"]
+]
+```
 
 This is useful if functionality expects a single ("JSON") Array; this was the case for example when using `ObjectReader.readValues()` functionality.
 
