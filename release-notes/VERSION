@@ -1,12 +1,14 @@
-Version: 2.1.2 (04-Dec-2012)
+Version: 2.1.4 (26-Feb-2013)
 
-Fixes:
-
-* [Issue#10]: Embedded linefeeds not properly handled
+No functional changes
 
 ------------------------------------------------------------------------
 === History: ===
 ------------------------------------------------------------------------
+
+2.1.2 (04-Dec-2012)
+
+* [Issue#10]: Embedded linefeeds not properly handled
 
 2.1.1 (12-Nov-2012)
 
