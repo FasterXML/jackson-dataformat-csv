@@ -14,6 +14,8 @@ import com.fasterxml.jackson.dataformat.csv.impl.LRUMap;
  */
 public class CsvMapper extends ObjectMapper
 {
+    private static final long serialVersionUID = 898121211926121724L;
+
     /**
      * Simple caching for schema instances, given that they are relatively expensive
      * to construct; this one is for "loose" (non-typed) schemas

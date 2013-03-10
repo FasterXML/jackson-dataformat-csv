@@ -183,6 +183,7 @@ public final class CsvParserBootstrapper
     /**********************************************************
      */
     
+    @SuppressWarnings("resource")
     public Reader constructReader()
         throws IOException
     {

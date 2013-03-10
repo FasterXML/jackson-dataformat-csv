@@ -13,6 +13,8 @@ import com.fasterxml.jackson.dataformat.csv.impl.UTF8Writer;
 
 public class CsvFactory extends JsonFactory
 {
+    private static final long serialVersionUID = -4036356829870939719L;
+
     /**
      * Name used to identify CSV format.
      * (and returned by {@link #getFormatName()}
@@ -78,7 +80,7 @@ public class CsvFactory extends JsonFactory
 
     @Override
     public Version version() {
-        return ModuleVersion.instance.version();
+        return PackageVersion.VERSION;
     }
     
     /*
