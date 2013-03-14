@@ -382,7 +382,7 @@ public final class CsvWriter
                 _flushBuffer();
             }
             char c = text.charAt(i);
-            if (i == _cfgQuoteCharacter) { // double up
+            if (c == _cfgQuoteCharacter) { // double up
                 _outputBuffer[_outputTail++] = _cfgQuoteCharacter;
                 if (_outputTail >= _outputEnd) {
                     _flushBuffer();
