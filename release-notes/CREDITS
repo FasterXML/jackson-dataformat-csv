@@ -1,0 +1,12 @@
+Project: jackson-dataformat-csv
+
+Here are people who have contributed to development of this project:
+(version numbers in parenthesis indicate release in which the problem was fixed)
+
+Tatu Saloranta, tatu.saloranta@iki.fi: author
+
+Lior Lipshitz (from zazma.com):
+
+* Reported #14: Incorrect quoting of double-quotes for long String values that
+  cross buffer boundary
+ (2.1.5 / 2.2.0)
