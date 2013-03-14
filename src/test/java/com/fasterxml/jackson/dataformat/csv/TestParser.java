@@ -78,8 +78,6 @@ public class TestParser extends ModuleTestBase
         CsvSchema cs = CsvSchema.emptySchema().withHeader();
         ObjectReader or = mapper.reader(HashMap.class).with(cs);
         
-        System.out.println("quote [" + cs.getQuoteChar() + "]");
-        
         MappingIterator<Map<String,String>> mi = or.readValues(CSV);
 
         assertTrue(mi.hasNext());
