@@ -111,6 +111,34 @@ public class TestGenerator extends ModuleTestBase
         // MUST use doubling for quotes!
         assertEquals("id,\"Some \"\"stuff\"\"\"\n", result);
     }
+
+    // [Issue#14]: String values that cross buffer boundary won't be quoted properly
+    public void testLongerWithQuotes() throws Exception
+    {
+        ObjectMapper mapper = mapperForCsv();
+        CsvSchema schema = CsvSchema.builder()
+            .addColumn("id")
+            .addColumn("desc")
+            .build();
+
+        String base = "Longer sequence with bunch of words to test quoting with needs to be at least one line "
+                +"long to allow for appropriate indexes and boundary crossing conditions as well";
+        
+        StringBuilder sb = new StringBuilder();
+        do {
+            for (String word : base.split("\\s")) {
+                sb.append(' ');
+                sb.append('"');
+                sb.append(word);
+                sb.append('"');
+            }
+        } while (sb.length() < 1050);
+        final String inputDesc = sb.toString();
+        String expOutputDesc = inputDesc.replace("\"", "\"\"");
+        String expOutput = "id,\""+expOutputDesc+"\"";
+        String result = mapper.writer(schema).writeValueAsString(new IdDesc("id", inputDesc)).trim();
+        assertEquals(expOutput, result);
+    }
     
     /*
     /**********************************************************************
