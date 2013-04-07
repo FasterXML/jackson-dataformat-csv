@@ -30,7 +30,7 @@ public class TestParserWithHeader extends ModuleTestBase
 
     public void testSimpleHeader() throws Exception
     {
-        CsvParser parser = (CsvParser) new CsvFactory().createJsonParser(
+        CsvParser parser = (CsvParser) new CsvFactory().createParser(
                 "name, age,  other\nfoo,2,xyz\n");
         // need to enable first-line-as-schema handling:
         parser.setSchema(CsvSchema.emptySchema().withHeader());
@@ -94,7 +94,7 @@ public class TestParserWithHeader extends ModuleTestBase
         CsvMapper mapper = mapperForCsv();
         mapper.disable(CsvParser.Feature.WRAP_AS_ARRAY);
         CsvSchema schema = CsvSchema.emptySchema().withHeader();
-        CsvParser p = (CsvParser) mapper.getFactory().createJsonParser(CSV);
+        CsvParser p = (CsvParser) mapper.getFactory().createParser(CSV);
         p.setSchema(schema);
         // need to read something to ensure header line is processed
         assertEquals(JsonToken.START_OBJECT, p.nextToken());
@@ -126,7 +126,7 @@ public class TestParserWithHeader extends ModuleTestBase
         CsvMapper mapper = mapperForCsv();
         mapper.disable(CsvParser.Feature.WRAP_AS_ARRAY);
         CsvSchema schema = CsvSchema.emptySchema().withHeader();
-        CsvParser p = (CsvParser) mapper.getFactory().createJsonParser(CSV);
+        CsvParser p = (CsvParser) mapper.getFactory().createParser(CSV);
         p.setSchema(schema);
         // need to read something to ensure header line is processed
         assertEquals(JsonToken.START_OBJECT, p.nextToken());

@@ -28,7 +28,7 @@ public class TestParser extends ModuleTestBase
         assertFalse(user.isVerified());
         assertArrayEquals(new byte[] { 1, 2, 3, 4, 5}, user.getUserImage());
     }
-    
+
     public void testSimpleWithAutoSchema() throws Exception
     {
         CsvMapper mapper = mapperForCsv();

@@ -48,7 +48,7 @@ public final class ManualPerfComparison
     private byte[] writeAsJson(RequestEntry[] entries) throws IOException
     {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream(256 + entries.length * 100);
-        JsonGenerator jgen = jsonMapper.getFactory().createJsonGenerator(bytes);
+        JsonGenerator jgen = jsonMapper.getFactory().createGenerator(bytes);
         for (RequestEntry entry : entries) {
             jsonMapper.writeValue(jgen, entry);
         }

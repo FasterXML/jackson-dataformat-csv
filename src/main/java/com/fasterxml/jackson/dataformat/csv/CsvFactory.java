@@ -202,20 +202,6 @@ public class CsvFactory extends JsonFactory
      */
 
     @Override
-    public CsvParser createParser(InputStream in)
-        throws IOException, JsonParseException
-    {
-        return _createParser(in, _createContext(in, false));
-    }
-
-    @Override
-    public JsonParser createParser(Reader r)
-        throws IOException, JsonParseException
-    {
-        return _createParser(r, _createContext(r, false));
-    }
-    
-    @Override
     public CsvParser createParser(File f)
         throws IOException, JsonParseException
     {
@@ -227,6 +213,20 @@ public class CsvFactory extends JsonFactory
         throws IOException, JsonParseException
     {
         return _createParser(_optimizedStreamFromURL(url), _createContext(url, true));
+    }
+
+    @Override
+    public CsvParser createParser(InputStream in)
+        throws IOException, JsonParseException
+    {
+        return _createParser(in, _createContext(in, false));
+    }
+
+    @Override
+    public JsonParser createParser(Reader r)
+        throws IOException, JsonParseException
+    {
+        return _createParser(r, _createContext(r, false));
     }
 
     @Override
@@ -300,7 +300,44 @@ public class CsvFactory extends JsonFactory
 
     /*
     /**********************************************************
-    /* Overridden generator factory methods
+    /* Overridden generator factory methods, 2.1+
+    /**********************************************************
+     */
+
+    @Override
+    public CsvGenerator createGenerator(OutputStream out, JsonEncoding enc) throws IOException
+    {
+        // false -> we won't manage the stream unless explicitly directed to
+        IOContext ctxt = _createContext(out, false);
+        // [JACKSON-512]: allow wrapping with _outputDecorator
+        if (_outputDecorator != null) {
+            out = _outputDecorator.decorate(ctxt, out);
+        }
+        return _createGenerator(ctxt, _createWriter(out, JsonEncoding.UTF8, ctxt));
+    }
+
+    /**
+     * This method assumes use of UTF-8 for encoding.
+     */
+    @Override
+    public CsvGenerator createGenerator(OutputStream out) throws IOException {
+        return createGenerator(out, JsonEncoding.UTF8);
+    }
+
+    @Override
+    public CsvGenerator createGenerator(Writer out) throws IOException
+    {
+        IOContext ctxt = _createContext(out, false);
+        // [JACKSON-512]: allow wrapping with _outputDecorator
+        if (_outputDecorator != null) {
+            out = _outputDecorator.decorate(ctxt, out);
+        }
+        return _createGenerator(out, ctxt);
+    }
+
+    /*
+    /**********************************************************
+    /* Overridden generator factory methods, deprecated
     /**********************************************************
      */
     
@@ -309,21 +346,21 @@ public class CsvFactory extends JsonFactory
      * note: co-variant return type
      */
     @Override
-    public CsvGenerator createJsonGenerator(OutputStream out, JsonEncoding enc)
-        throws IOException
-    {
-        return createJsonGenerator(out);
+    public CsvGenerator createJsonGenerator(OutputStream out, JsonEncoding enc) throws IOException {
+        return createGenerator(out, enc);
     }
 
     /**
      * This method assumes use of UTF-8 for encoding.
      */
     @Override
-    public CsvGenerator createJsonGenerator(OutputStream out) throws IOException
-    {
-        // false -> we won't manage the stream unless explicitly directed to
-        IOContext ctxt = _createContext(out, false);
-        return _createGenerator(ctxt, _createWriter(out, JsonEncoding.UTF8, ctxt));
+    public CsvGenerator createJsonGenerator(OutputStream out) throws IOException {
+        return createGenerator(out);
+    }
+
+    @Override
+    public CsvGenerator createJsonGenerator(Writer w) throws IOException {
+        return createGenerator(w);
     }
     
     /*
