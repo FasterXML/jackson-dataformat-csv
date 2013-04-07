@@ -85,13 +85,12 @@ public class CsvFactory extends JsonFactory
     
     /*
     /**********************************************************
-    /* Format detection functionality (since 1.8)
+    /* Format detection functionality
     /**********************************************************
      */
     
     @Override
-    public String getFormatName()
-    {
+    public String getFormatName() {
         return FORMAT_NAME_CSV;
     }
     
@@ -104,7 +103,12 @@ public class CsvFactory extends JsonFactory
         // !!! TBI -- but how?
         return MatchStrength.INCONCLUSIVE;
     }
-    
+
+    @Override
+    public boolean canUseSchema(FormatSchema schema) {
+        return (schema instanceof CsvSchema);
+    }
+
     /*
     /**********************************************************
     /* Configuration, parser settings

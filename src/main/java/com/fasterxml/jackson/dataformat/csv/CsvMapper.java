@@ -1,7 +1,5 @@
 package com.fasterxml.jackson.dataformat.csv;
 
-import com.fasterxml.jackson.core.*;
-
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -14,7 +12,7 @@ import com.fasterxml.jackson.dataformat.csv.impl.LRUMap;
  */
 public class CsvMapper extends ObjectMapper
 {
-    private static final long serialVersionUID = 898121211926121724L;
+    private static final long serialVersionUID = -4573529235914611523L;
 
     /**
      * Simple caching for schema instances, given that they are relatively expensive
@@ -93,29 +91,6 @@ public class CsvMapper extends ObjectMapper
         return (CsvFactory) _jsonFactory;
     }
     
-    /**
-     * Overridden with more specific type, since factory we have
-     * is always of type {@link CsvFactory}
-     * 
-     * @deprecated Since 2.1 use {@link #getFactory()}
-     */
-    @Deprecated
-    @Override
-    public final CsvFactory getJsonFactory() {
-        return getCsvFactory();
-    }
-
-    /**
-     * Type-safe accessor for accessing underlying CSV-specific
-     * {@link JsonFactory} implementation
-     * 
-     * @deprecated Since 2.1 use {@link #getFactory()}, it is co-variant
-     */
-    @Deprecated
-    public final CsvFactory getCsvFactory() {
-        return (CsvFactory) _jsonFactory;
-    }
-    
     /*
     /**********************************************************************
     /* CsvSchema construction; overrides, new methods
@@ -159,24 +134,6 @@ public class CsvMapper extends ObjectMapper
 
     public final CsvSchema typedSchemaFor(TypeReference<?> pojoTypeRef) {
         return _schemaFor(constructType(pojoTypeRef.getType()), _typedSchemas, true);
-    }
-    
-    @Override
-    public ObjectReader reader(FormatSchema schema)
-    {
-        if ((schema != null) && !(schema instanceof CsvSchema)) {
-            throw new IllegalArgumentException("Schema to set must be of type CsvSchema");
-        }
-        return super.reader(schema);
-    }
-
-    @Override
-    public ObjectWriter writer(FormatSchema schema)
-    {
-        if ((schema != null) && !(schema instanceof CsvSchema)) {
-            throw new IllegalArgumentException("Schema to set must be of type CsvSchema");
-        }
-        return super.writer(schema);
     }
 
     /**
@@ -276,5 +233,4 @@ public class CsvMapper extends ObjectMapper
         // but in general we will just do what we can:
         return CsvSchema.ColumnType.NUMBER_OR_STRING;
     }
-
 }
