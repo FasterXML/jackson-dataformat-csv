@@ -202,12 +202,15 @@ public class CsvMapper extends ObjectMapper
         CsvSchema.Builder builder = CsvSchema.builder();
         for (BeanPropertyDefinition prop : beanDesc.findProperties()) {
             // ignore setter-only properties:
-            if (prop.couldSerialize()) {
-                if (typed) {
-                    builder.addColumn(prop.getName(), _determineType(prop.getAccessor().getRawType()));
-                } else {
-                    builder.addColumn(prop.getName());
-                }
+            if (!prop.couldSerialize()) {
+                continue;
+            }
+            // TODO: [Issue#15]: need to handle unwrapped props?
+
+            if (typed) {
+                builder.addColumn(prop.getName(), _determineType(prop.getAccessor().getRawType()));
+            } else {
+                builder.addColumn(prop.getName());
             }
         }
         CsvSchema result = builder.build();

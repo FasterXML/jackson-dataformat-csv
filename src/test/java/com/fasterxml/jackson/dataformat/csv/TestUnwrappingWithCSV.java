@@ -51,8 +51,7 @@ public class TestUnwrappingWithCSV extends ModuleTestBase
             .addColumn("x")
             .addColumn("y")
             .build();
-        Unwrapping wrapper = mapper.reader(schema).withType(Unwrapping.class).readValue(
-                CSV);
+        Unwrapping wrapper = mapper.reader(schema).withType(Unwrapping.class).readValue(CSV);
         assertNotNull(wrapper);
         assertNotNull(wrapper.location);
         assertEquals(15, wrapper.location.x);
@@ -67,12 +66,19 @@ public class TestUnwrappingWithCSV extends ModuleTestBase
      * Another simple test, but this time auto-generating Schema from
      * POJO.
      */
+    /* NOTE: the problem here is that Unwrapped properties should be further
+     * detected to find sub-properties -- but that information is not yet
+     * available via BeanProperty/POJOPropertyBuilder. But it needs to be
+     * made; and when this occurs, we can handle this case reasonably well.
+     */
     /*
     public void testSimpleWithAutoSchema() throws Exception
     {
         final String CSV = "Henry,1,2\n";
         CsvMapper mapper = mapperForCsv();
         CsvSchema schema = mapper.schemaFor(Unwrapping.class);
+System.err.println("SChema/auto -> "+schema);        
+        
         Unwrapping wrapper = mapper.reader(schema).withType(Unwrapping.class).readValue(CSV);
         assertNotNull(wrapper);
         assertNotNull(wrapper.location);
