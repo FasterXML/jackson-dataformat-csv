@@ -1,10 +1,19 @@
-Version: 2.1.4 (26-Feb-2013)
+Project: jackson-dataformat-csv
+Version: 2.2.0 (xx-xxx-2013)
 
-No functional changes
+New minor version.
+
+Changes:
+
+#15: Ensure that `@JsonUnwrapper` works, even with auto-schema
 
 ------------------------------------------------------------------------
 === History: ===
 ------------------------------------------------------------------------
+
+2.1.4 (26-Feb-2013)
+
+No functional changes
 
 2.1.2 (04-Dec-2012)
 

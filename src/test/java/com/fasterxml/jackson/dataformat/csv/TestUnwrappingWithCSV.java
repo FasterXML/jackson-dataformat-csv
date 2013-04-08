@@ -22,7 +22,7 @@ public class TestUnwrappingWithCSV extends ModuleTestBase
 
     static class Unwrapping {
         public String name;
-        @JsonUnwrapped
+        @JsonUnwrapped(prefix="loc.")
         public Location location;
 
         public Unwrapping() { }
@@ -48,8 +48,8 @@ public class TestUnwrappingWithCSV extends ModuleTestBase
         ObjectMapper mapper = mapperForCsv();
         CsvSchema schema = CsvSchema.builder()
             .addColumn("name")
-            .addColumn("x")
-            .addColumn("y")
+            .addColumn("loc.x")
+            .addColumn("loc.y")
             .build();
         Unwrapping wrapper = mapper.reader(schema).withType(Unwrapping.class).readValue(CSV);
         assertNotNull(wrapper);
@@ -71,22 +71,19 @@ public class TestUnwrappingWithCSV extends ModuleTestBase
      * available via BeanProperty/POJOPropertyBuilder. But it needs to be
      * made; and when this occurs, we can handle this case reasonably well.
      */
-    /*
     public void testSimpleWithAutoSchema() throws Exception
     {
-        final String CSV = "Henry,1,2\n";
+        final String CSV = "Henry,28,12\n";
         CsvMapper mapper = mapperForCsv();
         CsvSchema schema = mapper.schemaFor(Unwrapping.class);
-System.err.println("SChema/auto -> "+schema);        
         
         Unwrapping wrapper = mapper.reader(schema).withType(Unwrapping.class).readValue(CSV);
         assertNotNull(wrapper);
         assertNotNull(wrapper.location);
-        assertEquals(15, wrapper.location.x);
-        assertEquals(27, wrapper.location.y);
+        assertEquals(28, wrapper.location.x);
+        assertEquals(12, wrapper.location.y);
 
         // should also write out the same way
         assertEquals(CSV, mapper.writer(schema).writeValueAsString(wrapper));
     }
-    */
 }

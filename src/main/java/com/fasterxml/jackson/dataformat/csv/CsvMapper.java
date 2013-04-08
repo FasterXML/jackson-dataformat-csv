@@ -1,7 +1,9 @@
 package com.fasterxml.jackson.dataformat.csv;
 
 import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
+import com.fasterxml.jackson.databind.util.NameTransformer;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import com.fasterxml.jackson.dataformat.csv.impl.LRUMap;
@@ -190,7 +192,8 @@ public class CsvMapper extends ObjectMapper
     /**********************************************************************
      */
 
-    protected CsvSchema _schemaFor(JavaType pojoType, LRUMap<JavaType,CsvSchema> schemas, boolean typed)
+    protected CsvSchema _schemaFor(JavaType pojoType, LRUMap<JavaType,CsvSchema> schemas,
+            boolean typed)
     {
         synchronized (schemas) {
             CsvSchema s = schemas.get(pojoType);
@@ -198,26 +201,50 @@ public class CsvMapper extends ObjectMapper
                 return s;
             }
         }
-        BeanDescription beanDesc = getSerializationConfig().introspect(pojoType);
+        final AnnotationIntrospector intr = _deserializationConfig.getAnnotationIntrospector();
         CsvSchema.Builder builder = CsvSchema.builder();
-        for (BeanPropertyDefinition prop : beanDesc.findProperties()) {
-            // ignore setter-only properties:
-            if (!prop.couldSerialize()) {
-                continue;
-            }
-            // TODO: [Issue#15]: need to handle unwrapped props?
-
-            if (typed) {
-                builder.addColumn(prop.getName(), _determineType(prop.getAccessor().getRawType()));
-            } else {
-                builder.addColumn(prop.getName());
-            }
-        }
+        _addSchemaProperties(builder, intr, typed, pojoType, null);
         CsvSchema result = builder.build();
         synchronized (schemas) {
             schemas.put(pojoType, result);
         }
         return result;
+    }
+
+    protected void _addSchemaProperties(CsvSchema.Builder builder, AnnotationIntrospector intr,
+            boolean typed,
+            JavaType pojoType, NameTransformer unwrapper)
+    {
+        BeanDescription beanDesc = getSerializationConfig().introspect(pojoType);
+        for (BeanPropertyDefinition prop : beanDesc.findProperties()) {
+            // ignore setter-only properties:
+            if (!prop.couldSerialize()) {
+                continue;
+            }
+            // [Issue#15]: handle unwrapped props
+            AnnotatedMember m = prop.getPrimaryMember();
+            if (m != null) {
+                NameTransformer nextUnwrapper = intr.findUnwrappingNameTransformer(prop.getPrimaryMember());
+                if (nextUnwrapper != null) {
+                    if (unwrapper != null) {
+                        nextUnwrapper = NameTransformer.chainedTransformer(unwrapper, nextUnwrapper);
+                    }
+                    JavaType nextType = m.getType(beanDesc.bindingsForBeanType());
+                    _addSchemaProperties(builder, intr, typed, nextType, nextUnwrapper);
+                    continue;
+                }
+            }
+            // Then name wrapping/unwrapping
+            String name = prop.getName();
+            if (unwrapper != null) {
+                name = unwrapper.transform(name);
+            }
+            if (typed && m != null) {
+                builder.addColumn(name, _determineType(m.getRawType()));
+            } else {
+                builder.addColumn(name);
+            }
+        }
     }
     
     // should not be null since couldSerialize() returned true, so:
