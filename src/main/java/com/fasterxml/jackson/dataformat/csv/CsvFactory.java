@@ -71,7 +71,27 @@ public class CsvFactory extends JsonFactory
     public CsvFactory() { this(null); }
 
     public CsvFactory(ObjectCodec oc) { super(oc); }
+
+    /**
+     * @since 2.2.1
+     */
+    protected CsvFactory(CsvFactory src, ObjectCodec oc)
+    {
+        super(src, oc);
+        _csvParserFeatures = src._csvParserFeatures;
+        _csvGeneratorFeatures = src._csvGeneratorFeatures;
+        _cfgColumnSeparator = src._cfgColumnSeparator;
+        _cfgQuoteCharacter = src._cfgQuoteCharacter;
+        _cfgLineSeparator = src._cfgLineSeparator;
+    }
     
+    @Override
+    public CsvFactory copy()
+    {
+        _checkInvalidCopy(CsvFactory.class);
+        return new CsvFactory(this, null);
+    }
+
     /*                                                                                       
     /**********************************************************                              
     /* Versioned                                                                             
@@ -261,6 +281,7 @@ public class CsvFactory extends JsonFactory
      */
     
     @Override
+    @Deprecated
     public CsvParser createJsonParser(File f)
         throws IOException, JsonParseException
     {
@@ -268,6 +289,7 @@ public class CsvFactory extends JsonFactory
     }
 
     @Override
+    @Deprecated
     public CsvParser createJsonParser(URL url)
         throws IOException, JsonParseException
     {
@@ -275,6 +297,7 @@ public class CsvFactory extends JsonFactory
     }
 
     @Override
+    @Deprecated
     public CsvParser createJsonParser(InputStream in)
         throws IOException, JsonParseException
     {
@@ -282,6 +305,7 @@ public class CsvFactory extends JsonFactory
     }
 
     @Override
+    @Deprecated
     public JsonParser createJsonParser(Reader r)
         throws IOException, JsonParseException
     {
@@ -289,6 +313,7 @@ public class CsvFactory extends JsonFactory
     }
     
     @Override
+    @Deprecated
     public CsvParser createJsonParser(byte[] data)
         throws IOException, JsonParseException
     {
@@ -296,6 +321,7 @@ public class CsvFactory extends JsonFactory
     }
     
     @Override
+    @Deprecated
     public CsvParser createJsonParser(byte[] data, int offset, int len)
         throws IOException, JsonParseException
     {
@@ -345,24 +371,20 @@ public class CsvFactory extends JsonFactory
     /**********************************************************
      */
     
-    /**
-     *<p>
-     * note: co-variant return type
-     */
     @Override
+    @Deprecated
     public CsvGenerator createJsonGenerator(OutputStream out, JsonEncoding enc) throws IOException {
         return createGenerator(out, enc);
     }
 
-    /**
-     * This method assumes use of UTF-8 for encoding.
-     */
     @Override
+    @Deprecated
     public CsvGenerator createJsonGenerator(OutputStream out) throws IOException {
         return createGenerator(out);
     }
 
     @Override
+    @Deprecated
     public CsvGenerator createJsonGenerator(Writer w) throws IOException {
         return createGenerator(w);
     }

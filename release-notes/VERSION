@@ -1,15 +1,15 @@
 Project: jackson-dataformat-csv
-Version: 2.2.0 (22-Apr-2013)
+Version: 2.2.1 (xx-May-2013)
 
-New minor version.
-
-Changes:
-
-#15: Ensure that `@JsonUnwrapper` works, even with auto-schema
+- Fixed `CsvFactory.copy()`
 
 ------------------------------------------------------------------------
 === History: ===
 ------------------------------------------------------------------------
+
+2.2.0 (22-Apr-2013)
+
+#15: Ensure that `@JsonUnwrapper` works, even with auto-schema
 
 2.1.4 (26-Feb-2013)
 

@@ -40,18 +40,15 @@ abstractions.
   </scm>
 
   <properties>
-    <jackson.core.version>2.2.0</jackson.core.version>
-    <!-- CSV plug-in is 1.6 only -->
-    <javac.src.version>1.6</javac.src.version>
-    <javac.target.version>1.6</javac.target.version>
+    <jackson.core.version>2.2.1-SNAPSHOT</jackson.core.version>
     <!-- Generate PackageVersion.java into this directory. -->
     <packageVersion.dir>com/fasterxml/jackson/dataformat/csv</packageVersion.dir>
-    <packageVersion.package>com.fasterxml.jackson.dataformat.csv</packageVersion.package>
+    <packageVersion.package>${project.groupId}.csv</packageVersion.package>
 
     <!--
      | Configuration properties for the OSGi maven-bundle-plugin
     -->
-    <osgi.export>com.fasterxml.jackson.dataformat.csv;version=${project.version}
+    <osgi.export>${project.groupId}.csv;version=${project.version}
 </osgi.export>
     <osgi.private>com.fasterxml.jackson.dataformat.csv.impl</osgi.private>
     <osgi.import>com.fasterxml.jackson.core
