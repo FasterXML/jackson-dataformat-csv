@@ -92,6 +92,22 @@ public class CsvFactory extends JsonFactory
         return new CsvFactory(this, null);
     }
 
+    /*
+    /**********************************************************
+    /* Serializable overrides
+    /**********************************************************
+     */
+
+    /**
+     * Method that we need to override to actually make restoration go
+     * through constructors etc.
+     * Also: must be overridden by sub-classes as well.
+     */
+    @Override
+    protected Object readResolve() {
+        return new CsvFactory(this, _objectCodec);
+    }
+
     /*                                                                                       
     /**********************************************************                              
     /* Versioned                                                                             
