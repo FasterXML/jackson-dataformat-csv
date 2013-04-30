@@ -11,6 +11,10 @@ import com.fasterxml.jackson.core.JsonEncoding;
  * CSV files can take; and most commonly only UTF-8 or Latin-1
  * is used.
  *<p>
+ * NOTE: as of Jackson 2.2, this enumeration is <b>not used</b>
+ * for anything -- it is more of a placeholder for possible future
+ * functionality.
+ *<p>
  * Note: if application want to explicitly disregard Encoding
  * limitations (to read in content encoded using an encoding not
  * listed as allowed), they can use {@link java.io.Reader} 
