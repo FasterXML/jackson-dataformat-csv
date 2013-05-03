@@ -40,7 +40,7 @@ abstractions.
   </scm>
 
   <properties>
-    <jackson.core.version>2.1.4</jackson.core.version>
+    <jackson.core.version>2.1.5</jackson.core.version>
     <!-- CSV plug-in is 1.6 only -->
     <javac.src.version>1.6</javac.src.version>
     <javac.target.version>1.6</javac.target.version>
