@@ -1,11 +1,15 @@
 Project: jackson-dataformat-csv
-Version: 2.2.1 (03-May-2013)
+Version: 2.2.1 (27-May-2013)
 
-- Fixed `CsvFactory.copy()`
+No functional changes
 
 ------------------------------------------------------------------------
 === History: ===
 ------------------------------------------------------------------------
+
+2.2.1 (03-May-2013)
+
+- Fixed `CsvFactory.copy()`
 
 2.2.0 (22-Apr-2013)
 
