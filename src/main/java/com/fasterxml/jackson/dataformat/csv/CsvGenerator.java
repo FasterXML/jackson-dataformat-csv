@@ -518,7 +518,9 @@ public class CsvGenerator extends GeneratorBase
             return;
         }
         _verifyValueWrite("write number");
-        _writer.write(_columnIndex(), dec.toString());
+        String str = isEnabled(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN) ?
+                dec.toPlainString() : dec.toString();
+        _writer.write(_columnIndex(), str);
     }
 
     @Override
