@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 import com.fasterxml.jackson.databind.util.NameTransformer;
 import com.fasterxml.jackson.core.type.TypeReference;
-
 import com.fasterxml.jackson.dataformat.csv.impl.LRUMap;
 
 /**
@@ -42,6 +41,8 @@ public class CsvMapper extends ObjectMapper
     public CsvMapper(CsvFactory f)
     {
         super(f);
+        // As per #11: default to alphabetic ordering
+        enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY);
     }
 
     /*

@@ -20,6 +20,8 @@ public class TestUnwrappingWithCSV extends ModuleTestBase
         }
     }
 
+    // IMPORTANT: ordering DOES matter here
+    @JsonPropertyOrder({ "name", "location" })
     static class Unwrapping {
         public String name;
         @JsonUnwrapped(prefix="loc.")

@@ -3,6 +3,7 @@ package com.fasterxml.jackson.dataformat.csv;
 import java.io.*;
 
 import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.databind.MapperFeature;
 
 public class TestVersions extends ModuleTestBase
 {
@@ -18,6 +19,13 @@ public class TestVersions extends ModuleTestBase
         jgen.close();
     }
 
+    // Mostly to verify #11
+    public void testMapperDefaults()
+    {
+        CsvMapper mapper = new CsvMapper();
+        assertTrue(mapper.isEnabled(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY));
+    }
+    
     /*
     /**********************************************************
     /* Helper methods
