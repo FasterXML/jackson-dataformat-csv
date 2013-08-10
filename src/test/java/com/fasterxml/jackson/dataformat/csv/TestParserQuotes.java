@@ -11,12 +11,18 @@ public class TestParserQuotes extends ModuleTestBase
     /* Helper types
     /**********************************************************************
      */
+
     @JsonPropertyOrder({"age, name"})
     protected static class AgeName {
         public int age;
         public String name;
     }
 
+    @JsonPropertyOrder({"s1", "s2", "s3"})
+    protected static class ThreeString {
+        public String s1, s2, s3;
+    }
+    
     /*
     /**********************************************************************
     /* Test methods

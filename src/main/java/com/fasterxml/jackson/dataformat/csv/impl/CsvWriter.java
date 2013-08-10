@@ -6,6 +6,7 @@ import java.util.Arrays;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.io.IOContext;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 
 /**
  * Low-level helper class that handles actual output of CSV, purely
@@ -41,19 +42,19 @@ public final class CsvWriter
      */
     final protected Writer _out;
     
-    protected final char _cfgColumnSeparator;
+    final protected char _cfgColumnSeparator;
 
-    protected final char _cfgQuoteCharacter;
+    final protected char _cfgQuoteCharacter;
     
-    protected final char[] _cfgLineSeparator;
+    final protected char[] _cfgLineSeparator;
 
-    protected final int _cfgLineSeparatorLength;
+    final protected int _cfgLineSeparatorLength;
 
     /**
      * Lowest-valued character that is safe to output without using
      * quotes around value
      */
-    protected final int _cfgMinSafeChar;
+    final protected int _cfgMinSafeChar;
     
     /*
     /**********************************************************
@@ -116,7 +117,7 @@ public final class CsvWriter
     
     /*
     /**********************************************************
-    /* Construction
+    /* Construction, (re)configuration
     /**********************************************************
      */
 
@@ -134,11 +135,35 @@ public final class CsvWriter
         _cfgLineSeparator = linefeed;
         _cfgLineSeparatorLength = linefeed.length;
 
+        _cfgMinSafeChar = _calcSafeChar();
+    }
+
+    public CsvWriter(CsvWriter base, CsvSchema newSchema)
+    {
+        _ioContext = base._ioContext;
+        _outputBuffer = base._outputBuffer;
+        _bufferRecyclable = base._bufferRecyclable;
+        _outputEnd = base._outputEnd;
+        _out = base._out;
+
+        _cfgColumnSeparator = newSchema.getColumnSeparator();
+        _cfgQuoteCharacter = newSchema.getQuoteChar();
+        _cfgLineSeparator = newSchema.getLineSeparator();
+        _cfgLineSeparatorLength = _cfgLineSeparator.length;
+        _cfgMinSafeChar = _calcSafeChar();
+    }  
+    
+    private final int _calcSafeChar()
+    {
         int min = Math.max(_cfgColumnSeparator, _cfgQuoteCharacter);
         for (int i = 0; i < _cfgLineSeparatorLength; ++i) {
             min = Math.max(min, _cfgLineSeparator[i]);
         }
-        _cfgMinSafeChar = (min+1);
+        return min+1;
+    }
+
+    public CsvWriter withSchema(CsvSchema schema) {
+        return new CsvWriter(this, schema);
     }
 
     /*
