@@ -1,12 +1,14 @@
 Project: jackson-dataformat-csv
-Version: 2.2.2 (27-May-2013)
+Version: 2.2.3 (xx-Aug-2013)
 
-No functional changes
+#17: Fix support for using custom delimeters (like semicolon instead of comma)
+ (reported by asselmeyer@github)
 
 ------------------------------------------------------------------------
 === History: ===
 ------------------------------------------------------------------------
 
+2.2.2 (27-May-2013)
 2.2.1 (03-May-2013)
 
 - Fixed `CsvFactory.copy()`
