@@ -80,7 +80,8 @@ public class CsvGenerator extends GeneratorBase
      */
     protected CsvSchema _schema = EMPTY_SCHEMA;
 
-    protected final CsvWriter _writer;
+    // note: can not be final since we may need to re-create it for new schema
+    protected CsvWriter _writer;
     
     /*
     /**********************************************************
@@ -106,7 +107,7 @@ public class CsvGenerator extends GeneratorBase
     /* Life-cycle
     /**********************************************************
      */
-    
+
     public CsvGenerator(IOContext ctxt, int jsonFeatures, int csvFeatures,
             ObjectCodec codec, Writer out,
             char columnSeparator, char quoteChar, char[] linefeed)
@@ -170,7 +171,10 @@ public class CsvGenerator extends GeneratorBase
             super.setSchema(schema);
             return;
         }
-        _schema = (CsvSchema) schema;
+        if (_schema != schema) {
+            _schema = (CsvSchema) schema;
+            _writer = _writer.withSchema(_schema);
+        }
     }
 
     /*
