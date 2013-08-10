@@ -59,6 +59,7 @@ public final class F5500Reader
             }
         }
         System.out.println();
+        it.close();
         return count;
     }
 }

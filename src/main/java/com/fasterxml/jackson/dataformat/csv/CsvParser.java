@@ -10,7 +10,6 @@ import com.fasterxml.jackson.core.io.IOContext;
 import com.fasterxml.jackson.core.json.JsonReadContext;
 import com.fasterxml.jackson.core.util.BufferRecycler;
 import com.fasterxml.jackson.core.util.ByteArrayBuilder;
-
 import com.fasterxml.jackson.dataformat.csv.impl.CsvReader;
 import com.fasterxml.jackson.dataformat.csv.impl.TextBuffer;
 
@@ -645,6 +644,7 @@ public class CsvParser
         return null;
     }
     
+    @SuppressWarnings("resource")
     @Override
     public byte[] getBinaryValue(Base64Variant variant) throws IOException, JsonParseException
     {

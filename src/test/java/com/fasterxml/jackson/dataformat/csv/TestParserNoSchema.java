@@ -53,6 +53,7 @@ public class TestParserNoSchema extends ModuleTestBase
         assertFalse(it.hasNext());
 
         cp.close();
+        it.close();
     }
     
     public void testUntypedAsArray() throws Exception
@@ -116,6 +117,7 @@ public class TestParserNoSchema extends ModuleTestBase
         assertFalse(it.hasNext());
 
         cp.close();
+        it.close();
     }
 
 }

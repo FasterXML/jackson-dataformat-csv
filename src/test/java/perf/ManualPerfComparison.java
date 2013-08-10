@@ -4,15 +4,14 @@ import java.io.*;
 import java.util.*;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-
 import com.fasterxml.jackson.databind.*;
-
 import com.fasterxml.jackson.dataformat.csv.*;
 
 /**
  * Simple manual performance micro-benchmark that compares compress and
  * decompress speeds of this LZF implementation with other codecs.
  */
+@SuppressWarnings("resource")
 public final class ManualPerfComparison
 {
     private ObjectMapper jsonMapper;

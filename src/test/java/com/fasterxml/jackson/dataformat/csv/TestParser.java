@@ -63,6 +63,7 @@ public class TestParser extends ModuleTestBase
         assertEquals("", result.get("userImage"));
 
         assertFalse(it.hasNextValue());
+        it.close();
     }
 
     // Test for [Issue#10]
@@ -110,5 +111,6 @@ public class TestParser extends ModuleTestBase
         assertEquals("data43", map.get("C"));
 
         assertFalse(mi.hasNext());
+        mi.close();
     }
 }

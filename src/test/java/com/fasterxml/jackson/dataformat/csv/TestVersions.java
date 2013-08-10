@@ -12,8 +12,10 @@ public class TestVersions extends ModuleTestBase
         assertVersion(f);
         CsvParser jp = (CsvParser) f.createParser("abc");
         assertVersion(jp);
-        CsvGenerator jgen = f.createJsonGenerator(new ByteArrayOutputStream());
+        CsvGenerator jgen = f.createGenerator(new ByteArrayOutputStream());
         assertVersion(jgen);
+        jp.close();
+        jgen.close();
     }
 
     /*

@@ -7,7 +7,6 @@ import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.format.InputAccessor;
 import com.fasterxml.jackson.core.format.MatchStrength;
 import com.fasterxml.jackson.core.io.IOContext;
-
 import com.fasterxml.jackson.dataformat.csv.impl.UTF8Reader;
 import com.fasterxml.jackson.dataformat.csv.impl.UTF8Writer;
 
@@ -241,6 +240,7 @@ public class CsvFactory extends JsonFactory
     /**********************************************************
      */
 
+    @SuppressWarnings("resource")
     @Override
     public CsvParser createParser(File f)
         throws IOException, JsonParseException
@@ -295,7 +295,8 @@ public class CsvFactory extends JsonFactory
     /* Overridden parser factory methods, deprecated
     /**********************************************************
      */
-    
+
+    @SuppressWarnings("resource")
     @Override
     @Deprecated
     public CsvParser createJsonParser(File f)
@@ -350,6 +351,7 @@ public class CsvFactory extends JsonFactory
     /**********************************************************
      */
 
+    @SuppressWarnings("resource")
     @Override
     public CsvGenerator createGenerator(OutputStream out, JsonEncoding enc) throws IOException
     {
@@ -370,6 +372,7 @@ public class CsvFactory extends JsonFactory
         return createGenerator(out, JsonEncoding.UTF8);
     }
 
+    @SuppressWarnings("resource")
     @Override
     public CsvGenerator createGenerator(Writer out) throws IOException
     {
@@ -417,6 +420,7 @@ public class CsvFactory extends JsonFactory
      * Overridable factory method that actually instantiates desired
      * parser.
      */
+    @SuppressWarnings("resource")
     @Override
     protected CsvParser _createParser(InputStream in, IOContext ctxt)
         throws IOException, JsonParseException
@@ -442,6 +446,7 @@ public class CsvFactory extends JsonFactory
      * Overridable factory method that actually instantiates desired
      * parser.
      */
+    @SuppressWarnings("resource")
     @Override
     protected CsvParser _createParser(byte[] data, int offset, int len, IOContext ctxt)
         throws IOException, JsonParseException

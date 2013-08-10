@@ -62,6 +62,7 @@ public class TestParserSequences extends ModuleTestBase
         assertEquals(5, entry.x);
         assertEquals(6, entry.y);
         assertFalse(it.hasNext());
+        it.close();
     }
 
     // Test using sequence of entries wrapped in a logical array.
@@ -103,9 +104,11 @@ public class TestParserSequences extends ModuleTestBase
         // and then chars: NOTE: ASCII, so bytes == chars
         String text = writer.writeValueAsString(entries);
         assertEquals(EXPECTED_BYTES, text.length());
+        it.close();
 
         it = mapper.reader(Entry.class).with(schema).readValues(text);
         verifySame(it, entries);
+        it.close();
     
     }
 
@@ -130,6 +133,7 @@ public class TestParserSequences extends ModuleTestBase
         assertEquals("e", row[0]);
         assertEquals("f", row[1]);
         assertFalse(it.hasNext());
+        it.close();
     }
     
     /*

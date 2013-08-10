@@ -46,6 +46,7 @@ public class TestParserTrimSpaces extends ModuleTestBase
         assertEquals("3 ", entry.c);
 
         assertFalse(it.hasNext());
+        it.close();
     }
 
     public void testTrimming() throws Exception
@@ -76,5 +77,6 @@ public class TestParserTrimSpaces extends ModuleTestBase
         assertEquals("", entry.c);
         
         assertFalse(it.hasNext());
+        it.close();
     }
 }

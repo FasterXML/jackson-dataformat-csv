@@ -42,8 +42,9 @@ public class TestParserWithHeader extends ModuleTestBase
         assertEquals("name", schema.column(0).getName());
         assertEquals("age", schema.column(1).getName());
         assertEquals("other", schema.column(2).getName());
+        parser.close();
     }
-    
+
     public void testSimpleQuotes() throws Exception
     {
         CsvMapper mapper = mapperForCsv();
@@ -70,6 +71,7 @@ public class TestParserWithHeader extends ModuleTestBase
         assertEquals(6, entry.age);
         assertEquals("Lila", entry.name);
         assertFalse(it.hasNext());        
+        it.close();
     }
 
     public void testLongHeader() throws Exception

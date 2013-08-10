@@ -48,5 +48,6 @@ public class TestParserQuotes extends ModuleTestBase
         assertEquals(13, user.age);
         assertEquals("Joe \"Sixpack\" Paxson", user.name);
         assertFalse(it.hasNext());
+        it.close();
     }
 }
