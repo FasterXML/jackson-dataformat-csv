@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class TestParserWorkarounds extends ModuleTestBase
 {
     /**
-     * Test for [Issue-1]; in case we get an extra empty element,
+     * Test for [#1]; in case we get an extra empty element,
      * we can just ignore it.
      */
     public void testIgnoringOptionalTrailing() throws Exception

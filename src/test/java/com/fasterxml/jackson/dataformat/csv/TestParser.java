@@ -2,14 +2,26 @@ package com.fasterxml.jackson.dataformat.csv;
 
 import java.util.*;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.*;
 
 import static org.junit.Assert.assertArrayEquals;
 
-import com.fasterxml.jackson.dataformat.csv.ModuleTestBase.FiveMinuteUser.Gender;
-
 public class TestParser extends ModuleTestBase
 {
+    @JsonPropertyOrder({ "x", "y", "z" })
+    public static class Point {
+        public int x;
+        public Integer y;
+        public Integer z = 8;
+    }    
+
+    /*
+    /**********************************************************
+    /* Test methods
+    /**********************************************************
+     */    
+    
     public void testSimpleExplicit() throws Exception
     {
         ObjectMapper mapper = mapperForCsv();
@@ -24,7 +36,7 @@ public class TestParser extends ModuleTestBase
         FiveMinuteUser user = mapper.reader(schema).withType(FiveMinuteUser.class).readValue("Bob,Robertson,MALE,AQIDBAU=,false\n");
         assertEquals("Bob", user.firstName);
         assertEquals("Robertson", user.lastName);
-        assertEquals(Gender.MALE, user.getGender());
+        assertEquals(FiveMinuteUser.Gender.MALE, user.getGender());
         assertFalse(user.isVerified());
         assertArrayEquals(new byte[] { 1, 2, 3, 4, 5}, user.getUserImage());
     }
@@ -37,7 +49,7 @@ public class TestParser extends ModuleTestBase
         FiveMinuteUser user = mapper.reader(schema).withType(FiveMinuteUser.class).readValue("Joe,Josephson,MALE,true,AwE=\n");
         assertEquals("Joe", user.firstName);
         assertEquals("Josephson", user.lastName);
-        assertEquals(Gender.MALE, user.getGender());
+        assertEquals(FiveMinuteUser.Gender.MALE, user.getGender());
         assertTrue(user.isVerified());
         assertArrayEquals(new byte[] { 3, 1 }, user.getUserImage());
     }
@@ -112,5 +124,30 @@ public class TestParser extends ModuleTestBase
 
         assertFalse(mi.hasNext());
         mi.close();
+    }
+
+    // [Issue#12]
+    public void testEmptyHandlingForInteger() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        CsvSchema schema = mapper.schemaFor(Point.class).withoutHeader();
+
+        // First: empty value, to be considered as null
+        Point result = mapper.reader(Point.class).with(schema).readValue(",,\n");
+        assertEquals(0, result.x);
+        assertNull(result.y);
+        assertNull(result.z);
+    }
+
+    public void testStringNullHandlingForInteger() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        CsvSchema schema = mapper.schemaFor(Point.class).withoutHeader();
+
+        // First: empty value, to be considered as null
+        Point result = mapper.reader(Point.class).with(schema).readValue("null,null,null\n");
+        assertEquals(0, result.x);
+        assertNull(result.y);
+        assertNull(result.z);
     }
 }
