@@ -1,5 +1,5 @@
 Project: jackson-dataformat-csv
-Version: 2.2.3 (xx-Aug-2013)
+Version: 2.2.3 (22-Aug-2013)
 
 #17: Fix support for using custom delimeters (like semicolon instead of comma)
  (reported by asselmeyer@github)

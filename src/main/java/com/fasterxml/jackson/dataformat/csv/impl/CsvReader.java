@@ -530,7 +530,7 @@ public class CsvReader
     public String nextString() throws IOException, JsonParseException
     {
         _numTypesValid = NR_UNKNOWN;
-        
+
         if (_pendingLF > 0) { // either pendingLF, or closed
             if (_inputSource != null) { // if closed, we just need to return null
                 _handleLF();
