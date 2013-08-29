@@ -117,6 +117,18 @@ public class CsvFactory extends JsonFactory
     public Version version() {
         return PackageVersion.VERSION;
     }
+
+    /*
+    /**********************************************************
+    /* Capability introspection
+    /**********************************************************
+     */
+
+    // Yes; CSV is positional
+    @Override
+    public boolean requiresPropertyOrdering() {
+        return true;
+    }
     
     /*
     /**********************************************************
