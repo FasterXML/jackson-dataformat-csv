@@ -12,6 +12,7 @@
   <artifactId>jackson-dataformat-csv</artifactId>
   <name>Jackson-dataformat-CSV</name>
   <version>2.3.0-SNAPSHOT</version>
+  <packaging>bundle</packaging>
   <description>Support for reading and writing CSV-encoded data via Jackson
 abstractions.
   </description>
