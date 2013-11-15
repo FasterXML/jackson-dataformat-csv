@@ -25,7 +25,7 @@ abstractions.
   </scm>
 
   <properties>
-    <jackson.core.version>2.3.0-rc1</jackson.core.version>
+    <jackson.core.version>2.3.0</jackson.core.version>
     <!-- Generate PackageVersion.java into this directory. -->
     <packageVersion.dir>com/fasterxml/jackson/dataformat/csv</packageVersion.dir>
     <packageVersion.package>${project.groupId}.csv</packageVersion.package>
