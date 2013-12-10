@@ -1,12 +1,12 @@
 package com.fasterxml.jackson.dataformat.csv.impl;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.io.IOContext;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Arrays;
-
-import com.fasterxml.jackson.core.*;
-import com.fasterxml.jackson.core.io.IOContext;
-import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 
 /**
  * Low-level helper class that handles actual output of CSV, purely
@@ -225,6 +225,17 @@ public final class CsvWriter
         _buffer(columnIndex, BufferedValue.buffered(value));
     }
 
+    public void write(int columnIndex, float value) throws IOException
+    {
+        // easy case: all in order
+        if (columnIndex == _nextColumnToWrite) {
+            appendValue(value);
+            ++_nextColumnToWrite;
+            return;
+        }
+        _buffer(columnIndex, BufferedValue.buffered(value));
+    }
+
     public void write(int columnIndex, double value) throws IOException
     {
         // easy case: all in order
@@ -235,6 +246,7 @@ public final class CsvWriter
         }
         _buffer(columnIndex, BufferedValue.buffered(value));
     }
+
 
     public void write(int columnIndex, boolean value) throws IOException
     {
@@ -328,6 +340,19 @@ public final class CsvWriter
             _outputBuffer[_outputTail++] = _cfgColumnSeparator;
         }
         _outputTail = NumberOutput.outputLong(value, _outputBuffer, _outputTail);
+    }
+
+    protected void appendValue(float value) throws IOException
+    {
+        String str = NumberOutput.toString(value);
+        final int len = str.length();
+        if ((_outputTail + len) >= _outputTail) { // >= to include possible comma too
+            _flushBuffer();
+        }
+        if (_nextColumnToWrite > 0) {
+            _outputBuffer[_outputTail++] = _cfgColumnSeparator;
+        }
+        writeRaw(str);
     }
 
     protected void appendValue(double value) throws IOException
