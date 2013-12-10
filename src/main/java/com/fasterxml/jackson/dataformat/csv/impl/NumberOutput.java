@@ -227,6 +227,12 @@ public final class NumberOutput
         return Double.toString(value);
     }
 
+    public static String toString(float value)
+    {
+        return Float.toString(value);
+    }
+
+
     /*
     /**********************************************************
     /* Internal methods

@@ -20,6 +20,17 @@ public class TestGenerator extends ModuleTestBase
         }
     }
 
+    @JsonPropertyOrder({"id", "amount"})
+    static class Entry2 {
+        public String id;
+        public float amount;
+
+        public Entry2(String id, float amount) {
+            this.id = id;
+            this.amount = amount;
+        }
+    }
+
     @JsonPropertyOrder({"id", "desc"})
     static class IdDesc {
         public String id, desc;
@@ -97,6 +108,21 @@ public class TestGenerator extends ModuleTestBase
 
         String result = mapper.writer(schema).writeValueAsString(new Entry("abc", 1.25));
         assertEquals("abc,1.25\n", result);
+    }
+
+    public void testExplicitWithFloat() throws Exception
+    {
+        ObjectMapper mapper = mapperForCsv();
+        CsvSchema schema = CsvSchema.builder()
+                .addColumn("id")
+                .addColumn("amount")
+                .build();
+
+        float amount = 1.89f;
+        //this value loses precision when converted
+        assertFalse(Double.toString((double)amount).equals("1.89"));
+        String result = mapper.writer(schema).writeValueAsString(new Entry2("abc", amount));
+        assertEquals("abc,1.89\n", result);
     }
 
     public void testExplicitWithQuoted() throws Exception
