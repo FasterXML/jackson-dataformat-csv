@@ -1,5 +1,13 @@
 Project: jackson-dataformat-csv
-Version: 2.3.0 (14-Nov-2013)
+Version: 2.3.1 (xx-xxx-2013)
+
+#28: Missing override for `createGenerator()`
+
+------------------------------------------------------------------------
+=== History: ===
+------------------------------------------------------------------------
+
+2.3.0 (14-Nov-2013)
 
 #11: Default `CsvMapper` to use alphabetic sorting of properties (since
  alternative is basically undefined; and with JDK 1.7+, unstable too)
@@ -7,10 +15,6 @@ Version: 2.3.0 (14-Nov-2013)
 #20: Support filtering (`@JsonView`, `@JsonFilter`) with CSV
  (requested by mablaev@github)
 - Add support for `JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN`
-
-------------------------------------------------------------------------
-=== History: ===
-------------------------------------------------------------------------
 
 2.2.2 (27-May-2013)
 
