@@ -396,6 +396,14 @@ public class CsvFactory extends JsonFactory
         return _createGenerator(out, ctxt);
     }
 
+    @Override
+    public CsvGenerator createGenerator(File f, JsonEncoding enc) throws IOException
+    {
+        OutputStream out = new FileOutputStream(f);
+        return createGenerator(out, enc);
+    }
+
+
     /*
     /**********************************************************
     /* Overridden generator factory methods, deprecated

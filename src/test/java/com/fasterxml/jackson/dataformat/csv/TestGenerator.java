@@ -5,7 +5,10 @@ import com.fasterxml.jackson.core.JsonGenerationException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.csv.ModuleTestBase.FiveMinuteUser.Gender;
+
+import java.io.File;
 
 public class TestGenerator extends ModuleTestBase
 {
@@ -164,6 +167,26 @@ public class TestGenerator extends ModuleTestBase
         String expOutput = "id,\""+expOutputDesc+"\"";
         String result = mapper.writer(schema).writeValueAsString(new IdDesc("id", inputDesc)).trim();
         assertEquals(expOutput, result);
+    }
+
+    public void testWriteInFile() throws Exception
+    {
+        ObjectMapper mapper = mapperForCsv();
+        CsvSchema schema = CsvSchema.builder()
+                .addColumn("firstName")
+                .addColumn("lastName")
+                .build();
+
+        ObjectNode node = mapper.createObjectNode()
+                .put("firstName", "David")
+                .put("lastName", "Douillet");
+
+        File file = File.createTempFile("file", ".csv");
+        try {
+            mapper.writer(schema.withHeader()).writeValue(file, node);
+        } finally {
+            file.delete();
+        }
     }
     
     /*
