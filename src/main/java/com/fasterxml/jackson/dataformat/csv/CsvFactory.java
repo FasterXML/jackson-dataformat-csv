@@ -396,13 +396,19 @@ public class CsvFactory extends JsonFactory
         return _createGenerator(out, ctxt);
     }
 
+    @SuppressWarnings("resource")
     @Override
     public CsvGenerator createGenerator(File f, JsonEncoding enc) throws IOException
     {
         OutputStream out = new FileOutputStream(f);
-        return createGenerator(out, enc);
+        // Important: make sure that we always auto-close stream we create:
+        IOContext ctxt = _createContext(out, false);
+        // [JACKSON-512]: allow wrapping with _outputDecorator
+        if (_outputDecorator != null) {
+            out = _outputDecorator.decorate(ctxt, out);
+        }
+        return _createGenerator(ctxt, _createWriter(out, JsonEncoding.UTF8, ctxt));
     }
-
 
     /*
     /**********************************************************

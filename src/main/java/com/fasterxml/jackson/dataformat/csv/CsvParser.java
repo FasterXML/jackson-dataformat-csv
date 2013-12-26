@@ -7,6 +7,7 @@ import java.math.BigInteger;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.base.ParserMinimalBase;
 import com.fasterxml.jackson.core.io.IOContext;
+import com.fasterxml.jackson.core.json.DupDetector;
 import com.fasterxml.jackson.core.json.JsonReadContext;
 import com.fasterxml.jackson.core.util.BufferRecycler;
 import com.fasterxml.jackson.core.util.ByteArrayBuilder;
@@ -236,17 +237,19 @@ public class CsvParser
         super(parserFeatures);    
         _objectCodec = codec;
         _textBuffer = new TextBuffer(br);
+        DupDetector dups = JsonParser.Feature.STRICT_DUPLICATE_DETECTION.enabledIn(parserFeatures)
+                ? DupDetector.rootDetector(this) : null;
         _csvFeatures = csvFeatures;
-        _parsingContext = JsonReadContext.createRootContext();
+        _parsingContext = JsonReadContext.createRootContext(dups);
         _reader = new CsvReader(this, ctxt, reader, _schema, _textBuffer,
                 isEnabled(JsonParser.Feature.AUTO_CLOSE_SOURCE),
                 isEnabled(Feature.TRIM_SPACES));
     }
 
-    /*                                                                                       
-    /**********************************************************                              
+    /*
+    /**********************************************************
     /* Versioned                                                                             
-    /**********************************************************                              
+    /**********************************************************                 
      */
 
     @Override
