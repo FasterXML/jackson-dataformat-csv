@@ -1,5 +1,5 @@
 Project: jackson-dataformat-csv
-Version: 2.3.1 (xx-xxx-2013)
+Version: 2.3.1 (28-Dec-2013)
 
 #28: Missing override for `createGenerator()`
 

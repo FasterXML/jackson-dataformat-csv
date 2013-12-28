@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.fasterxml</groupId>
     <artifactId>oss-parent</artifactId>
-    <version>11</version>
+    <version>12</version>
   </parent>
 
   <groupId>com.fasterxml.jackson.dataformat</groupId>
@@ -25,7 +25,8 @@ abstractions.
   </scm>
 
   <properties>
-    <jackson.core.version>2.3.0</jackson.core.version>
+    <jackson.version.annotations>2.3.0</jackson.version.annotations>
+    <jackson.version.core>2.3.1</jackson.version.core>
     <!-- Generate PackageVersion.java into this directory. -->
     <packageVersion.dir>com/fasterxml/jackson/dataformat/csv</packageVersion.dir>
     <packageVersion.package>${project.groupId}.csv</packageVersion.package>
@@ -55,12 +56,12 @@ abstractions.
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>
-      <version>${jackson.core.version}</version>
+      <version>${jackson.version.core}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>${jackson.core.version}</version>
+      <version>${jackson.version.core}</version>
     </dependency>
 
      <!-- and for testing, JUnit (or TestNG?) is needed -->
@@ -73,7 +74,7 @@ abstractions.
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-      <version>${jackson.core.version}</version>
+      <version>${jackson.version.annotations}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
