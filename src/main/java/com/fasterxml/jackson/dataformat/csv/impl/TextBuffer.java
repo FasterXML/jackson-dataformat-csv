@@ -114,7 +114,7 @@ public final class TextBuffer
                 // And then return that array
                 char[] buf = _currentSegment;
                 _currentSegment = null;
-                _allocator.releaseCharBuffer(BufferRecycler.CharBufferType.TEXT_BUFFER, buf);
+                _allocator.releaseCharBuffer(BufferRecycler.CHAR_TEXT_BUFFER, buf);
             }
         }
     }
@@ -175,7 +175,7 @@ public final class TextBuffer
     private final char[] findBuffer(int needed)
     {
         if (_allocator != null) {
-            return _allocator.allocCharBuffer(BufferRecycler.CharBufferType.TEXT_BUFFER, needed);
+            return _allocator.allocCharBuffer(BufferRecycler.CHAR_TEXT_BUFFER, needed);
         }
         return new char[Math.max(needed, MIN_SEGMENT_LEN)];
     }
