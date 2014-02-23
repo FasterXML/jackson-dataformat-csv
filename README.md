@@ -61,9 +61,9 @@ CsvSchema schema = CsvSchema.builder()
 // Read schema from the first line; start with bootstrap instance
 // to enable reading of schema from the first line
 // NOTE: reads schema and uses it for binding
-CsvSchema bootstrap = CsvSchema.emptySchema().withHeader();
+CsvSchema bootstrapSchema = CsvSchema.emptySchema().withHeader();
 ObjectMapper mapper = new CsvMapper();
-mapper.reader(Pojo.class).withSchema(bootstrap).readValue(json);
+mapper.reader(Pojo.class).with(bootstrapSchema).readValue(json);
 ```
 
 It is important to note that the schema object is needed to ensure correct ordering of columns; schema instances are immutable and fully reusable (as are `ObjectWriter` instances).
@@ -84,7 +84,7 @@ CsvMapper mapper = new CsvMapper();
 Pojo value = ...;
 CsvSchema schema = mapper.schemaFor(Pojo.class); // schema from 'Pojo' definition
 String csv = mapper.writer(schema).writeValueAsString();
-Pojo result = mapper.reader(Pojo.class).withSchema(schema).read(csv);
+Pojo result = mapper.reader(Pojo.class).with(schema).read(csv);
 ```
 
 ## Data-binding without schema
