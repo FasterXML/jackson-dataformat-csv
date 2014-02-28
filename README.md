@@ -1,6 +1,6 @@
 # Overview
 
-This project contains [Jackson](http://http://wiki.fasterxml.com/JacksonHome) extension component for reading and writing [CSV](http://en.wikipedia.org/wiki/Comma-separated_values) encoded data, either as "raw" data (sequence of String arrays), or via data binding to/from Java Objects (POJOs).
+This project contains [Jackson](http://wiki.fasterxml.com/JacksonHome) extension component for reading and writing [CSV](http://en.wikipedia.org/wiki/Comma-separated_values) encoded data, either as "raw" data (sequence of String arrays), or via data binding to/from Java Objects (POJOs).
 
 Project is licensed under [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt).
 
