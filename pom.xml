@@ -25,7 +25,7 @@ abstractions.
   </scm>
 
   <properties>
-    <jackson.version.annotations>2.3.0</jackson.version.annotations>
+    <jackson.version.annotations>2.4.0-SNAPSHOT</jackson.version.annotations>
     <jackson.version.core>2.4.0-SNAPSHOT</jackson.version.core>
     <!-- Generate PackageVersion.java into this directory. -->
     <packageVersion.dir>com/fasterxml/jackson/dataformat/csv</packageVersion.dir>
@@ -75,6 +75,12 @@ abstractions.
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
       <version>${jackson.version.annotations}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>16.0.1</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
