@@ -61,10 +61,13 @@ public class TestGenerator extends ModuleTestBase
             .addColumn("verified")
             .build();
 
+        // from base, default order differs:
+        // @JsonPropertyOrder({"firstName", "lastName", "gender" ,"verified", "userImage"})
+        
         FiveMinuteUser user = new FiveMinuteUser("Silu", "Seppala", false, Gender.MALE,
                 new byte[] { 1, 2, 3, 4, 5});
-        String result = mapper.writer(schema).writeValueAsString(user);        
-        assertEquals("Silu,Seppala,MALE,AQIDBAU=,false\n", result);
+        String csv = mapper.writer(schema).writeValueAsString(user);
+        assertEquals("Silu,Seppala,MALE,AQIDBAU=,false\n", csv);
     }
 
     public void testSimpleWithAutoSchema() throws Exception
