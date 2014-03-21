@@ -11,6 +11,11 @@ Lior Lipshitz (from zazma.com)
   cross buffer boundary
  (2.1.5 / 2.2.0)
 
+Paul Magrath (Magrath@github)
+
+* Reported #33: CSV is written without column separators if first column is null
+ (2.3.3)
+
 Jason Dunkelberger (dirkraft@github)
 
 * Suggested #32: Allow disabling of quoteChar
