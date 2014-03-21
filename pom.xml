@@ -3,9 +3,9 @@
   <modelVersion>4.0.0</modelVersion> 
 
   <parent>
-    <groupId>com.fasterxml</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>12</version>
+    <groupId>com.fasterxml.jackson</groupId>
+    <artifactId>jackson-parent</artifactId>
+    <version>2.4</version>
   </parent>
 
   <groupId>com.fasterxml.jackson.dataformat</groupId>
@@ -16,7 +16,7 @@
   <description>Support for reading and writing CSV-encoded data via Jackson
 abstractions.
   </description>
-  <url>http://wiki.fasterxml.com/JacksonExtensionCSV</url>
+  <url>https://github.com/FasterXML/jackson-dataformat-csv</url>
   <scm>
     <connection>scm:git:git@github.com:FasterXML/jackson-dataformat-csv.git</connection>
     <developerConnection>scm:git:git@github.com:FasterXML/jackson-dataformat-csv.git</developerConnection>
@@ -26,14 +26,11 @@ abstractions.
 
   <properties>
     <jackson.version.annotations>2.4.0-SNAPSHOT</jackson.version.annotations>
-    <jackson.version.core>2.4.0-SNAPSHOT</jackson.version.core>
+    <jackson.version.core>${project.version}</jackson.version.core>
     <!-- Generate PackageVersion.java into this directory. -->
     <packageVersion.dir>com/fasterxml/jackson/dataformat/csv</packageVersion.dir>
     <packageVersion.package>${project.groupId}.csv</packageVersion.package>
 
-    <!--
-     | Configuration properties for the OSGi maven-bundle-plugin
-    -->
     <osgi.export>${project.groupId}.csv;version=${project.version}
 </osgi.export>
     <osgi.private>com.fasterxml.jackson.dataformat.csv.impl</osgi.private>
@@ -64,13 +61,7 @@ abstractions.
       <version>${jackson.version.core}</version>
     </dependency>
 
-     <!-- and for testing, JUnit (or TestNG?) is needed -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.8.2</version>
-      <scope>test</scope>
-    </dependency>
+     <!-- and for testing -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
