@@ -4,13 +4,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.fasterxml.jackson.dataformat.csv.ModuleTestBase;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 
-import java.lang.String;import static org.junit.Assert.assertEquals;
+import java.lang.String;
 
-public class TestWriter {
-
+// [Issue#33]
+public class TestWriter extends ModuleTestBase
+{
     @Test
     public void testWrite_NoNulls() throws JsonProcessingException {
         final CsvSchema.Builder csvSchemaBuilder = new CsvSchema.Builder();

@@ -6,16 +6,16 @@ import com.fasterxml.jackson.databind.*;
 
 public class TestParserQuotes extends ModuleTestBase
 {
-    /*
-    /**********************************************************************
-    /* Helper types
-    /**********************************************************************
-     */
-
     @JsonPropertyOrder({"age, name"})
     protected static class AgeName {
         public int age;
         public String name;
+
+        public AgeName() { }
+        public AgeName(int age, String name) {
+            this.age = age;
+            this.name = name;
+        }
     }
 
     @JsonPropertyOrder({"s1", "s2", "s3"})
@@ -55,5 +55,32 @@ public class TestParserQuotes extends ModuleTestBase
         assertEquals("Joe \"Sixpack\" Paxson", user.name);
         assertFalse(it.hasNext());
         it.close();
+    }
+
+    // [Issue#32]
+    public void testDisablingQuotes() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        mapper.disable(CsvParser.Feature.WRAP_AS_ARRAY);
+        CsvSchema schema = mapper.schemaFor(AgeName.class)
+                .withoutQuoteChar()
+                ;
+
+        // First, read something and expect quotes to be retained
+
+//        final String RAW_NAME = "\"UNKNOWN\"";
+        final String RAW_NAME = "\"UNKNOWN";
+        
+        MappingIterator<AgeName> it = mapper.reader(schema).withType(AgeName.class).readValues(
+                "38,"+RAW_NAME+"\n");
+        assertTrue(it.hasNext());
+        AgeName user = it.nextValue();
+        assertEquals(38, user.age);
+        assertEquals(RAW_NAME, user.name);
+        assertFalse(it.hasNext());
+        it.close();
+
+        String csv = mapper.writer(schema).writeValueAsString(user).trim();
+        assertEquals("38,"+RAW_NAME, csv);
     }
 }

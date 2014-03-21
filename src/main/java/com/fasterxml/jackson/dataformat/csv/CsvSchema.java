@@ -60,8 +60,6 @@ import com.fasterxml.jackson.core.FormatSchema;
  *    read column names from the document itself.
  *  </li>
  *</ul>
- *
- * @since 1.9
  */
 public class CsvSchema 
     implements FormatSchema,
@@ -185,7 +183,8 @@ public class CsvSchema
         
         protected char _columnSeparator = DEFAULT_COLUMN_SEPARATOR;
 
-        protected char _quoteChar = DEFAULT_QUOTE_CHAR;
+        // note: need to use int to allow -1 for 'none'
+        protected int _quoteChar = DEFAULT_QUOTE_CHAR;
 
         // note: need to use int to allow -1 for 'none'
         protected int _escapeChar = DEFAULT_QUOTE_CHAR;
@@ -285,6 +284,14 @@ public class CsvSchema
         }
 
         /**
+         * @since 2.4
+         */
+        public Builder disableQuoteChar() {
+            _quoteChar = -1;
+            return this;
+        }
+        
+        /**
          * Method for specifying character used for optional escaping
          * of characters in quoted String values.
          * Default is "not used", meaning that no escaping used.
@@ -348,7 +355,7 @@ public class CsvSchema
 
     protected final char _columnSeparator;
 
-    protected final char _quoteChar;
+    protected final int _quoteChar;
     
     protected final int _escapeChar;
     
@@ -356,7 +363,7 @@ public class CsvSchema
     
     public CsvSchema(Column[] columns,
             boolean useHeader, boolean skipFirstDataRow,
-            char columnSeparator, char quoteChar, int escapeChar,
+            char columnSeparator, int quoteChar, int escapeChar,
             char[] lineSeparator)
     {
         if (columns == null) {
@@ -387,7 +394,7 @@ public class CsvSchema
      */
     protected CsvSchema(Column[] columns,
             boolean useHeader, boolean skipFirstDataRow,
-            char columnSeparator, char quoteChar, int escapeChar,
+            char columnSeparator, int quoteChar, int escapeChar,
             char[] lineSeparator,
             Map<String,Column> columnsByName)
     {
@@ -476,7 +483,13 @@ public class CsvSchema
             new CsvSchema(_columns, _useHeader, _skipFirstDataRow,
                     _columnSeparator, c, _escapeChar, _lineSeparator, _columnsByName);
     }
-    
+
+    public CsvSchema withoutQuoteChar() {
+        return (_quoteChar == -1) ? this :
+            new CsvSchema(_columns, _useHeader, _skipFirstDataRow,
+                    _columnSeparator, -1, _escapeChar, _lineSeparator, _columnsByName);
+    }
+
     public CsvSchema withEscapeChar(char c) {
         return (_escapeChar == c) ? this
                 : new CsvSchema(_columns, _useHeader, _skipFirstDataRow,
@@ -498,7 +511,7 @@ public class CsvSchema
         return new CsvSchema(NO_COLUMNS, _useHeader, _skipFirstDataRow,
                 _columnSeparator, _quoteChar, _escapeChar, _lineSeparator, _columnsByName);
     }
-    
+
     /*
     /**********************************************************************
     /* Public API, FormatSchema
@@ -519,9 +532,12 @@ public class CsvSchema
     public boolean useHeader() { return _useHeader; }
     public boolean skipFirstDataRow() { return _skipFirstDataRow; }
     public char getColumnSeparator() { return _columnSeparator; }
-    public char getQuoteChar() { return _quoteChar; }
+    public int getQuoteChar() { return _quoteChar; }
     public int getEscapeChar() { return _escapeChar; }
     public char[] getLineSeparator() { return _lineSeparator; }
+
+    public boolean usesQuoteChar() { return _quoteChar >= 0; }
+    public boolean usesEscapeChar() { return _escapeChar >= 0; }
     
     /*
     /**********************************************************************

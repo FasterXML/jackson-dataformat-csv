@@ -44,7 +44,7 @@ public final class CsvWriter
     
     final protected char _cfgColumnSeparator;
 
-    final protected char _cfgQuoteCharacter;
+    final protected int _cfgQuoteCharacter;
     
     final protected char[] _cfgLineSeparator;
 
@@ -155,6 +155,7 @@ public final class CsvWriter
     
     private final int _calcSafeChar()
     {
+        // note: quote char may be -1 to signify "no quoting":
         int min = Math.max(_cfgColumnSeparator, _cfgQuoteCharacter);
         for (int i = 0; i < _cfgLineSeparatorLength; ++i) {
             min = Math.max(min, _cfgLineSeparator[i]);
@@ -403,7 +404,8 @@ public final class CsvWriter
         if (_outputTail >= _outputEnd) {
             _flushBuffer();
         }
-        final char q = _cfgQuoteCharacter;
+        // NOTE: caller should guarantee quote char is valid (not -1) at this point:
+        final char q = (char) _cfgQuoteCharacter;
         _outputBuffer[_outputTail++] = q;
         // simple case: if we have enough room, no need for boundary checks
         final int len = text.length();
@@ -414,7 +416,7 @@ public final class CsvWriter
         for (int i = 0; i < len; ++i) {
             char c = text.charAt(i);
             if (c == q) { // double up
-                _outputBuffer[_outputTail++] = _cfgQuoteCharacter;
+                _outputBuffer[_outputTail++] = q;
                 if (_outputTail >= _outputEnd) {
                     _flushBuffer();
                 }
@@ -427,13 +429,15 @@ public final class CsvWriter
     private final void _writeLongQuoted(String text) throws IOException
     {
         final int len = text.length();
+        // NOTE: caller should guarantee quote char is valid (not -1) at this point:
+        final char q = (char) _cfgQuoteCharacter;
         for (int i = 0; i < len; ++i) {
             if (_outputTail >= _outputEnd) {
                 _flushBuffer();
             }
             char c = text.charAt(i);
-            if (c == _cfgQuoteCharacter) { // double up
-                _outputBuffer[_outputTail++] = _cfgQuoteCharacter;
+            if (c == q) { // double up
+                _outputBuffer[_outputTail++] = q;
                 if (_outputTail >= _outputEnd) {
                     _flushBuffer();
                 }
@@ -443,7 +447,7 @@ public final class CsvWriter
         if (_outputTail >= _outputEnd) {
             _flushBuffer();
         }
-        _outputBuffer[_outputTail++] = _cfgQuoteCharacter;
+        _outputBuffer[_outputTail++] = q;
     }
     
     public void writeRaw(String text) throws IOException
@@ -571,6 +575,10 @@ public final class CsvWriter
      */
     protected final boolean _mayNeedQuotes(String value, int length)
     {
+        // 21-Mar-2014, tatu: If quoting disabled, don't quote
+        if (_cfgQuoteCharacter < 0) {
+            return false;
+        }
         // let's not bother checking long Strings, just quote already:
         if (length > MAX_QUOTE_CHECK) {
             return true;
