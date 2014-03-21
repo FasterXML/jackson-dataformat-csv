@@ -1,11 +1,16 @@
 Project: jackson-dataformat-csv
-Version: 2.3.2 (01-Mar-2014)
+Version: 2.3.3 (xx-xxx-2014)
 
-No functional changes
+- Fix a minor problem with `CsvSchema` defaults: was setting default
+  escape char to be same as default quote (i.e. double-quote)
 
 ------------------------------------------------------------------------
 === History: ===
 ------------------------------------------------------------------------
+
+2.3.2 (01-Mar-2014)
+
+No functional changes
 
 2.3.1 (28-Dec-2013)
 
