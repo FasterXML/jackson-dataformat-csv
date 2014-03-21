@@ -31,7 +31,7 @@ System.err.println(" 2nd => ["+result.s2+"]");
 System.err.println(" 3rd => ["+result.s3+"]");
 */
 
-        // start by trailing space trimming (easist one to work)
+        // start by trailing space trimming (easiest one to work)
         assertEquals("abc", result.s1);
         // follow by leading space trimming
         assertEquals("def", result.s2);

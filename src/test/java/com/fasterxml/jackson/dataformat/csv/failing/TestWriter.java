@@ -13,67 +13,44 @@ import java.lang.String;
 // [Issue#33]
 public class TestWriter extends ModuleTestBase
 {
+    private final CsvSchema SCHEMA = new CsvSchema.Builder()
+        .addColumn("timestamp", CsvSchema.ColumnType.STRING)
+        .addColumn("value", CsvSchema.ColumnType.NUMBER)
+        .addColumn("id", CsvSchema.ColumnType.STRING)
+        .build();
+    final ObjectWriter WRITER = new CsvMapper().writer().withSchema(SCHEMA);
+    
     @Test
     public void testWrite_NoNulls() throws JsonProcessingException {
-        final CsvSchema.Builder csvSchemaBuilder = new CsvSchema.Builder();
-        csvSchemaBuilder.addColumn("timestamp", CsvSchema.ColumnType.STRING);
-        csvSchemaBuilder.addColumn("value", CsvSchema.ColumnType.NUMBER);
-        csvSchemaBuilder.addColumn("id", CsvSchema.ColumnType.STRING);
-        final CsvSchema schema = csvSchemaBuilder.build();
-        final ObjectWriter writer = new CsvMapper().writer().withSchema(schema);
-
-        final String string = writer.writeValueAsString(
+        final String csv = WRITER.writeValueAsString(
                 ImmutableMap.of("timestamp", "2014-03-10T23:32:47+00:00",
                         "value", 42, "id", "hello"));
 
-        assertEquals("\"2014-03-10T23:32:47+00:00\",42,hello\n", string);
+        assertEquals("\"2014-03-10T23:32:47+00:00\",42,hello\n", csv);
     }
 
     @Test
     public void testWrite_NullFirstColumn() throws JsonProcessingException {
-        final CsvSchema.Builder csvSchemaBuilder = new CsvSchema.Builder();
-        csvSchemaBuilder.addColumn("timestamp", CsvSchema.ColumnType.STRING);
-        csvSchemaBuilder.addColumn("value", CsvSchema.ColumnType.NUMBER);
-        csvSchemaBuilder.addColumn("id", CsvSchema.ColumnType.STRING);
-        final CsvSchema schema = csvSchemaBuilder.build();
-        final ObjectWriter writer = new CsvMapper().writer().withSchema(schema);
-
-        final String string = writer.writeValueAsString(
+        final String csv = WRITER.writeValueAsString(
                 ImmutableMap.of("value", 42, "id", "hello"));
-
-        assertEquals(",42,hello\n", string);
+        assertEquals(",42,hello\n", csv);
     }
 
     @Test
     public void testWrite_NullSecondColumn() throws JsonProcessingException {
-        final CsvSchema.Builder csvSchemaBuilder = new CsvSchema.Builder();
-        csvSchemaBuilder.addColumn("timestamp", CsvSchema.ColumnType.STRING);
-        csvSchemaBuilder.addColumn("value", CsvSchema.ColumnType.NUMBER);
-        csvSchemaBuilder.addColumn("id", CsvSchema.ColumnType.STRING);
-        final CsvSchema schema = csvSchemaBuilder.build();
-        final ObjectWriter writer = new CsvMapper().writer().withSchema(schema);
-
-        final String string = writer.writeValueAsString(
+        final String csv = WRITER.writeValueAsString(
                 ImmutableMap.of("timestamp", "2014-03-10T23:32:47+00:00",
                         "id", "hello"));
 
-        assertEquals("\"2014-03-10T23:32:47+00:00\",,hello\n", string);
+        assertEquals("\"2014-03-10T23:32:47+00:00\",,hello\n", csv);
     }
 
     @Test
     public void testWrite_NullThirdColumn() throws JsonProcessingException {
-        final CsvSchema.Builder csvSchemaBuilder = new CsvSchema.Builder();
-        csvSchemaBuilder.addColumn("timestamp", CsvSchema.ColumnType.STRING);
-        csvSchemaBuilder.addColumn("value", CsvSchema.ColumnType.NUMBER);
-        csvSchemaBuilder.addColumn("id", CsvSchema.ColumnType.STRING);
-        final CsvSchema schema = csvSchemaBuilder.build();
-        final ObjectWriter writer = new CsvMapper().writer().withSchema(schema);
-
-        final String string = writer.writeValueAsString(
+        final String csv = WRITER.writeValueAsString(
                 ImmutableMap.of("timestamp", "2014-03-10T23:32:47+00:00",
                         "value", 42));
 
-        assertEquals("\"2014-03-10T23:32:47+00:00\",42\n", string);
+        assertEquals("\"2014-03-10T23:32:47+00:00\",42\n", csv);
     }
-
 }
