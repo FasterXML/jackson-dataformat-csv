@@ -5,8 +5,13 @@ Here are people who have contributed to development of this project:
 
 Tatu Saloranta, tatu.saloranta@iki.fi: author
 
-Lior Lipshitz (from zazma.com):
+Lior Lipshitz (from zazma.com)
 
 * Reported #14: Incorrect quoting of double-quotes for long String values that
   cross buffer boundary
  (2.1.5 / 2.2.0)
+
+Jason Dunkelberger (dirkraft@github)
+
+* Suggested #32: Allow disabling of quoteChar
+ (2.4.0)

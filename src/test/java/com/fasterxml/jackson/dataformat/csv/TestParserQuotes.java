@@ -65,18 +65,23 @@ public class TestParserQuotes extends ModuleTestBase
         CsvSchema schema = mapper.schemaFor(AgeName.class)
                 .withoutQuoteChar()
                 ;
-
+        
         // First, read something and expect quotes to be retained
 
-//        final String RAW_NAME = "\"UNKNOWN\"";
-        final String RAW_NAME = "\"UNKNOWN";
+        final String RAW_NAME = "\"UNKNOWN\"";
+        final String RAW_NAME2 = "a\"b";
         
-        MappingIterator<AgeName> it = mapper.reader(schema).withType(AgeName.class).readValues(
-                "38,"+RAW_NAME+"\n");
+        MappingIterator<AgeName> it = mapper.reader(schema).withType(AgeName.class)
+                .readValues("38,"+RAW_NAME+"\n"
+                        +"27,"+RAW_NAME2+"\n");
         assertTrue(it.hasNext());
         AgeName user = it.nextValue();
         assertEquals(38, user.age);
         assertEquals(RAW_NAME, user.name);
+
+        AgeName user2 = it.nextValue();
+        assertEquals(27, user2.age);
+        assertEquals(RAW_NAME2, user2.name);
         assertFalse(it.hasNext());
         it.close();
 
