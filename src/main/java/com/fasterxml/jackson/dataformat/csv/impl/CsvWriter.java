@@ -273,9 +273,10 @@ public final class CsvWriter
             _lastBuffered = -1;
             for (int i = _nextColumnToWrite; i <= last; ++i) {
                 BufferedValue value = _buffered[i];
-                if (value == null) { // missing value still needs separator
+                if (i > _nextColumnToWrite) {
                     appendColumnSeparator();
-                } else {
+                }
+                if (value != null) {
                     _buffered[i] = null;
                     value.write(this);
                 }
@@ -304,7 +305,7 @@ public final class CsvWriter
             _flushBuffer();
         }
         if (_nextColumnToWrite > 0) {
-            _outputBuffer[_outputTail++] = _cfgColumnSeparator;
+            appendColumnSeparator();
         }
         /* First: determine if we need quotes; simple heuristics;
          * only check for short Strings, stop if something found
@@ -382,14 +383,11 @@ public final class CsvWriter
         _outputTail += len;
     }
 
-    protected void appendColumnSeparator() throws IOException
-    {
-        if (_nextColumnToWrite > 0) {
-            if (_outputTail >= _outputTail) {
-                _flushBuffer();
-            }
-            _outputBuffer[_outputTail++] = _cfgColumnSeparator;
+    protected void appendColumnSeparator() throws IOException {
+        if (_outputTail >= _outputTail) {
+            _flushBuffer();
         }
+        _outputBuffer[_outputTail++] = _cfgColumnSeparator;
     }
     
     /*

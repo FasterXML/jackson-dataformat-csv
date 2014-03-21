@@ -1,6 +1,8 @@
 Project: jackson-dataformat-csv
 Version: 2.3.3 (xx-xxx-2014)
 
+#33: CSV is written without column separators if first column is null
+ (reported by Paul M)
 - Fix a minor problem with `CsvSchema` defaults: was setting default
   escape char to be same as default quote (i.e. double-quote)
 
