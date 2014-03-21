@@ -274,7 +274,7 @@ public final class CsvWriter
             _lastBuffered = -1;
             for (int i = _nextColumnToWrite; i <= last; ++i) {
                 BufferedValue value = _buffered[i];
-                if (i > 0) {
+                if (i > _nextColumnToWrite) {
                     appendColumnSeparator();
                 }
                 if (value != null) {

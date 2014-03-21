@@ -1,17 +1,16 @@
-package com.fasterxml.jackson.dataformat.csv.failing;
+package com.fasterxml.jackson.dataformat.csv;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
-import com.fasterxml.jackson.dataformat.csv.ModuleTestBase;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 
 import java.lang.String;
 
 // [Issue#33]
-public class TestWriter extends ModuleTestBase
+public class TestWriterWithMissingValues extends ModuleTestBase
 {
     private final CsvSchema SCHEMA = new CsvSchema.Builder()
         .addColumn("timestamp", CsvSchema.ColumnType.STRING)
