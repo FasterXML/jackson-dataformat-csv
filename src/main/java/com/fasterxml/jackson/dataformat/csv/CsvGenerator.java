@@ -139,8 +139,7 @@ public class CsvGenerator extends GeneratorBase
      * (should we throw an exception instead?)
      */
     @Override
-    public CsvGenerator useDefaultPrettyPrinter()
-    {
+    public CsvGenerator useDefaultPrettyPrinter() {
         return this;
     }
 
@@ -597,8 +596,7 @@ public class CsvGenerator extends GeneratorBase
     }
 
     @Override
-    protected void _releaseBuffers()
-    {
+    protected void _releaseBuffers() {
         _writer._releaseBuffers();
     }
 
