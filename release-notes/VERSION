@@ -1,5 +1,5 @@
 Project: jackson-dataformat-csv
-Version: 2.3.3 (xx-xxx-2014)
+Version: 2.3.3 (10-Apr-2014)
 
 #33: CSV is written without column separators if first column is null
  (reported by Paul M)
