@@ -129,7 +129,11 @@ public class CsvFactory extends JsonFactory
     public boolean requiresPropertyOrdering() {
         return true;
     }
-    
+
+    // No, we can't make use of char[] optimizations
+    @Override
+    public boolean canUseCharArrays() { return false; }
+
     /*
     /**********************************************************
     /* Format detection functionality
@@ -297,49 +301,6 @@ public class CsvFactory extends JsonFactory
     public CsvParser createParser(char[] data, int offset, int len) throws IOException {
         return _createParser(data, offset, len, _createContext(data, true), false);
     }
-    
-    /*
-    /**********************************************************
-    /* Overridden parser factory methods, deprecated
-    /**********************************************************
-     */
-
-    @SuppressWarnings("resource")
-    @Override
-    @Deprecated
-    public CsvParser createJsonParser(File f) throws IOException {
-        return _createParser(new FileInputStream(f), _createContext(f, true));
-    }
-
-    @Override
-    @Deprecated
-    public CsvParser createJsonParser(URL url) throws IOException {
-        return _createParser(_optimizedStreamFromURL(url), _createContext(url, true));
-    }
-
-    @Override
-    @Deprecated
-    public CsvParser createJsonParser(InputStream in) throws IOException {
-        return _createParser(in, _createContext(in, false));
-    }
-
-    @Override
-    @Deprecated
-    public CsvParser createJsonParser(Reader r) throws IOException {
-        return _createParser(r, _createContext(r, false));
-    }
-    
-    @Override
-    @Deprecated
-    public CsvParser createJsonParser(byte[] data) throws IOException {
-        return _createParser(data, 0, data.length, _createContext(data, true));
-    }
-    
-    @Override
-    @Deprecated
-    public CsvParser createJsonParser(byte[] data, int offset, int len) throws IOException {
-        return _createParser(data, offset, len, _createContext(data, true));
-    }
 
     /*
     /**********************************************************
@@ -394,30 +355,6 @@ public class CsvFactory extends JsonFactory
         return _createGenerator(ctxt, _createWriter(out, JsonEncoding.UTF8, ctxt));
     }
 
-    /*
-    /**********************************************************
-    /* Overridden generator factory methods, deprecated
-    /**********************************************************
-     */
-    
-    @Override
-    @Deprecated
-    public CsvGenerator createJsonGenerator(OutputStream out, JsonEncoding enc) throws IOException {
-        return createGenerator(out, enc);
-    }
-
-    @Override
-    @Deprecated
-    public CsvGenerator createJsonGenerator(OutputStream out) throws IOException {
-        return createGenerator(out);
-    }
-
-    @Override
-    @Deprecated
-    public CsvGenerator createJsonGenerator(Writer w) throws IOException {
-        return createGenerator(w);
-    }
-    
     /*
     /******************************************************
     /* Overridden internal factory methods
