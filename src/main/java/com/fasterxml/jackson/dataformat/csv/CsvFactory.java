@@ -254,52 +254,48 @@ public class CsvFactory extends JsonFactory
 
     @SuppressWarnings("resource")
     @Override
-    public CsvParser createParser(File f)
-        throws IOException, JsonParseException
-    {
+    public CsvParser createParser(File f) throws IOException {
         return _createParser(new FileInputStream(f), _createContext(f, true));
     }
 
     @Override
-    public CsvParser createParser(URL url)
-        throws IOException, JsonParseException
-    {
+    public CsvParser createParser(URL url) throws IOException {
         return _createParser(_optimizedStreamFromURL(url), _createContext(url, true));
     }
 
     @Override
-    public CsvParser createParser(InputStream in)
-        throws IOException, JsonParseException
-    {
+    public CsvParser createParser(InputStream in) throws IOException {
         return _createParser(in, _createContext(in, false));
     }
 
     @Override
-    public JsonParser createParser(Reader r)
-        throws IOException, JsonParseException
-    {
+    public CsvParser createParser(Reader r) throws IOException {
         return _createParser(r, _createContext(r, false));
     }
 
     @Override
-    public CsvParser createParser(String doc)
-        throws IOException, JsonParseException
-    {
+    public CsvParser createParser(String doc) throws IOException {
         return _createParser(new StringReader(doc), _createContext(doc, true));
     }
     
     @Override
-    public CsvParser createParser(byte[] data)
-        throws IOException, JsonParseException
-    {
+    public CsvParser createParser(byte[] data) throws IOException {
         return _createParser(data, 0, data.length, _createContext(data, true));
     }
     
     @Override
-    public CsvParser createParser(byte[] data, int offset, int len)
-        throws IOException, JsonParseException
-    {
+    public CsvParser createParser(byte[] data, int offset, int len) throws IOException {
         return _createParser(data, offset, len, _createContext(data, true));
+    }
+
+    @Override
+    public CsvParser createParser(char[] data) throws IOException {
+        return _createParser(data, 0, data.length, _createContext(data, true), false);
+    }
+    
+    @Override
+    public CsvParser createParser(char[] data, int offset, int len) throws IOException {
+        return _createParser(data, offset, len, _createContext(data, true), false);
     }
     
     /*
@@ -311,49 +307,37 @@ public class CsvFactory extends JsonFactory
     @SuppressWarnings("resource")
     @Override
     @Deprecated
-    public CsvParser createJsonParser(File f)
-        throws IOException, JsonParseException
-    {
+    public CsvParser createJsonParser(File f) throws IOException {
         return _createParser(new FileInputStream(f), _createContext(f, true));
     }
 
     @Override
     @Deprecated
-    public CsvParser createJsonParser(URL url)
-        throws IOException, JsonParseException
-    {
+    public CsvParser createJsonParser(URL url) throws IOException {
         return _createParser(_optimizedStreamFromURL(url), _createContext(url, true));
     }
 
     @Override
     @Deprecated
-    public CsvParser createJsonParser(InputStream in)
-        throws IOException, JsonParseException
-    {
+    public CsvParser createJsonParser(InputStream in) throws IOException {
         return _createParser(in, _createContext(in, false));
     }
 
     @Override
     @Deprecated
-    public JsonParser createJsonParser(Reader r)
-        throws IOException, JsonParseException
-    {
+    public CsvParser createJsonParser(Reader r) throws IOException {
         return _createParser(r, _createContext(r, false));
     }
     
     @Override
     @Deprecated
-    public CsvParser createJsonParser(byte[] data)
-        throws IOException, JsonParseException
-    {
+    public CsvParser createJsonParser(byte[] data) throws IOException {
         return _createParser(data, 0, data.length, _createContext(data, true));
     }
     
     @Override
     @Deprecated
-    public CsvParser createJsonParser(byte[] data, int offset, int len)
-        throws IOException, JsonParseException
-    {
+    public CsvParser createJsonParser(byte[] data, int offset, int len) throws IOException {
         return _createParser(data, offset, len, _createContext(data, true));
     }
 
@@ -446,14 +430,10 @@ public class CsvFactory extends JsonFactory
      * Overridable factory method that actually instantiates desired
      * parser.
      */
-    @SuppressWarnings("resource")
     @Override
-    protected CsvParser _createParser(InputStream in, IOContext ctxt)
-        throws IOException, JsonParseException
-    {
-        Reader r = _createReader(in, null, ctxt);
+    protected CsvParser _createParser(InputStream in, IOContext ctxt) throws IOException {
         return new CsvParser(ctxt, _getBufferRecycler(), _parserFeatures, _csvParserFeatures,
-                _objectCodec, r);
+                _objectCodec, _createReader(in, null, ctxt));
     }
 
     /**
@@ -461,35 +441,25 @@ public class CsvFactory extends JsonFactory
      * parser.
      */
     @Override
-    protected CsvParser _createParser(Reader r, IOContext ctxt)
-        throws IOException, JsonParseException
-    {
+    protected CsvParser _createParser(Reader r, IOContext ctxt) throws IOException {
         return new CsvParser(ctxt, _getBufferRecycler(), _parserFeatures, _csvParserFeatures,
                 _objectCodec, r);
     }
 
-    /**
-     * Overridable factory method that actually instantiates desired
-     * parser.
-     */
-    @SuppressWarnings("resource")
     @Override
-    protected CsvParser _createParser(byte[] data, int offset, int len, IOContext ctxt)
-        throws IOException, JsonParseException
-    {
-        Reader r = _createReader(data, offset, len, null, ctxt);
+    protected CsvParser _createParser(byte[] data, int offset, int len, IOContext ctxt) throws IOException {
         return new CsvParser(ctxt, _getBufferRecycler(), _parserFeatures, _csvParserFeatures,
-                _objectCodec, r);
+                _objectCodec, _createReader(data, offset, len, null, ctxt));
     }
-    
-    /**
-     * Overridable factory method that actually instantiates desired
-     * generator.
-     */
+
+    protected CsvParser _createParser(char[] data, int offset, int len, IOContext ctxt,
+            boolean recyclable) throws IOException {
+        return new CsvParser(ctxt, _getBufferRecycler(), _parserFeatures, _csvParserFeatures,
+                _objectCodec, new CharArrayReader(data, offset, len));
+    }
+
     @Override
-    protected CsvGenerator _createGenerator(Writer out, IOContext ctxt)
-        throws IOException
-    {
+    protected CsvGenerator _createGenerator(Writer out, IOContext ctxt) throws IOException {
         return _createGenerator(ctxt, out);
     }
 
@@ -508,8 +478,7 @@ public class CsvFactory extends JsonFactory
     /**********************************************************
      */
     
-    protected CsvGenerator _createGenerator(IOContext ctxt, Writer out)
-        throws IOException
+    protected CsvGenerator _createGenerator(IOContext ctxt, Writer out) throws IOException
     {
         int feats = _csvGeneratorFeatures;
         CsvGenerator gen = new CsvGenerator(ctxt, _generatorFeatures, feats,
