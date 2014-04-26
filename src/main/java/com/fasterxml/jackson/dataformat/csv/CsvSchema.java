@@ -188,7 +188,7 @@ public class CsvSchema
         protected char _quoteChar = DEFAULT_QUOTE_CHAR;
 
         // note: need to use int to allow -1 for 'none'
-        protected int _escapeChar = DEFAULT_QUOTE_CHAR;
+        protected int _escapeChar = DEFAULT_ESCAPE_CHAR;
         
         protected char[] _lineSeparator = DEFAULT_LINEFEED;
         

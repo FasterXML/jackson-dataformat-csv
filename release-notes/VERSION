@@ -1,12 +1,16 @@
 Project: jackson-dataformat-csv
-Version: 2.2.3 (22-Aug-2013)
+Version: 2.2.4 (xx-xxx-xxxx)
 
-#17: Fix support for using custom delimeters (like semicolon instead of comma)
- (reported by asselmeyer@github)
+#36: Schema build does not use DEFAULT_ESCAPE_CHAR by default
 
 ------------------------------------------------------------------------
 === History: ===
 ------------------------------------------------------------------------
+
+(22-Aug-2013)
+
+#17: Fix support for using custom delimeters (like semicolon instead of comma)
+ (reported by asselmeyer@github)
 
 2.2.2 (27-May-2013)
 2.2.1 (03-May-2013)
