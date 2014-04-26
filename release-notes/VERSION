@@ -8,6 +8,13 @@ Version: 2.4.0 (xx-xxx-2014)
 === History: ===
 ------------------------------------------------------------------------
 
+2.3.3 (10-Apr-2014)
+
+#33: CSV is written without column separators if first column is null
+ (reported by Paul M)
+#36 Fix a minor problem with `CsvSchema` defaults: was setting default
+  escape char to be same as default quote (i.e. double-quote)
+
 2.3.2 (01-Mar-2014)
 
 No functional changes
