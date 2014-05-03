@@ -1,14 +1,19 @@
 Project: jackson-dataformat-csv
-Version: 2.3.3 (10-Apr-2014)
+Version: 2.3.4 (xx-xxx-2014)
+
+#38: Extra column delimiter added when column is escaped and follows empty column
+ (reported by Paul M, Magrath@github)
+
+------------------------------------------------------------------------
+=== History: ===
+------------------------------------------------------------------------
+
+2.3.3 (10-Apr-2014)
 
 #33: CSV is written without column separators if first column is null
  (reported by Paul M)
 #36: Fix a minor problem with `CsvSchema` defaults: was setting default
   escape char to be same as default quote (i.e. double-quote)
-
-------------------------------------------------------------------------
-=== History: ===
-------------------------------------------------------------------------
 
 2.3.2 (01-Mar-2014)
 
