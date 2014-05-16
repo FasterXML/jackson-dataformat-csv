@@ -12,7 +12,7 @@ import java.util.Arrays;
  * Low-level helper class that handles actual output of CSV, purely
  * based on indexes given without worrying about reordering etc.
  */
-public final class CsvWriter
+public class CsvWriter
 {
     /* As an optimization we try coalescing short writes into
      * buffer; but pass longer directly.
@@ -568,7 +568,7 @@ public final class CsvWriter
      * Helper method that determines whether given String is likely
      * to require quoting; check tries to optimize for speed.
      */
-    protected final boolean _mayNeedQuotes(String value, int length)
+    protected boolean _mayNeedQuotes(String value, int length)
     {
         // let's not bother checking long Strings, just quote already:
         if (length > MAX_QUOTE_CHECK) {
