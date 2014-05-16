@@ -111,10 +111,17 @@ public class CsvGenerator extends GeneratorBase
             ObjectCodec codec, Writer out,
             char columnSeparator, char quoteChar, char[] linefeed)
     {
+        this(ctxt, jsonFeatures, csvFeatures, codec,
+                new CsvWriter(ctxt, out, columnSeparator, quoteChar, linefeed));
+    }
+
+    public CsvGenerator(IOContext ctxt, int jsonFeatures, int csvFeatures,
+            ObjectCodec codec, CsvWriter csvWriter)
+    {
         super(jsonFeatures, codec);
         _ioContext = ctxt;
         _csvFeatures = csvFeatures;
-        _writer = new CsvWriter(ctxt, out, columnSeparator, quoteChar, linefeed);
+        _writer = csvWriter;
     }
 
     /*                                                                                       

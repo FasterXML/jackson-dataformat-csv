@@ -12,7 +12,7 @@ import java.util.Arrays;
  * Low-level helper class that handles actual output of CSV, purely
  * based on indexes given without worrying about reordering etc.
  */
-public final class CsvWriter
+public class CsvWriter
 {
     /* As an optimization we try coalescing short writes into
      * buffer; but pass longer directly.
@@ -50,6 +50,8 @@ public final class CsvWriter
 
     final protected int _cfgLineSeparatorLength;
 
+    protected int _cfgMaxQuoteCheckChars;
+    
     /**
      * Lowest-valued character that is safe to output without using
      * quotes around value
@@ -136,6 +138,8 @@ public final class CsvWriter
         _cfgLineSeparatorLength = linefeed.length;
 
         _cfgMinSafeChar = _calcSafeChar();
+
+        _cfgMaxQuoteCheckChars = MAX_QUOTE_CHECK;
     }
 
     public CsvWriter(CsvWriter base, CsvSchema newSchema)
@@ -145,6 +149,7 @@ public final class CsvWriter
         _bufferRecyclable = base._bufferRecyclable;
         _outputEnd = base._outputEnd;
         _out = base._out;
+        _cfgMaxQuoteCheckChars = base._cfgMaxQuoteCheckChars;
 
         _cfgColumnSeparator = newSchema.getColumnSeparator();
         _cfgQuoteCharacter = newSchema.getQuoteChar();
@@ -187,7 +192,7 @@ public final class CsvWriter
     /**********************************************************
      */
 
-    public void write(int columnIndex, String value) throws IOException
+    public final void write(int columnIndex, String value) throws IOException
     {
         // easy case: all in order
         if (columnIndex == _nextColumnToWrite) {
@@ -198,13 +203,13 @@ public final class CsvWriter
         _buffer(columnIndex, BufferedValue.buffered(value));
     }
 
-    public void write(int columnIndex, char[] ch, int offset, int len) throws IOException
+    public final void write(int columnIndex, char[] ch, int offset, int len) throws IOException
     {
         // !!! TODO: optimize
         write(columnIndex, new String(ch, offset, len));
     }
     
-    public void write(int columnIndex, int value) throws IOException
+    public final void write(int columnIndex, int value) throws IOException
     {
         // easy case: all in order
         if (columnIndex == _nextColumnToWrite) {
@@ -215,7 +220,7 @@ public final class CsvWriter
         _buffer(columnIndex, BufferedValue.buffered(value));
     }
 
-    public void write(int columnIndex, long value) throws IOException
+    public final void write(int columnIndex, long value) throws IOException
     {
         // easy case: all in order
         if (columnIndex == _nextColumnToWrite) {
@@ -226,7 +231,7 @@ public final class CsvWriter
         _buffer(columnIndex, BufferedValue.buffered(value));
     }
 
-    public void write(int columnIndex, float value) throws IOException
+    public final void write(int columnIndex, float value) throws IOException
     {
         // easy case: all in order
         if (columnIndex == _nextColumnToWrite) {
@@ -237,7 +242,7 @@ public final class CsvWriter
         _buffer(columnIndex, BufferedValue.buffered(value));
     }
 
-    public void write(int columnIndex, double value) throws IOException
+    public final void write(int columnIndex, double value) throws IOException
     {
         // easy case: all in order
         if (columnIndex == _nextColumnToWrite) {
@@ -249,7 +254,7 @@ public final class CsvWriter
     }
 
 
-    public void write(int columnIndex, boolean value) throws IOException
+    public final void write(int columnIndex, boolean value) throws IOException
     {
         // easy case: all in order
         if (columnIndex == _nextColumnToWrite) {
@@ -260,7 +265,7 @@ public final class CsvWriter
         _buffer(columnIndex, BufferedValue.buffered(value));
     }
     
-    public void writeColumnName(String name) throws IOException
+    public final void writeColumnName(String name) throws IOException
     {
         appendValue(name);
         ++_nextColumnToWrite;
@@ -572,14 +577,14 @@ public final class CsvWriter
      * Helper method that determines whether given String is likely
      * to require quoting; check tries to optimize for speed.
      */
-    protected final boolean _mayNeedQuotes(String value, int length)
+    protected boolean _mayNeedQuotes(String value, int length)
     {
         // 21-Mar-2014, tatu: If quoting disabled, don't quote
         if (_cfgQuoteCharacter < 0) {
             return false;
         }
         // let's not bother checking long Strings, just quote already:
-        if (length > MAX_QUOTE_CHECK) {
+        if (length > _cfgMaxQuoteCheckChars) {
             return true;
         }
         for (int i = 0; i < length; ++i) {
@@ -599,7 +604,7 @@ public final class CsvWriter
         _buffered[index] = v;
     }
 
-    protected final void _flushBuffer() throws IOException
+    protected void _flushBuffer() throws IOException
     {
         if (_outputTail > 0) {
             _charsWritten += _outputTail;
