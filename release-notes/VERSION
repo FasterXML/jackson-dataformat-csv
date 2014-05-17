@@ -3,6 +3,9 @@ Version: 2.3.4 (xx-xxx-2014)
 
 #38: Extra column delimiter added when column is escaped and follows empty column
  (reported by Paul M, Magrath@github)
+#41: CvsParser.getText() not working for field name (causing failures for "untyped"
+  deserialization)
+ (reported by Claude W, Claudenw@github)
 - Allow sub-classing of `CsvWriter`
 
 ------------------------------------------------------------------------

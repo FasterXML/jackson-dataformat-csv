@@ -150,4 +150,25 @@ public class TestParser extends ModuleTestBase
         assertNull(result.y);
         assertNull(result.z);
     }
+
+    // [Issue#41]
+    public void testIncorrectDups41() throws Exception
+    {
+        final String INPUT = "\"foo\",\"bar\",\"foo\"";
+        CsvSchema schema = CsvSchema.builder().addColumn("Col1").addColumn("Col2")
+                .addColumn("Col3").build();
+
+        MappingIterator<Object> iter = new CsvMapper().reader(Object.class)
+                .with(schema).readValues(INPUT);
+
+        Map<?,?> m  = (Map<?,?>) iter.next();
+        assertFalse(iter.hasNextValue());
+
+        if (m.size() != 3) {
+            fail("Should have 3 entries, but got: "+m);
+        }
+        assertEquals("foo", m.get("Col1"));
+        assertEquals("bar", m.get("Col2"));
+        assertEquals("foo", m.get("Col3"));
+    }
 }

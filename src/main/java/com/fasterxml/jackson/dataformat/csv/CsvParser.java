@@ -293,8 +293,7 @@ public class CsvParser
     }
 
     @Override
-    public int releaseBuffered(Writer out) throws IOException
-    {
+    public int releaseBuffered(Writer out) throws IOException {
         return _reader.releaseBuffered(out);
     }
 
@@ -397,14 +396,12 @@ public class CsvParser
      */
 
     @Override
-    public String getCurrentName() throws IOException, JsonParseException
-    {
+    public String getCurrentName() throws IOException, JsonParseException {
         return _currentName;
     }
 
     @Override
-    public void overrideCurrentName(String name)
-    {
+    public void overrideCurrentName(String name) {
         _currentName = name;
     }
     
@@ -613,21 +610,33 @@ public class CsvParser
     // For now we do not store char[] representation...
     @Override
     public boolean hasTextCharacters() {
+        if (_currToken == JsonToken.FIELD_NAME) {
+            return false;
+        }
         return _textBuffer.hasTextAsCharacters();
     }
-    
+
     @Override
     public String getText() throws IOException, JsonParseException {
+        if (_currToken == JsonToken.FIELD_NAME) {
+            return _currentName;
+        }
         return _currentValue;
     }
 
     @Override
     public char[] getTextCharacters() throws IOException, JsonParseException {
+        if (_currToken == JsonToken.FIELD_NAME) {
+            return _currentName.toCharArray();
+        }
         return _textBuffer.contentsAsArray();
     }
 
     @Override
     public int getTextLength() throws IOException, JsonParseException {
+        if (_currToken == JsonToken.FIELD_NAME) {
+            return _currentName.length();
+        }
         return _textBuffer.size();
     }
 
