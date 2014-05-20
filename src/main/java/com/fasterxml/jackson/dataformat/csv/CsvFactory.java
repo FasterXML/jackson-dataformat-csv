@@ -389,6 +389,7 @@ public class CsvFactory extends JsonFactory
                 _objectCodec, _createReader(data, offset, len, null, ctxt));
     }
 
+    @Override
     protected CsvParser _createParser(char[] data, int offset, int len, IOContext ctxt,
             boolean recyclable) throws IOException {
         return new CsvParser(ctxt, _getBufferRecycler(), _parserFeatures, _csvParserFeatures,

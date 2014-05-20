@@ -141,6 +141,9 @@ public class CsvSchema
         ;
     }
 
+    /**
+     * Representation of info for a single column
+     */
     public static class Column
     {
         private final String _name;
@@ -334,7 +337,7 @@ public class CsvSchema
             }
         }
     }
-    
+
     /*
     /**********************************************************************
     /* Configuration, construction
@@ -407,7 +410,22 @@ public class CsvSchema
         _lineSeparator = lineSeparator;
         _columnsByName = columnsByName;
     }    
-    
+
+    /**
+     * Copy constructor used for creating variants using
+     * <code>sortedBy()</code> methods.
+     */
+    protected CsvSchema(CsvSchema base, Column[] columns) {
+        _columns = columns;
+        _useHeader = base._useHeader;
+        _skipFirstDataRow = base._skipFirstDataRow;
+        _columnSeparator = base._columnSeparator;
+        _quoteChar = base._quoteChar;
+        _escapeChar = base._escapeChar;
+        _lineSeparator = base._lineSeparator;
+        _columnsByName = base._columnsByName;
+    }
+            
     public static Builder builder() {
         return new Builder();
     }
@@ -442,6 +460,12 @@ public class CsvSchema
         return new Builder(this);
     }
 
+    /*
+    /**********************************************************************
+    /* Mutant factories
+    /**********************************************************************
+     */
+    
     public CsvSchema withUseHeader(boolean state) {
         return (_useHeader == state) ? this
                 : new CsvSchema(_columns, state, _skipFirstDataRow,
@@ -512,6 +536,49 @@ public class CsvSchema
                 _columnSeparator, _quoteChar, _escapeChar, _lineSeparator, _columnsByName);
     }
 
+    /**
+     * Mutant factory method that will construct a new instance in which columns
+     * are sorted based on names given as argument. Columns not listed in argument
+     * will be sorted after those within list, using existing ordering.
+     *<p>
+     * For example, schema that has columns:
+     *<pre>"a", "d", "c", "b"
+     *</pre>
+     * ordered with <code>schema.sortedBy("a", "b");</code>
+     * would result instance that columns in order:
+     *<pre>"a", "b", "d", "c"
+     *</pre>
+     * 
+     * @since 2.4
+     */
+    public CsvSchema sortedBy(String... columnNames) {
+        LinkedHashMap<String,Column> map = new LinkedHashMap<String,Column>();
+        for (String colName : columnNames) {
+            Column col = _columnsByName.get(colName);
+            if (col != null) {
+                map.put(col.getName(), col);
+            }
+        }
+        for (Column col : _columns) {
+            map.put(col.getName(), col);
+        }
+        return new CsvSchema(this, map.values().toArray(new Column[map.size()]));
+    }
+
+    /**
+     * Mutant factory method that will construct a new instance in which columns
+     * are sorted using given {@link Comparator} over column names.
+     * 
+     * @since 2.4
+     */
+    public CsvSchema sortedBy(Comparator<String> cmp) {
+        TreeMap<String,Column> map = new TreeMap<String,Column>(cmp);
+        for (Column col : _columns) {
+            map.put(col.getName(), col);
+        }
+        return new CsvSchema(this, map.values().toArray(new Column[map.size()]));
+    }
+    
     /*
     /**********************************************************************
     /* Public API, FormatSchema

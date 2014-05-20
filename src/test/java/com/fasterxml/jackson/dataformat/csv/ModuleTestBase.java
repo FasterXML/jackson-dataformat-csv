@@ -85,15 +85,17 @@ public abstract class ModuleTestBase extends junit.framework.TestCase
         return '"'+str+'"';
     }
 
-    protected void assertToken(JsonToken expToken, JsonToken actToken)
-    {
+    protected String aposToQuotes(String json) {
+        return json.replace("'", "\"");
+    }
+
+    protected void assertToken(JsonToken expToken, JsonToken actToken) {
         if (actToken != expToken) {
             fail("Expected token "+expToken+", current token "+actToken);
         }
     }
     
-    protected void assertToken(JsonToken expToken, JsonParser jp)
-    {
+    protected void assertToken(JsonToken expToken, JsonParser jp) {
         assertToken(expToken, jp.getCurrentToken());
     }
 

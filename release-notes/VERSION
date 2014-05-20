@@ -3,6 +3,7 @@ Version: 2.4.0 (xx-xxx-2014)
 
 #32: Allow disabling of quoteChar
  (suggested by Jason D)
+#40: Allow (re)ordering of columns of Schema, using `CsvSchema.sortedBy(...)`
 
 ------------------------------------------------------------------------
 === History: ===
