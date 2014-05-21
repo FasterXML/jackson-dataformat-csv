@@ -429,8 +429,7 @@ public class CsvReader
         }
     }
     
-    protected final boolean loadMore()
-        throws IOException
+    protected final boolean loadMore() throws IOException
     {
         _currInputProcessed += _inputEnd;
         _currInputRowStart -= _inputEnd;
@@ -468,7 +467,7 @@ public class CsvReader
      * Method that can be called to see if there is at least one more
      * character to be parsed.
      */
-    public boolean hasMoreInput() throws IOException, JsonParseException
+    public boolean hasMoreInput() throws IOException
     {
         if (_inputPtr < _inputEnd) {
             return true;
@@ -482,7 +481,7 @@ public class CsvReader
      * 
      * @return True if there is a new data line to handle; false if not
      */
-    public boolean startNewLine() throws IOException, JsonParseException
+    public boolean startNewLine() throws IOException
     {
         // first: if pending LF, skip it
         if (_pendingLF != 0) {
@@ -499,7 +498,7 @@ public class CsvReader
         return (_inputPtr < _inputEnd || loadMore());
     }
 
-    public boolean skipLine() throws IOException, JsonParseException
+    public boolean skipLine() throws IOException
     {
         if (_pendingLF != 0) {
             if (_inputSource == null) {
@@ -527,7 +526,7 @@ public class CsvReader
      * @return Column value if more found; null to indicate end of line
      *  of input
      */
-    public String nextString() throws IOException, JsonParseException
+    public String nextString() throws IOException
     {
         _numTypesValid = NR_UNKNOWN;
         
@@ -610,7 +609,7 @@ public class CsvReader
         return _nextUnquotedString(outBuf, outPtr);
     }
 
-    public JsonToken nextStringOrLiteral() throws IOException, JsonParseException
+    public JsonToken nextStringOrLiteral() throws IOException
     {
         _numTypesValid = NR_UNKNOWN;
         // !!! TODO: implement properly
@@ -621,7 +620,7 @@ public class CsvReader
         return JsonToken.VALUE_STRING;
     }
 
-    public JsonToken nextNumber() throws IOException, JsonParseException
+    public JsonToken nextNumber() throws IOException
     {
         _numTypesValid = NR_UNKNOWN;
         // !!! TODO: implement properly
@@ -631,7 +630,7 @@ public class CsvReader
         }
         return JsonToken.VALUE_STRING;
     }
-    public JsonToken nextNumberOrString() throws IOException, JsonParseException
+    public JsonToken nextNumberOrString() throws IOException
     {
         _numTypesValid = NR_UNKNOWN;
         // !!! TODO: implement properly
@@ -648,7 +647,7 @@ public class CsvReader
     /**********************************************************************
      */
     
-    protected String _nextUnquotedString(char[] outBuf, int outPtr) throws IOException, JsonParseException
+    protected String _nextUnquotedString(char[] outBuf, int outPtr) throws IOException
     {
         int c;
         final char[] inputBuffer = _inputBuffer;
@@ -694,7 +693,7 @@ public class CsvReader
         return _textBuffer.finishAndReturn(outPtr, _trimSpaces);
     }
     
-    protected String _nextQuotedString() throws IOException, JsonParseException
+    protected String _nextQuotedString() throws IOException
     {
         char[] outBuf = _textBuffer.emptyAndGetCurrentSegment();
         int outPtr = 0;
@@ -794,7 +793,7 @@ public class CsvReader
         return result;
     }
     
-    protected final void _handleLF() throws IOException, JsonParseException
+    protected final void _handleLF() throws IOException
     {
         // already skipped past first part; but may get \r\n so skip the other char too?
         if (_pendingLF == INT_CR) {
@@ -809,7 +808,7 @@ public class CsvReader
         _currInputRowStart = _inputPtr;
     }
 
-    protected char _unescape() throws IOException, JsonParseException
+    protected char _unescape() throws IOException
     {
         if (_inputPtr >= _inputEnd) {
             if (!loadMore()) {
@@ -832,7 +831,7 @@ public class CsvReader
         return c;
     }
     
-    protected int _nextChar() throws IOException, JsonParseException
+    protected int _nextChar() throws IOException
     {
         if (_inputPtr >= _inputEnd) {
             if (!loadMore()) {
@@ -842,7 +841,7 @@ public class CsvReader
         return _inputBuffer[_inputPtr++];
     }
     
-    protected int _skipLeadingSpace() throws IOException, JsonParseException
+    protected int _skipLeadingSpace() throws IOException
     {
         while (true) {
             if (_inputPtr >= _inputEnd) {
@@ -868,7 +867,7 @@ public class CsvReader
     /**********************************************************************
      */
 
-    public Number getNumberValue() throws IOException, JsonParseException
+    public Number getNumberValue() throws IOException
     {
         if (_numTypesValid == NR_UNKNOWN) {
             _parseNumericValue(NR_UNKNOWN); // will also check event type
@@ -899,7 +898,7 @@ public class CsvReader
         return Double.valueOf(_numberDouble);
     }
     
-    public NumberType getNumberType() throws IOException, JsonParseException
+    public NumberType getNumberType() throws IOException
     {
         if (_numTypesValid == NR_UNKNOWN) {
             _parseNumericValue(NR_UNKNOWN); // will also check event type
@@ -924,7 +923,7 @@ public class CsvReader
         return NumberType.DOUBLE;
     }
     
-    public int getIntValue() throws IOException, JsonParseException
+    public int getIntValue() throws IOException
     {
         if ((_numTypesValid & NR_INT) == 0) {
             if (_numTypesValid == NR_UNKNOWN) { // not parsed at all
@@ -937,7 +936,7 @@ public class CsvReader
         return _numberInt;
     }
     
-    public long getLongValue() throws IOException, JsonParseException
+    public long getLongValue() throws IOException
     {
         if ((_numTypesValid & NR_LONG) == 0) {
             if (_numTypesValid == NR_UNKNOWN) {
@@ -950,7 +949,7 @@ public class CsvReader
         return _numberLong;
     }
     
-    public BigInteger getBigIntegerValue() throws IOException, JsonParseException
+    public BigInteger getBigIntegerValue() throws IOException
     {
         if ((_numTypesValid & NR_BIGINT) == 0) {
             if (_numTypesValid == NR_UNKNOWN) {
@@ -963,14 +962,14 @@ public class CsvReader
         return _numberBigInt;
     }
     
-    public float getFloatValue() throws IOException, JsonParseException
+    public float getFloatValue() throws IOException
     {
         double value = getDoubleValue();
         // Bounds/range checks would be tricky here, so let's not bother...
         return (float) value;
     }
     
-    public double getDoubleValue() throws IOException, JsonParseException
+    public double getDoubleValue() throws IOException
     {
         if ((_numTypesValid & NR_DOUBLE) == 0) {
             if (_numTypesValid == NR_UNKNOWN) {
@@ -983,7 +982,7 @@ public class CsvReader
         return _numberDouble;
     }
     
-    public BigDecimal getDecimalValue() throws IOException, JsonParseException
+    public BigDecimal getDecimalValue() throws IOException
     {
         if ((_numTypesValid & NR_BIGDECIMAL) == 0) {
             if (_numTypesValid == NR_UNKNOWN) {
@@ -1012,7 +1011,7 @@ public class CsvReader
      *   mostly necessary to optimize handling of floating point numbers
      */
     protected void _parseNumericValue(int expType)
-        throws IOException, JsonParseException
+        throws IOException
     {
         // Int or float?
         if (_currToken == JsonToken.VALUE_NUMBER_INT) {
@@ -1064,7 +1063,7 @@ public class CsvReader
     }
     
     private final void _parseSlowFloatValue(int expType)
-        throws IOException, JsonParseException
+        throws IOException
     {
         /* Nope: floating point. Here we need to be careful to get
          * optimal parsing strategy: choice is between accurate but
@@ -1089,7 +1088,7 @@ public class CsvReader
     }
     
     private final void _parseSlowIntValue(int expType, char[] buf, int offset, int len)
-        throws IOException, JsonParseException
+        throws IOException
     {
         String numStr = _textBuffer.contentsAsString();
         try {
@@ -1116,7 +1115,7 @@ public class CsvReader
      */    
     
     protected void convertNumberToInt()
-        throws IOException, JsonParseException
+        throws IOException
     {
         // First, converting from long ought to be easy
         if ((_numTypesValid & NR_LONG) != 0) {
@@ -1149,7 +1148,7 @@ public class CsvReader
     }
     
     protected void convertNumberToLong()
-        throws IOException, JsonParseException
+        throws IOException
     {
         if ((_numTypesValid & NR_INT) != 0) {
             _numberLong = _numberInt;
@@ -1176,7 +1175,7 @@ public class CsvReader
     }
     
     protected void convertNumberToBigInteger()
-        throws IOException, JsonParseException
+        throws IOException
     {
         if ((_numTypesValid & NR_BIGDECIMAL) != 0) {
             // here it'll just get truncated, no exceptions thrown
@@ -1194,7 +1193,7 @@ public class CsvReader
     }
     
     protected void convertNumberToDouble()
-        throws IOException, JsonParseException
+        throws IOException
     {
         /* 05-Aug-2008, tatus: Important note: this MUST start with
          *   more accurate representations, since we don't know which
@@ -1217,19 +1216,11 @@ public class CsvReader
         _numTypesValid |= NR_DOUBLE;
     }
     
-    protected void convertNumberToBigDecimal()
-        throws IOException, JsonParseException
+    protected void convertNumberToBigDecimal() throws IOException
     {
-        /* 05-Aug-2008, tatus: Important note: this MUST start with
-         *   more accurate representations, since we don't know which
-         *   value is the original one (others get generated when
-         *   requested)
-         */
-    
         if ((_numTypesValid & NR_DOUBLE) != 0) {
-            /* Let's actually parse from String representation,
-             * to avoid rounding errors that non-decimal floating operations
-             * would incur
+            /* Let's actually parse from String representation, to avoid
+             * rounding errors that non-decimal floating operations could incur
              */
             _numberBigDecimal = new BigDecimal(getText());
         } else if ((_numTypesValid & NR_BIGINT) != 0) {
@@ -1260,26 +1251,19 @@ public class CsvReader
         _reportError(msg);
     }
     
-    protected void reportInvalidNumber(String msg)
-        throws JsonParseException
-    {
+    protected void reportInvalidNumber(String msg) throws JsonParseException {
         _reportError("Invalid numeric value: "+msg);
     }
     
-    protected void reportOverflowInt()
-        throws IOException, JsonParseException
-    {
+    protected void reportOverflowInt() throws IOException {
         _reportError("Numeric value ("+getText()+") out of range of int ("+Integer.MIN_VALUE+" - "+Integer.MAX_VALUE+")");
     }
     
-    protected void reportOverflowLong()
-        throws IOException, JsonParseException
-    {
+    protected void reportOverflowLong() throws IOException {
         _reportError("Numeric value ("+getText()+") out of range of long ("+Long.MIN_VALUE+" - "+Long.MAX_VALUE+")");
     }
 
-    protected final JsonParseException constructError(String msg, Throwable t)
-    {
+    protected final JsonParseException constructError(String msg, Throwable t) {
         return new JsonParseException(msg, getCurrentLocation(), t);
     }
     
@@ -1299,9 +1283,7 @@ public class CsvReader
         throw new IllegalStateException("Internal error: code path should never get executed");
     }
 
-    protected final void _reportError(String msg)
-        throws JsonParseException
-    {
+    protected final void _reportError(String msg) throws JsonParseException {
         throw new JsonParseException(msg, getCurrentLocation());
     }
 }
