@@ -19,9 +19,26 @@ public class CsvGenerator extends GeneratorBase
      */
     public enum Feature {
         /**
-         * Placeholder until we have actual features
+         * Feature that determines how much work is done before determining that
+         * a column value requires quoting: when set as <code>true</code>, full
+         * check is made to only use quoting when it is strictly necessary;
+         * but when <code>false</code>, a faster but more conservative check
+         * is made, and possibly quoting is used for values that might not need it.
+         * Trade-offs is basically between optimal/minimal quoting (true), and
+         * faster handling (false).
+         * Faster check involves only checking first N characters of value, as well
+         * as possible looser checks.
+         *<p>
+         * Note, however, that regardless setting, all values that need to be quoted
+         * will be: it is just that when set to <code>false</code>, other values may
+         * also be quoted (to avoid having to do more expensive checks).
+         *<p>
+         * Default value is <code>false</code> for "loose" (approximate, conservative)
+         * checking.
+         * 
+         * @since 2.4
          */
-        BOGUS(false) // placeholder
+        STRICT_CHECK_FOR_QUOTING(false),
         ;
 
         protected final boolean _defaultState;
@@ -41,15 +58,16 @@ public class CsvGenerator extends GeneratorBase
             }
             return flags;
         }
-        
+
         private Feature(boolean defaultState) {
             _defaultState = defaultState;
             _mask = (1 << ordinal());
         }
         
+        public boolean enabledIn(int flags) { return (flags & getMask()) != 0; }
         public boolean enabledByDefault() { return _defaultState; }
         public int getMask() { return _mask; }
-    };
+    }
 
     protected final static long MIN_INT_AS_LONG = Integer.MIN_VALUE;
     protected final static long MAX_INT_AS_LONG = Integer.MAX_VALUE;
@@ -112,7 +130,7 @@ public class CsvGenerator extends GeneratorBase
             char columnSeparator, char quoteChar, char[] linefeed)
     {
         this(ctxt, jsonFeatures, csvFeatures, codec,
-                new CsvWriter(ctxt, out, columnSeparator, quoteChar, linefeed));
+                new CsvWriter(ctxt, csvFeatures, out, columnSeparator, quoteChar, linefeed));
     }
 
     public CsvGenerator(IOContext ctxt, int jsonFeatures, int csvFeatures,
@@ -259,6 +277,7 @@ public class CsvGenerator extends GeneratorBase
 
     public CsvGenerator enable(Feature f) {
         _csvFeatures |= f.getMask();
+        _writer.setFeatures(_csvFeatures);
         return this;
     }
 
@@ -273,11 +292,9 @@ public class CsvGenerator extends GeneratorBase
 
     public CsvGenerator configure(Feature f, boolean state) {
         if (state) {
-            enable(f);
-        } else {
-            disable(f);
+            return enable(f);
         }
-        return this;
+        return disable(f);
     }
 
     /*

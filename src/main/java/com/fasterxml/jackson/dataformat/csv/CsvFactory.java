@@ -418,8 +418,7 @@ public class CsvFactory extends JsonFactory
     
     protected CsvGenerator _createGenerator(IOContext ctxt, Writer out) throws IOException
     {
-        int feats = _csvGeneratorFeatures;
-        CsvGenerator gen = new CsvGenerator(ctxt, _generatorFeatures, feats,
+        CsvGenerator gen = new CsvGenerator(ctxt, _generatorFeatures, _csvGeneratorFeatures,
                 _objectCodec, out,
                 _cfgColumnSeparator, _cfgQuoteCharacter, _cfgLineSeparator);
         // any other initializations? No?
@@ -434,7 +433,7 @@ public class CsvFactory extends JsonFactory
         if (enc == null || enc == JsonEncoding.UTF8) {
             // 28-May-2012, tatu: Custom UTF8 reader should be faster, esp for small input:
 //            return new InputStreamReader(in, UTF8);
-            boolean autoClose = ctxt.isResourceManaged() || this.isEnabled(JsonParser.Feature.AUTO_CLOSE_SOURCE);
+            boolean autoClose = ctxt.isResourceManaged() || isEnabled(JsonParser.Feature.AUTO_CLOSE_SOURCE);
             return new UTF8Reader(ctxt, in, autoClose);
         }
         return new InputStreamReader(in, enc.getJavaName());

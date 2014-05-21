@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.*;
 
 public class TestParserQuotes extends ModuleTestBase
 {
-    @JsonPropertyOrder({"age, name"})
+    @JsonPropertyOrder({"age", "name"})
     protected static class AgeName {
         public int age;
         public String name;

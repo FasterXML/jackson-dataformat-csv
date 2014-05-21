@@ -2,6 +2,7 @@ package com.fasterxml.jackson.dataformat.csv.impl;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.io.IOContext;
+import com.fasterxml.jackson.dataformat.csv.CsvGenerator;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 
 import java.io.IOException;
@@ -22,7 +23,7 @@ public class CsvWriter
     /* Also: only do check for optional quotes for short
      * values; longer ones will always be quoted.
      */
-    final protected static int MAX_QUOTE_CHECK = 20;
+    final protected static int MAX_QUOTE_CHECK = 24;
     
     final protected BufferedValue[] NO_BUFFERED = new BufferedValue[0];
 
@@ -36,7 +37,7 @@ public class CsvWriter
      */
 
     final protected IOContext _ioContext;
-    
+
     /**
      * Underlying {@link Writer} used for output.
      */
@@ -57,6 +58,14 @@ public class CsvWriter
      * quotes around value
      */
     final protected int _cfgMinSafeChar;
+
+    protected int _csvFeatures;
+
+    /**
+     * Marker flag used to determine if to do optimal (aka "strict") quoting
+     * checks or not (looser conservative check)
+     */
+    protected boolean _cfgOptimalQuoting;
     
     /*
     /**********************************************************
@@ -123,10 +132,22 @@ public class CsvWriter
     /**********************************************************
      */
 
+    @Deprecated // since 2.4, remove in 2.5
     public CsvWriter(IOContext ctxt, Writer out,
             char columnSeparator, char quoteChar, char[] linefeed)
     {
+        this(ctxt, CsvGenerator.Feature.collectDefaults(),
+                out, columnSeparator, quoteChar, linefeed);
+                
+    }
+    
+    public CsvWriter(IOContext ctxt, int csvFeatures, Writer out,
+            char columnSeparator, char quoteChar, char[] linefeed)
+    {
         _ioContext = ctxt;
+        _csvFeatures = csvFeatures;
+        _cfgOptimalQuoting = CsvGenerator.Feature.STRICT_CHECK_FOR_QUOTING.enabledIn(csvFeatures);
+        
         _outputBuffer = ctxt.allocConcatBuffer();
         _bufferRecyclable = true;
         _outputEnd = _outputBuffer.length;
@@ -145,6 +166,9 @@ public class CsvWriter
     public CsvWriter(CsvWriter base, CsvSchema newSchema)
     {
         _ioContext = base._ioContext;
+        _csvFeatures = base._csvFeatures;
+        _cfgOptimalQuoting = base._cfgOptimalQuoting;
+
         _outputBuffer = base._outputBuffer;
         _bufferRecyclable = base._bufferRecyclable;
         _outputEnd = base._outputEnd;
@@ -172,6 +196,14 @@ public class CsvWriter
         return new CsvWriter(this, schema);
     }
 
+    public CsvWriter setFeatures(int feat) {
+        if (feat != _csvFeatures) {
+            _csvFeatures = feat;
+            _cfgOptimalQuoting = CsvGenerator.Feature.STRICT_CHECK_FOR_QUOTING.enabledIn(feat);
+        }
+        return this;
+    }
+    
     /*
     /**********************************************************
     /* Read-access to output state
@@ -583,13 +615,45 @@ public class CsvWriter
         if (_cfgQuoteCharacter < 0) {
             return false;
         }
-        // let's not bother checking long Strings, just quote already:
+        // may skip checks unless we want exact checking
+        if (_cfgOptimalQuoting) {
+            return _needsQuotingStrict(value);
+        }
         if (length > _cfgMaxQuoteCheckChars) {
             return true;
         }
-        for (int i = 0; i < length; ++i) {
+        return _needsQuotingLoose(value);
+    }
+
+    /**
+     *<p>
+     * NOTE: final since checking is not expected to be changed here; override
+     * calling method (<code>_mayNeedQuotes</code>) instead, if necessary.
+     * 
+     * @since 2.4
+     */
+    protected final boolean _needsQuotingLoose(String value)
+    {
+        for (int i = 0, len = value.length(); i < len; ++i) {
             if (value.charAt(i) < _cfgMinSafeChar) {
                 return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @since 2.4
+     */
+    protected boolean _needsQuotingStrict(String value)
+    {
+        for (int i = 0, len = value.length(); i < len; ++i) {
+            char c = value.charAt(i);
+            if (c < _cfgMinSafeChar) {
+                if (c == _cfgColumnSeparator || c == _cfgQuoteCharacter
+                        || c == '\r' || c == '\n') {
+                    return true;
+                }
             }
         }
         return false;

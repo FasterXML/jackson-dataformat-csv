@@ -1,6 +1,8 @@
 Project: jackson-dataformat-csv
 Version: 2.4.0 (xx-xxx-2014)
 
+#26: Inconsistent quoting of headers, values; add
+  `CsvGenerator.Feature.STRICT_CHECK_FOR_QUOTING` to allow more optimal checks.
 #32: Allow disabling of quoteChar
  (suggested by Jason D)
 #40: Allow (re)ordering of columns of Schema, using `CsvSchema.sortedBy(...)`

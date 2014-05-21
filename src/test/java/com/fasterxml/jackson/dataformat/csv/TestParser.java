@@ -32,8 +32,21 @@ public class TestParser extends ModuleTestBase
             .addColumn("userImage")
             .addColumn("verified")
             .build();
+        ObjectReader r = mapper.reader(schema);
+        _testSimpleExplicit(r, false);
+        _testSimpleExplicit(r, true);
+    }
 
-        FiveMinuteUser user = mapper.reader(schema).withType(FiveMinuteUser.class).readValue("Bob,Robertson,MALE,AQIDBAU=,false\n");
+    private void _testSimpleExplicit(ObjectReader r, boolean useBytes) throws Exception
+    {
+        r = r.withType(FiveMinuteUser.class);
+        FiveMinuteUser user;
+        final String INPUT = "Bob,Robertson,MALE,AQIDBAU=,false\n";
+        if (useBytes) {
+            user = r.readValue(INPUT);
+        } else {
+            user = r.readValue(INPUT.getBytes("UTF-8"));
+        }
         assertEquals("Bob", user.firstName);
         assertEquals("Robertson", user.lastName);
         assertEquals(FiveMinuteUser.Gender.MALE, user.getGender());
@@ -79,7 +92,12 @@ public class TestParser extends ModuleTestBase
     }
 
     // Test for [Issue#10]
-    public void testMapsWithLinefeeds() throws Exception
+    public void testMapsWithLinefeeds() throws Exception {
+        _testMapsWithLinefeeds(false);
+        _testMapsWithLinefeeds(true);
+    }
+
+    private void _testMapsWithLinefeeds(boolean useBytes) throws Exception
     {
         CsvMapper mapper = mapperForCsv();
         String CSV = "A,B,C\n"
@@ -91,7 +109,13 @@ public class TestParser extends ModuleTestBase
         CsvSchema cs = CsvSchema.emptySchema().withHeader();
         ObjectReader or = mapper.reader(HashMap.class).with(cs);
         
-        MappingIterator<Map<String,String>> mi = or.readValues(CSV);
+        MappingIterator<Map<String,String>> mi;
+
+        if (useBytes) {
+            mi = or.readValues(CSV.getBytes("UTF-8"));
+        } else {
+            mi = or.readValues(CSV);
+        }
 
         assertTrue(mi.hasNext());
         Map<String,String> map = mi.nextValue();

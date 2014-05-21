@@ -106,8 +106,7 @@ public class CsvMapper extends ObjectMapper
      * Definition will not be strictly typed (that is, all columns are
      * just defined to be exposed as String tokens).
      */
-    public CsvSchema schemaFor(JavaType pojoType)
-    {
+    public CsvSchema schemaFor(JavaType pojoType) {
         return _schemaFor(pojoType, _untypedSchemas, false);
     }
 
@@ -126,8 +125,7 @@ public class CsvMapper extends ObjectMapper
      * determine type limitations which may make parsing more efficient
      * (especially for numeric types like java.lang.Integer).
      */
-    public CsvSchema typedSchemaFor(JavaType pojoType)
-    {
+    public CsvSchema typedSchemaFor(JavaType pojoType) {
         return _schemaFor(pojoType, _typedSchemas, true);
     }
 
