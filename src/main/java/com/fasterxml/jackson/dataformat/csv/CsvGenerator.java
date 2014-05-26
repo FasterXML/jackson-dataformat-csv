@@ -39,6 +39,17 @@ public class CsvGenerator extends GeneratorBase
          * @since 2.4
          */
         STRICT_CHECK_FOR_QUOTING(false),
+
+        /**
+         * Feature that determines whether columns without matching value may be omitted,
+         * when they are the last values of the row.
+         * If <code>true</code>, values and separators between values may be omitted, to slightly reduce
+         * length of the row; if <code>false</code>, separators need to stay in place and values
+         * are indicated by empty Strings.
+         * 
+         * @since 2.4
+         */
+        OMIT_MISSING_TAIL_COLUMNS(false),
         ;
 
         protected final boolean _defaultState;

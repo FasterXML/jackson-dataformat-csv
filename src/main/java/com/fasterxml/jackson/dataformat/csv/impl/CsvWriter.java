@@ -64,9 +64,16 @@ public class CsvWriter
     /**
      * Marker flag used to determine if to do optimal (aka "strict") quoting
      * checks or not (looser conservative check)
+     * 
+     * @since 2.4
      */
     protected boolean _cfgOptimalQuoting;
-    
+
+    /**
+     * @since 2.4
+     */
+    protected boolean _cfgIncludeMissingTail;
+
     /*
     /**********************************************************
     /* Output state
@@ -142,6 +149,7 @@ public class CsvWriter
         _ioContext = ctxt;
         _csvFeatures = csvFeatures;
         _cfgOptimalQuoting = CsvGenerator.Feature.STRICT_CHECK_FOR_QUOTING.enabledIn(csvFeatures);
+        _cfgIncludeMissingTail = !CsvGenerator.Feature.OMIT_MISSING_TAIL_COLUMNS.enabledIn(_csvFeatures);
         
         _outputBuffer = ctxt.allocConcatBuffer();
         _bufferRecyclable = true;
@@ -174,6 +182,7 @@ public class CsvWriter
         _ioContext = ctxt;
         _csvFeatures = csvFeatures;
         _cfgOptimalQuoting = CsvGenerator.Feature.STRICT_CHECK_FOR_QUOTING.enabledIn(csvFeatures);
+        _cfgIncludeMissingTail = !CsvGenerator.Feature.OMIT_MISSING_TAIL_COLUMNS.enabledIn(_csvFeatures);
         
         _outputBuffer = ctxt.allocConcatBuffer();
         _bufferRecyclable = true;
@@ -198,6 +207,7 @@ public class CsvWriter
         _ioContext = base._ioContext;
         _csvFeatures = base._csvFeatures;
         _cfgOptimalQuoting = base._cfgOptimalQuoting;
+        _cfgIncludeMissingTail = base._cfgIncludeMissingTail;
 
         _outputBuffer = base._outputBuffer;
         _bufferRecyclable = base._bufferRecyclable;
@@ -356,9 +366,11 @@ public class CsvWriter
         }
         // Any missing values?
         if (_nextColumnToWrite < _columnCount) {
-            do {
-                appendColumnSeparator();
-            } while (++_nextColumnToWrite < _columnCount);
+            if (_cfgIncludeMissingTail) {
+                do {
+                    appendColumnSeparator();
+                } while (++_nextColumnToWrite < _columnCount);
+            }
         }
         // write line separator
         _nextColumnToWrite = 0;
