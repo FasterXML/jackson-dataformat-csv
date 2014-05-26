@@ -34,6 +34,8 @@ public class CsvFactory extends JsonFactory
 
     // could make it use Platform default too but...
     protected final static char[] DEFAULT_LF = { '\n' };
+
+    protected final static CsvSchema DEFAULT_SCHEMA = CsvSchema.emptySchema();
     
     /*
     /**********************************************************************
@@ -41,15 +43,19 @@ public class CsvFactory extends JsonFactory
     /**********************************************************************
      */
 
+    protected CsvSchema _schema = DEFAULT_SCHEMA;
+    
     protected int _csvParserFeatures = DEFAULT_CSV_PARSER_FEATURE_FLAGS;
 
     protected int _csvGeneratorFeatures = DEFAULT_CSV_GENERATOR_FEATURE_FLAGS;
 
+    /*
     protected char _cfgColumnSeparator = ',';
 
     protected char _cfgQuoteCharacter = '"';
     
     protected char[] _cfgLineSeparator = DEFAULT_LF;
+    */
     
     /*
     /**********************************************************************
@@ -79,9 +85,7 @@ public class CsvFactory extends JsonFactory
         super(src, oc);
         _csvParserFeatures = src._csvParserFeatures;
         _csvGeneratorFeatures = src._csvGeneratorFeatures;
-        _cfgColumnSeparator = src._cfgColumnSeparator;
-        _cfgQuoteCharacter = src._cfgQuoteCharacter;
-        _cfgLineSeparator = src._cfgLineSeparator;
+        _schema = src._schema;
     }
     
     @Override
@@ -419,8 +423,7 @@ public class CsvFactory extends JsonFactory
     protected CsvGenerator _createGenerator(IOContext ctxt, Writer out) throws IOException
     {
         CsvGenerator gen = new CsvGenerator(ctxt, _generatorFeatures, _csvGeneratorFeatures,
-                _objectCodec, out,
-                _cfgColumnSeparator, _cfgQuoteCharacter, _cfgLineSeparator);
+                _objectCodec, out, _schema);
         // any other initializations? No?
         return gen;
     }

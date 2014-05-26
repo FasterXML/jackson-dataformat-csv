@@ -74,6 +74,11 @@ public class CsvWriter
      */
 
     /**
+     * @since 2.4
+     */
+    protected int _columnCount;
+    
+    /**
      * Index of column we expect to write next
      */
     protected int _nextColumnToWrite = 0;
@@ -132,15 +137,37 @@ public class CsvWriter
     /**********************************************************
      */
 
+    public CsvWriter(IOContext ctxt, int csvFeatures, Writer out, CsvSchema schema)
+    {
+        _ioContext = ctxt;
+        _csvFeatures = csvFeatures;
+        _cfgOptimalQuoting = CsvGenerator.Feature.STRICT_CHECK_FOR_QUOTING.enabledIn(csvFeatures);
+        
+        _outputBuffer = ctxt.allocConcatBuffer();
+        _bufferRecyclable = true;
+        _outputEnd = _outputBuffer.length;
+        _out = out;
+
+        _cfgColumnSeparator = schema.getColumnSeparator();
+        _cfgQuoteCharacter = schema.getQuoteChar();
+        _cfgLineSeparator = schema.getLineSeparator();
+        _cfgLineSeparatorLength = (_cfgLineSeparator == null) ? 0 : _cfgLineSeparator.length;
+        _columnCount = schema.size();
+
+        _cfgMinSafeChar = _calcSafeChar();
+
+        _cfgMaxQuoteCheckChars = MAX_QUOTE_CHECK;
+    }
+
     @Deprecated // since 2.4, remove in 2.5
     public CsvWriter(IOContext ctxt, Writer out,
             char columnSeparator, char quoteChar, char[] linefeed)
     {
         this(ctxt, CsvGenerator.Feature.collectDefaults(),
                 out, columnSeparator, quoteChar, linefeed);
-                
     }
-    
+
+    @Deprecated // since 2.4, remove in 2.5
     public CsvWriter(IOContext ctxt, int csvFeatures, Writer out,
             char columnSeparator, char quoteChar, char[] linefeed)
     {
@@ -161,6 +188,9 @@ public class CsvWriter
         _cfgMinSafeChar = _calcSafeChar();
 
         _cfgMaxQuoteCheckChars = MAX_QUOTE_CHECK;
+
+        // not sure how this would be figured out so...
+        _columnCount = -1;    
     }
 
     public CsvWriter(CsvWriter base, CsvSchema newSchema)
@@ -180,6 +210,7 @@ public class CsvWriter
         _cfgLineSeparator = newSchema.getLineSeparator();
         _cfgLineSeparatorLength = _cfgLineSeparator.length;
         _cfgMinSafeChar = _calcSafeChar();
+        _columnCount = newSchema.size();
     }  
     
     private final int _calcSafeChar()
@@ -322,6 +353,12 @@ public class CsvWriter
             }
         } else if (_nextColumnToWrite <= 0) { // empty line; do nothing
             return;
+        }
+        // Any missing values?
+        if (_nextColumnToWrite < _columnCount) {
+            do {
+                appendColumnSeparator();
+            } while (++_nextColumnToWrite < _columnCount);
         }
         // write line separator
         _nextColumnToWrite = 0;
@@ -663,7 +700,7 @@ public class CsvWriter
     {
         _lastBuffered = Math.max(_lastBuffered, index);
         if (index >= _buffered.length) {
-            _buffered = Arrays.copyOf(_buffered, index+4);
+            _buffered = Arrays.copyOf(_buffered, Math.max(index+1, _columnCount));
         }
         _buffered[index] = v;
     }

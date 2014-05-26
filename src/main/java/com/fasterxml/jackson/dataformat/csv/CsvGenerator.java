@@ -125,12 +125,29 @@ public class CsvGenerator extends GeneratorBase
     /**********************************************************
      */
 
+    /**
+     * @deprecated Since 2.4
+     */
+    @Deprecated
     public CsvGenerator(IOContext ctxt, int jsonFeatures, int csvFeatures,
             ObjectCodec codec, Writer out,
             char columnSeparator, char quoteChar, char[] linefeed)
     {
         this(ctxt, jsonFeatures, csvFeatures, codec,
                 new CsvWriter(ctxt, csvFeatures, out, columnSeparator, quoteChar, linefeed));
+    }
+
+    /**
+     * @since 2.4
+     */
+    public CsvGenerator(IOContext ctxt, int jsonFeatures, int csvFeatures,
+            ObjectCodec codec, Writer out, CsvSchema schema)
+    {
+        super(jsonFeatures, codec);
+        _ioContext = ctxt;
+        _csvFeatures = csvFeatures;
+        _schema = schema;
+        _writer = new CsvWriter(ctxt, csvFeatures, out, schema);
     }
 
     public CsvGenerator(IOContext ctxt, int jsonFeatures, int csvFeatures,
@@ -141,7 +158,7 @@ public class CsvGenerator extends GeneratorBase
         _csvFeatures = csvFeatures;
         _writer = csvWriter;
     }
-
+    
     /*                                                                                       
     /**********************************************************                              
     /* Versioned                                                                             
@@ -185,13 +202,13 @@ public class CsvGenerator extends GeneratorBase
     @Override
     public void setSchema(FormatSchema schema)
     {
-        if (!(schema instanceof CsvSchema)) {
+        if (schema instanceof CsvSchema) {
+            if (_schema != schema) {
+                _schema = (CsvSchema) schema;
+                _writer = _writer.withSchema(_schema);
+            }
+        } else {
             super.setSchema(schema);
-            return;
-        }
-        if (_schema != schema) {
-            _schema = (CsvSchema) schema;
-            _writer = _writer.withSchema(_schema);
         }
     }
 

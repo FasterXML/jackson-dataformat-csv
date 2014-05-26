@@ -180,4 +180,17 @@ public class TestWriterWithSomeMoreMissingValues extends ModuleTestBase {
         assertEquals("hello,world,,again\n", csv);
     }
 
+    // [Issue#45]
+    public void testWriteNullThirdColumn() throws JsonProcessingException {
+        final CsvSchema.Builder csvSchemaBuilder = new CsvSchema.Builder();
+        csvSchemaBuilder.addColumn("timestamp", CsvSchema.ColumnType.STRING);
+        csvSchemaBuilder.addColumn("value", CsvSchema.ColumnType.NUMBER);
+        csvSchemaBuilder.addColumn("id", CsvSchema.ColumnType.STRING);
+        final CsvSchema schema = csvSchemaBuilder.build();
+        final ObjectWriter writer = new CsvMapper().writer().withSchema(schema);
+
+        final String string = writer.writeValueAsString(
+                ImmutableMap.of("timestamp", 0L, "value", 42));
+        assertEquals("0,42,\n", string);
+    }
 }

@@ -50,6 +50,6 @@ public class TestWriterWithMissingValues extends ModuleTestBase
                 ImmutableMap.of("timestamp", "2014-03-10T23:32:47+00:00",
                         "value", 42));
 
-        assertEquals("\"2014-03-10T23:32:47+00:00\",42\n", csv);
+        assertEquals("\"2014-03-10T23:32:47+00:00\",42,\n", csv);
     }
 }
