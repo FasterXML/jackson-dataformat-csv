@@ -6,9 +6,17 @@ Project is licensed under [Apache License 2.0](http://www.apache.org/licenses/LI
 
 # Status
 
-With version 2.0.0, implementation is complete and ready to be used for "real work". Unit tests cover basic usage patterns; and there is even a small performance benchmark for evaluating approximate performance (which is within factor of 2x from equivalent JSON parsing).
+As of version 2.3, this module is considered complete and production ready.
+All Jackson layers (streaming, databind, tree model) are supported.
 
-What is missing:
+## Limitations
+
+* Due to tabular nature of `CSV` format, deeply nested data structures are not well supported.
+* Use of Tree Model (`JsonNode`) is supported, but only within limitations of `CSV`.
+
+## Future improvements
+
+Areas that are planned to be improved include things like:
 
  * Optimizations to make number handling as efficient as from JSON (but note: even with existing code, performance is typically limited by I/O and NOT parsing or generation)
  * Extensive performance measurements
@@ -22,7 +30,7 @@ To use this extension on Maven-based projects, use following dependency:
 <dependency>
   <groupId>com.fasterxml.jackson.dataformat</groupId>
   <artifactId>jackson-dataformat-csv</artifactId>
-  <version>2.3.0</version>
+  <version>2.4.0</version>
 </dependency>
 ```
 
