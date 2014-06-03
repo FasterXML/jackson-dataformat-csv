@@ -1,6 +1,6 @@
 # Overview
 
-This project contains [Jackson](http://wiki.fasterxml.com/JacksonHome) extension component for reading and writing [CSV](http://en.wikipedia.org/wiki/Comma-separated_values) encoded data, either as "raw" data (sequence of String arrays), or via data binding to/from Java Objects (POJOs).
+[Jackson](/FasterXML/jackson) data format module for reading and writing [CSV](http://en.wikipedia.org/wiki/Comma-separated_values) encoded data, either as "raw" data (sequence of String arrays), or via data binding to/from Java Objects (POJOs).
 
 Project is licensed under [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt).
 
@@ -8,6 +8,9 @@ Project is licensed under [Apache License 2.0](http://www.apache.org/licenses/LI
 
 As of version 2.3, this module is considered complete and production ready.
 All Jackson layers (streaming, databind, tree model) are supported.
+
+[![Build Status](https://fasterxml.ci.cloudbees.com/job/jackson-dataformat-csv-master/badge/icon)](https://fasterxml\
+.ci.cloudbees.com/job/jackson-dataformat-csv-master/)
 
 ## Limitations
 
@@ -147,7 +150,7 @@ This is useful if functionality expects a single ("JSON") Array; this was the ca
 
 # Documentation
 
-* [Documentation](jackson-dataformat-csv/wiki/Documentation) (includes javadocs)
+* [Wiki](../../wiki) (includes javadocs)
 * External articles:
  * [CSV with Jackson 2.0](http://www.cowtowncoder.com/blog/archives/2012/03/entry_468.html)
 
