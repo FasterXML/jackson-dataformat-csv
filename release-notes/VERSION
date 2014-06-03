@@ -1,5 +1,5 @@
 Project: jackson-dataformat-csv
-Version: 2.4.0 (xx-xxx-2014)
+Version: 2.4.0 (02-Jun-2014)
 
 #26: Inconsistent quoting of headers, values; add
   `CsvGenerator.Feature.STRICT_CHECK_FOR_QUOTING` to allow more optimal checks.
