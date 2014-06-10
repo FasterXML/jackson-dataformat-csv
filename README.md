@@ -9,8 +9,7 @@ Project is licensed under [Apache License 2.0](http://www.apache.org/licenses/LI
 As of version 2.3, this module is considered complete and production ready.
 All Jackson layers (streaming, databind, tree model) are supported.
 
-[![Build Status](https://fasterxml.ci.cloudbees.com/job/jackson-dataformat-csv-master/badge/icon)](https://fasterxml\
-.ci.cloudbees.com/job/jackson-dataformat-csv-master/)
+[![Build Status](https://fasterxml.ci.cloudbees.com/job/jackson-dataformat-csv-master/badge/icon)](https://fasterxml.ci.cloudbees.com/job/jackson-dataformat-csv-master/)
 
 ## Limitations
 
