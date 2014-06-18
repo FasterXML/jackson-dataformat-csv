@@ -1,5 +1,13 @@
 Project: jackson-dataformat-csv
-Version: 2.4.0 (02-Jun-2014)
+Version: 2.4.1 (17-Jun-2014)
+
+No changes since 2.4.0.
+
+------------------------------------------------------------------------
+=== History: ===
+------------------------------------------------------------------------
+
+2.4.0 (02-Jun-2014)
 
 #26: Inconsistent quoting of headers, values; add
   `CsvGenerator.Feature.STRICT_CHECK_FOR_QUOTING` to allow more optimal checks.
@@ -8,10 +16,6 @@ Version: 2.4.0 (02-Jun-2014)
 #40: Allow (re)ordering of columns of Schema, using `CsvSchema.sortedBy(...)`
 #45: Change outputting behavior to include final commas even if values are
  missing; also add `CsvGenerator.OMIT_MISSING_TAIL_COLUMNS`
-
-------------------------------------------------------------------------
-=== History: ===
-------------------------------------------------------------------------
 
 2.3.3 (10-Apr-2014)
 
