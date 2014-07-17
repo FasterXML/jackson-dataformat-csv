@@ -1,5 +1,5 @@
 Project: jackson-dataformat-csv
-Version: 2.3.4 (xx-xxx-2014)
+Version: 2.3.4 (17-Jul-2014)
 
 #38: Extra column delimiter added when column is escaped and follows empty column
  (reported by Paul M, Magrath@github)
