@@ -1,5 +1,6 @@
 package com.fasterxml.jackson.dataformat.csv;
 
+import java.io.ByteArrayOutputStream;
 import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -16,23 +17,25 @@ public class TestParser extends ModuleTestBase
         public Integer z = 8;
     }    
 
-    /*
-    /**********************************************************
-    /* Test methods
-    /**********************************************************
-     */    
-    
-    public void testSimpleExplicit() throws Exception
-    {
-        ObjectMapper mapper = mapperForCsv();
-        CsvSchema schema = CsvSchema.builder()
+    final static CsvSchema SIMPLE_SCHEMA = CsvSchema.builder()
             .addColumn("firstName")
             .addColumn("lastName")
             .addColumn("gender")
             .addColumn("userImage")
             .addColumn("verified")
             .build();
-        ObjectReader r = mapper.reader(schema);
+    
+    
+    /*
+    /**********************************************************
+    /* Test methods
+    /**********************************************************
+     */    
+
+    public void testSimpleExplicit() throws Exception
+    {
+        ObjectMapper mapper = mapperForCsv();
+        ObjectReader r = mapper.reader(SIMPLE_SCHEMA);
         _testSimpleExplicit(r, false);
         _testSimpleExplicit(r, true);
     }
@@ -48,6 +51,32 @@ public class TestParser extends ModuleTestBase
             user = r.readValue(INPUT.getBytes("UTF-8"));
         }
         assertEquals("Bob", user.firstName);
+        assertEquals("Robertson", user.lastName);
+        assertEquals(FiveMinuteUser.Gender.MALE, user.getGender());
+        assertFalse(user.isVerified());
+        assertArrayEquals(new byte[] { 1, 2, 3, 4, 5}, user.getUserImage());
+    }
+
+    public void testSimpleExplicitWithBOM() throws Exception
+    {
+        ObjectMapper mapper = mapperForCsv();
+        ObjectReader r = mapper.reader(SIMPLE_SCHEMA);
+        r = r.withType(FiveMinuteUser.class);
+        FiveMinuteUser user;
+
+        ByteArrayOutputStream b = new ByteArrayOutputStream();
+
+        // first, UTF-8 BOM:
+        b.write(new byte[] { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF });
+        b.write("Bob,Robertson,MALE,AQIDBAU=,false\n".getBytes("UTF-8"));
+        b.close();
+
+        user = r.readValue(b.toByteArray());
+        String fn = user.firstName;
+
+        if (!fn.equals("Bob")) {
+            fail("Expected 'Bob' (3), got '"+fn+"' ("+fn.length()+")");
+        }
         assertEquals("Robertson", user.lastName);
         assertEquals(FiveMinuteUser.Gender.MALE, user.getGender());
         assertFalse(user.isVerified());
@@ -187,6 +216,7 @@ public class TestParser extends ModuleTestBase
 
         Map<?,?> m  = (Map<?,?>) iter.next();
         assertFalse(iter.hasNextValue());
+        iter.close();
 
         if (m.size() != 3) {
             fail("Should have 3 entries, but got: "+m);
