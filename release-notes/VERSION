@@ -6,6 +6,8 @@ Version: 2.3.4 (xx-xxx-2014)
 #41: CvsParser.getText() not working for field name (causing failures for "untyped"
   deserialization)
  (reported by Claude W, Claudenw@github)
+#47: UTF-8 BOM handling not working 
+ (reported by andrealexandre@github)
 - Allow sub-classing of `CsvWriter`
 
 ------------------------------------------------------------------------

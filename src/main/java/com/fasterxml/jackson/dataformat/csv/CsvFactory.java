@@ -7,6 +7,8 @@ import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.format.InputAccessor;
 import com.fasterxml.jackson.core.format.MatchStrength;
 import com.fasterxml.jackson.core.io.IOContext;
+import com.fasterxml.jackson.core.util.BufferRecycler;
+import com.fasterxml.jackson.dataformat.csv.impl.CsvParserBootstrapper;
 import com.fasterxml.jackson.dataformat.csv.impl.UTF8Reader;
 import com.fasterxml.jackson.dataformat.csv.impl.UTF8Writer;
 
@@ -446,12 +448,21 @@ public class CsvFactory extends JsonFactory
      * Overridable factory method that actually instantiates desired
      * parser.
      */
-    @SuppressWarnings("resource")
     @Override
-    protected CsvParser _createParser(InputStream in, IOContext ctxt)
-        throws IOException, JsonParseException
+    protected CsvParser _createParser(InputStream in, IOContext ctxt) throws IOException
     {
-        Reader r = _createReader(in, null, ctxt);
+        BufferRecycler rec = _getBufferRecycler();
+        return new CsvParserBootstrapper(ctxt, rec, _objectCodec, in)
+            .constructParser(_parserFeatures, _csvParserFeatures);
+    }
+
+    /**
+     * Overridable factory method that actually instantiates desired
+     * parser.
+     */
+    @Override
+    protected CsvParser _createParser(Reader r, IOContext ctxt) throws IOException
+    {
         return new CsvParser(ctxt, _getBufferRecycler(), _parserFeatures, _csvParserFeatures,
                 _objectCodec, r);
     }
@@ -461,25 +472,11 @@ public class CsvFactory extends JsonFactory
      * parser.
      */
     @Override
-    protected CsvParser _createParser(Reader r, IOContext ctxt)
-        throws IOException, JsonParseException
+    protected CsvParser _createParser(byte[] data, int offset, int len, IOContext ctxt) throws IOException
     {
-        return new CsvParser(ctxt, _getBufferRecycler(), _parserFeatures, _csvParserFeatures,
-                _objectCodec, r);
-    }
-
-    /**
-     * Overridable factory method that actually instantiates desired
-     * parser.
-     */
-    @SuppressWarnings("resource")
-    @Override
-    protected CsvParser _createParser(byte[] data, int offset, int len, IOContext ctxt)
-        throws IOException, JsonParseException
-    {
-        Reader r = _createReader(data, offset, len, null, ctxt);
-        return new CsvParser(ctxt, _getBufferRecycler(), _parserFeatures, _csvParserFeatures,
-                _objectCodec, r);
+        BufferRecycler rec = _getBufferRecycler();
+        return new CsvParserBootstrapper(ctxt, rec, _objectCodec, data, offset, len)
+            .constructParser(_parserFeatures, _csvParserFeatures);
     }
     
     /**
@@ -487,8 +484,7 @@ public class CsvFactory extends JsonFactory
      * generator.
      */
     @Override
-    protected CsvGenerator _createGenerator(Writer out, IOContext ctxt)
-        throws IOException
+    protected CsvGenerator _createGenerator(Writer out, IOContext ctxt) throws IOException
     {
         return _createGenerator(ctxt, out);
     }
