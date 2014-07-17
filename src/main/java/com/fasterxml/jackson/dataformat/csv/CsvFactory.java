@@ -7,6 +7,8 @@ import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.format.InputAccessor;
 import com.fasterxml.jackson.core.format.MatchStrength;
 import com.fasterxml.jackson.core.io.IOContext;
+import com.fasterxml.jackson.core.util.BufferRecycler;
+import com.fasterxml.jackson.dataformat.csv.impl.CsvParserBootstrapper;
 import com.fasterxml.jackson.dataformat.csv.impl.UTF8Reader;
 import com.fasterxml.jackson.dataformat.csv.impl.UTF8Writer;
 
@@ -373,8 +375,16 @@ public class CsvFactory extends JsonFactory
      */
     @Override
     protected CsvParser _createParser(InputStream in, IOContext ctxt) throws IOException {
-        return new CsvParser(ctxt, _getBufferRecycler(), _parserFeatures, _csvParserFeatures,
-                _objectCodec, _createReader(in, null, ctxt));
+        BufferRecycler rec = _getBufferRecycler();
+        return new CsvParserBootstrapper(ctxt, rec, _objectCodec, in)
+            .constructParser(_parserFeatures, _csvParserFeatures);
+    }
+
+    @Override
+    protected CsvParser _createParser(byte[] data, int offset, int len, IOContext ctxt) throws IOException {
+        BufferRecycler rec = _getBufferRecycler();
+        return new CsvParserBootstrapper(ctxt, rec, _objectCodec, data, offset, len)
+            .constructParser(_parserFeatures, _csvParserFeatures);
     }
 
     /**
@@ -386,13 +396,7 @@ public class CsvFactory extends JsonFactory
         return new CsvParser(ctxt, _getBufferRecycler(), _parserFeatures, _csvParserFeatures,
                 _objectCodec, r);
     }
-
-    @Override
-    protected CsvParser _createParser(byte[] data, int offset, int len, IOContext ctxt) throws IOException {
-        return new CsvParser(ctxt, _getBufferRecycler(), _parserFeatures, _csvParserFeatures,
-                _objectCodec, _createReader(data, offset, len, null, ctxt));
-    }
-
+    
     @Override
     protected CsvParser _createParser(char[] data, int offset, int len, IOContext ctxt,
             boolean recyclable) throws IOException {

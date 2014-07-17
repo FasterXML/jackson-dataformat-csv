@@ -8,7 +8,7 @@ import com.fasterxml.jackson.core.format.MatchStrength;
 import com.fasterxml.jackson.core.io.IOContext;
 import com.fasterxml.jackson.core.io.MergedStream;
 import com.fasterxml.jackson.core.io.UTF32Reader;
-
+import com.fasterxml.jackson.core.util.BufferRecycler;
 import com.fasterxml.jackson.dataformat.csv.CsvParser;
 
 /**
@@ -34,14 +34,18 @@ public final class CsvParserBootstrapper
      */
 
     protected final IOContext _context;
-
-    protected final InputStream _in;
     
+    protected final BufferRecycler _recycler;
+
+    protected final ObjectCodec _codec;
+
     /*
     /**********************************************************
     /* Input buffering
     /**********************************************************
      */
+    
+    protected final InputStream _in;
 
     protected final byte[] _inputBuffer;
 
@@ -86,10 +90,12 @@ public final class CsvParserBootstrapper
     /**********************************************************
      */
 
-    public CsvParserBootstrapper(IOContext ctxt, char quoteChar,
+    public CsvParserBootstrapper(IOContext ctxt, BufferRecycler rec, ObjectCodec codec,
             InputStream in)
     {
         _context = ctxt;
+        _recycler = rec;
+        _codec = codec;
         _in = in;
         _inputBuffer = ctxt.allocReadIOBuffer();
         _inputEnd = _inputPtr = 0;
@@ -97,10 +103,12 @@ public final class CsvParserBootstrapper
 //        _bufferRecyclable = true;
     }
 
-    public CsvParserBootstrapper(IOContext ctxt, char quoteChar,
+    public CsvParserBootstrapper(IOContext ctxt, BufferRecycler rec, ObjectCodec codec,
             byte[] inputBuffer, int inputStart, int inputLen)
     {
         _context = ctxt;
+        _recycler = rec;
+        _codec = codec;
         _in = null;
         _inputBuffer = inputBuffer;
         _inputPtr = inputStart;
@@ -112,27 +120,15 @@ public final class CsvParserBootstrapper
 
     /*
     /**********************************************************
-    /*  Encoding detection during bootstrapping
+    /* Public API
     /**********************************************************
      */
-    
-    /**
-     * Method that should be called after constructing an instace.
-     * It will figure out encoding that content uses, to allow
-     * for instantiating a proper scanner object.
-     */
-    public JsonEncoding detectEncoding()
-        throws IOException, JsonParseException
+
+    public CsvParser constructParser(int baseFeatures, int csvFeatures) throws IOException
     {
         boolean foundEncoding = false;
 
         // First things first: BOM handling
-        /* Note: we can require 4 bytes to be read, since no
-         * combination of BOM + valid JSON content can have
-         * shorter length (shortest valid JSON content is single
-         * digit char, but BOMs are chosen such that combination
-         * is always at least 4 chars long)
-         */
         if (ensureLoaded(4)) {
             int quad =  (_inputBuffer[_inputPtr] << 24)
                 | ((_inputBuffer[_inputPtr+1] & 0xFF) << 16)
@@ -164,7 +160,7 @@ public final class CsvParserBootstrapper
         JsonEncoding enc;
 
         /* Not found yet? As per specs, this means it must be UTF-8. */
-        if (!foundEncoding) {
+        if (!foundEncoding || _bytesPerChar == 1) {
             enc = JsonEncoding.UTF8;
         } else if (_bytesPerChar == 2) {
             enc = _bigEndian ? JsonEncoding.UTF16_BE : JsonEncoding.UTF16_LE;
@@ -174,33 +170,25 @@ public final class CsvParserBootstrapper
             throw new RuntimeException("Internal error"); // should never get here
         }
         _context.setEncoding(enc);
-        return enc;
+        return new CsvParser(_context, _recycler,  baseFeatures, csvFeatures, _codec,
+                _createReader(enc));
     }
-
-    /*
-    /**********************************************************
-    /* Constructing a Reader
-    /**********************************************************
-     */
     
     @SuppressWarnings("resource")
-    public Reader constructReader()
-        throws IOException
+    private Reader _createReader(JsonEncoding enc) throws IOException
     {
-        JsonEncoding enc = _context.getEncoding();
         switch (enc) { 
         case UTF32_BE:
         case UTF32_LE:
             return new UTF32Reader(_context, _in, _inputBuffer, _inputPtr, _inputEnd,
-                                   _context.getEncoding().isBigEndian());
-
+                                   enc.isBigEndian());
         case UTF16_BE:
         case UTF16_LE:
         case UTF8: // only in non-common case where we don't want to do direct mapping
             {
                 // First: do we have a Stream? If not, need to create one:
                 InputStream in = _in;
-
+                
                 if (in == null) {
                     in = new ByteArrayInputStream(_inputBuffer, _inputPtr, _inputEnd);
                 } else {
@@ -213,23 +201,11 @@ public final class CsvParserBootstrapper
                 }
                 return new InputStreamReader(in, enc.getJavaName());
             }
+        default:
+            throw new RuntimeException();
         }
-        throw new RuntimeException("Internal error"); // should never get here
     }
-
-    public CsvParser constructParser(int baseFeatures, int csvFeatures,
-            ObjectCodec codec)
-        throws IOException, JsonParseException
-    {
-//        JsonEncoding enc = detectEncoding();
-        // would we want to use optimized UTF-8 parser? Maybe later...
-        /*
-        return new CsvParser(_context, baseFeatures, csvFeatures, codec,
-                constructReader(), codec);
-                */
-        throw new Error();
-    }
-
+    
     /*
     /**********************************************************
     /*  Encoding detection for data format auto-detection
@@ -243,11 +219,10 @@ public final class CsvParserBootstrapper
      * be improved as necessary.
      */
     public static MatchStrength hasCSVFormat(InputAccessor acc,
-            char quoteChar, char separatorChar)
-        throws IOException
+            char quoteChar, char separatorChar) throws IOException
     {
-        // Ideally we should see "[" or "{"; but if not, we'll accept double-quote (String)
-        // in future could also consider accepting non-standard matches?
+        // No really good heuristics for CSV, since value starts with either
+        // double-quote, or alpha-num, but can also be preceded by white space...
         
         if (!acc.hasMoreBytes()) {
             return MatchStrength.INCONCLUSIVE;
@@ -316,8 +291,7 @@ public final class CsvParserBootstrapper
      * @return True if a BOM was succesfully found, and encoding
      *   thereby recognized.
      */
-    private boolean handleBOM(int quad)
-        throws IOException
+    private boolean handleBOM(int quad) throws IOException
     {
         /* Handling of (usually) optional BOM (required for
          * multi-byte formats); first 32-bit charsets:
@@ -362,8 +336,7 @@ public final class CsvParserBootstrapper
         return false;
     }
 
-    private boolean checkUTF32(int quad)
-        throws IOException
+    private boolean checkUTF32(int quad) throws IOException
     {
         /* Handling of (usually) optional BOM (required for
          * multi-byte formats); first 32-bit charsets:
@@ -407,9 +380,7 @@ public final class CsvParserBootstrapper
     /**********************************************************
      */
 
-    private void reportWeirdUCS4(String type)
-        throws IOException
-    {
+    private void reportWeirdUCS4(String type) throws IOException {
         throw new CharConversionException("Unsupported UCS-4 endianness ("+type+") detected");
     }
 
@@ -419,8 +390,7 @@ public final class CsvParserBootstrapper
     /**********************************************************
      */
 
-    protected boolean ensureLoaded(int minimum)
-        throws IOException
+    protected boolean ensureLoaded(int minimum) throws IOException
     {
         /* Let's assume here buffer has enough room -- this will always
          * be true for the limited used this method gets
