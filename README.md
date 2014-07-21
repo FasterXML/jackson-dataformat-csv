@@ -93,7 +93,7 @@ The most common method for reading CSV data, then, is:
 CsvMapper mapper = new CsvMapper();
 Pojo value = ...;
 CsvSchema schema = mapper.schemaFor(Pojo.class); // schema from 'Pojo' definition
-String csv = mapper.writer(schema).writeValueAsString();
+String csv = mapper.writer(schema).writeValueAsString(value);
 Pojo result = mapper.reader(Pojo.class).with(schema).read(csv);
 ```
 
