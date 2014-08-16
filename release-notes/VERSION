@@ -1,5 +1,5 @@
 Project: jackson-dataformat-csv
-Version: 2.4.2 (xx-Jul-2014)
+Version: 2.4.2 (15-Aug-2014)
 
 * [#47](../../jackson-dataformat-csv/issues/47): UTF-8 BOM handling not working
  (reported by andrealexandre@github)
