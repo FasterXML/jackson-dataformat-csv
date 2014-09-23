@@ -23,34 +23,34 @@ public final class UTF8Reader
 
     private final boolean _autoClose;
     
-    protected byte[] _inputBuffer;
+    private byte[] _inputBuffer;
 
     /**
      * Pointer to the next available byte (if any), iff less than
      * <code>mByteBufferEnd</code>
      */
-    protected int _inputPtr;
+    private int _inputPtr;
 
     /**
      * Pointed to the end marker, that is, position one after the last
      * valid available byte.
      */
-    protected int _inputEnd;
+    private int _inputEnd;
 
     /**
      * Decoded first character of a surrogate pair, if one needs to be buffered
      */
-    protected int _surrogate = -1;
+    private int _surrogate = -1;
     
     /**
      * Total read character count; used for error reporting purposes
      */
-    int _charCount = 0;
+    private int _charCount = 0;
 
     /**
      * Total read byte count; used for error reporting purposes
      */
-    int _byteCount = 0;
+    private int _byteCount = 0;
 
     /*
     /**********************************************************************
@@ -134,12 +134,11 @@ public final class UTF8Reader
 
     /**
      * Although this method is implemented by the base class, AND it should
-     * never be called by Woodstox code, let's still implement it bit more
+     * never be called by parser code, let's still implement it bit more
      * efficiently just in case
      */
     @Override
-    public int read()
-        throws IOException
+    public int read() throws IOException
     {
         if (_tmpBuffer == null) {
             _tmpBuffer = new char[1];

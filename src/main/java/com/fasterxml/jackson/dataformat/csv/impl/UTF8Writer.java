@@ -13,27 +13,27 @@ import com.fasterxml.jackson.core.io.IOContext;
 public final class UTF8Writer
     extends Writer
 {
-    final static int SURR1_FIRST = 0xD800;
-    final static int SURR1_LAST = 0xDBFF;
-    final static int SURR2_FIRST = 0xDC00;
-    final static int SURR2_LAST = 0xDFFF;
+    final private static int SURR1_FIRST = 0xD800;
+    final private static int SURR1_LAST = 0xDBFF;
+    final private static int SURR2_FIRST = 0xDC00;
+    final private static int SURR2_LAST = 0xDFFF;
 
-    final protected IOContext _context;
+    final private IOContext _context;
 
-    OutputStream _out;
+    private OutputStream _out;
 
-    byte[] _outBuffer;
+    private byte[] _outBuffer;
 
-    final int _outBufferEnd;
+    final private int _outBufferEnd;
 
-    int _outPtr;
+    private int _outPtr;
 
     /**
      * When outputting chars from BMP, surrogate pairs need to be coalesced.
      * To do this, both pairs must be known first; and since it is possible
      * pairs may be split, we need temporary storage for the first half
      */
-    int _surrogate = 0;
+    private int _surrogate = 0;
 
     public UTF8Writer(IOContext ctxt, OutputStream out)
     {
@@ -50,16 +50,14 @@ public final class UTF8Writer
     }
 
     @Override
-    public Writer append(char c)
-        throws IOException
+    public Writer append(char c) throws IOException
     {
         write(c);
         return this;
     }
 
     @Override
-    public void close()
-        throws IOException
+    public void close() throws IOException
     {
         if (_out != null) {
             if (_outPtr > 0) {
@@ -89,8 +87,7 @@ public final class UTF8Writer
     }
 
     @Override
-    public void flush()
-        throws IOException
+    public void flush() throws IOException
     {
         if (_out != null) {
             if (_outPtr > 0) {
@@ -102,15 +99,12 @@ public final class UTF8Writer
     }
 
     @Override
-    public void write(char[] cbuf)
-        throws IOException
-    {
+    public void write(char[] cbuf) throws IOException {
         write(cbuf, 0, cbuf.length);
     }
 
     @Override
-    public void write(char[] cbuf, int off, int len)
-        throws IOException
+    public void write(char[] cbuf, int off, int len) throws IOException
     {
         if (len < 2) {
             if (len == 1) {
@@ -252,8 +246,7 @@ public final class UTF8Writer
     }
 
     @Override
-    public void write(String str) throws IOException
-    {
+    public void write(String str) throws IOException {
         write(str, 0, str.length());
     }
 
@@ -360,10 +353,9 @@ public final class UTF8Writer
      */
 
     /**
-     * Method called to calculate UTF codepoint, from a surrogate pair.
+     * Method called to calculate UTF code point, from a surrogate pair.
      */
-    private int convertSurrogate(int secondPart)
-        throws IOException
+    private int convertSurrogate(int secondPart) throws IOException
     {
         int firstPart = _surrogate;
         _surrogate = 0;
@@ -375,8 +367,7 @@ public final class UTF8Writer
         return 0x10000 + ((firstPart - SURR1_FIRST) << 10) + (secondPart - SURR2_FIRST);
     }
 
-    private void throwIllegal(int code)
-        throws IOException
+    private void throwIllegal(int code) throws IOException
     {
         if (code > 0x10FFFF) { // over max?
             throw new IOException("Illegal character point (0x"+Integer.toHexString(code)+") to output; max is 0x10FFFF as per RFC 4627");
