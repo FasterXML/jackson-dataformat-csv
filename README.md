@@ -125,9 +125,10 @@ CsvMapper mapper = new CsvMapper();
 // important: we need "array wrapping" (see next section) here:
 mapper.enable(CsvParser.Feature.WRAP_AS_ARRAY);
 File csvFile = new File("input.csv"); // or from String, URL etc
-MappingIterator<Object[]> it = mapper.reader(Object[].class).readValues(csvFile);
+MappingIterator<String[]> it = mapper.reader(String[].class).readValues(csvFile);
 while (it.hasNext()) {
-  Object[] row = it.next();
+  String[] row = it.next();
+  // and voila, column values in an array. Works with Lists as well
 }
 ```
 
