@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.fasterxml.jackson.databind.MappingIterator;
 
-public class TestParserTrimSpaces extends ModuleTestBase
+public class ParserTrimSpacesTest extends ModuleTestBase
 {
     /*
     /**********************************************************************

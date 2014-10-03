@@ -63,14 +63,17 @@ import com.fasterxml.jackson.core.FormatSchema;
  */
 public class CsvSchema 
     implements FormatSchema,
-        Iterable<CsvSchema.Column>
+        Iterable<CsvSchema.Column>,
+        java.io.Serializable // since 2.4.3
 {
+    private static final long serialVersionUID = 1516385178088175324L;
+
     /*
     /**********************************************************************
     /* Constants
     /**********************************************************************
      */
- 
+
     protected final static Column[] NO_COLUMNS = new Column[0];
 
     public final static char DEFAULT_COLUMN_SEPARATOR = ',';
@@ -144,8 +147,10 @@ public class CsvSchema
     /**
      * Representation of info for a single column
      */
-    public static class Column
+    public static class Column implements java.io.Serializable // since 2.4.3
     {
+        private static final long serialVersionUID = 1L;
+
         private final String _name;
         private final int _index;
         private final ColumnType _type;

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 // for #12
-public class TestUnwrappingWithCSV extends ModuleTestBase
+public class UnwrappingWithCSVTest extends ModuleTestBase
 {
     @JsonPropertyOrder({"x", "y"})
     final static class Location {

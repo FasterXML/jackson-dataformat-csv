@@ -4,7 +4,7 @@ import java.util.Collections;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-public class TestSchema extends ModuleTestBase
+public class SchemaTest extends ModuleTestBase
 {
     @JsonPropertyOrder({ "a", "b", "c", "d" })
     static class Mixed {

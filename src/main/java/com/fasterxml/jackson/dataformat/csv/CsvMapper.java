@@ -13,19 +13,19 @@ import com.fasterxml.jackson.dataformat.csv.impl.LRUMap;
  */
 public class CsvMapper extends ObjectMapper
 {
-    private static final long serialVersionUID = -4573529235914611523L;
+    private static final long serialVersionUID = 1;
 
     /**
      * Simple caching for schema instances, given that they are relatively expensive
      * to construct; this one is for "loose" (non-typed) schemas
      */
-    protected final LRUMap<JavaType,CsvSchema> _untypedSchemas = new LRUMap<JavaType,CsvSchema>(8,32);
+    protected final LRUMap<JavaType,CsvSchema> _untypedSchemas;
 
     /**
      * Simple caching for schema instances, given that they are relatively expensive
      * to construct; this one is for typed schemas
      */
-    protected final LRUMap<JavaType,CsvSchema> _typedSchemas = new LRUMap<JavaType,CsvSchema>(8,32);
+    protected final LRUMap<JavaType,CsvSchema> _typedSchemas;
     
     /*
     /**********************************************************************
@@ -33,8 +33,7 @@ public class CsvMapper extends ObjectMapper
     /**********************************************************************
      */
 
-    public CsvMapper()
-    {
+    public CsvMapper() {
         this(new CsvFactory());
     }
 
@@ -43,8 +42,33 @@ public class CsvMapper extends ObjectMapper
         super(f);
         // As per #11: default to alphabetic ordering
         enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY);
+        _untypedSchemas = new LRUMap<JavaType,CsvSchema>(8,32);
+        _typedSchemas = new LRUMap<JavaType,CsvSchema>(8,32);
     }
 
+    /**
+     * Copy-constructor, mostly used to support {@link #copy}.
+     *<p>
+     * NOTE: {@link ObjectMapper} had this method since 2.1.
+     * 
+     * @since 2.5
+     */
+    protected CsvMapper(CsvMapper src)
+    {
+        super(src);
+        _untypedSchemas = new LRUMap<JavaType,CsvSchema>(8,32);
+        _typedSchemas = new LRUMap<JavaType,CsvSchema>(8,32);
+    }
+
+    /**
+     * @since 2.5
+     */
+    public CsvMapper copy()
+    {
+        _checkInvalidCopy(CsvMapper.class);
+        return new CsvMapper(this);
+    }
+    
     /*
     /**********************************************************************
     /* Configuration
