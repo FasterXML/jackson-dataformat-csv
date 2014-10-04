@@ -1,5 +1,5 @@
 Project: jackson-dataformat-csv
-Version: 2.4.3 (xx-Oct-2014)
+Version: 2.4.3 (04-Oct-2014)
 
 - Support JDK serializability of CsvMapper
 - Add `CsvMapper.copy()`
