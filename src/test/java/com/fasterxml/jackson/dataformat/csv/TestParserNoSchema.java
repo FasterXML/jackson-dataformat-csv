@@ -29,7 +29,7 @@ public class TestParserNoSchema extends ModuleTestBase
          */
         final String CSV = "1,null\nfoobar\n7,true\n";
         CsvParser cp = mapper.getFactory().createParser(CSV);
-        
+
         MappingIterator<Object[]> it = mapper.reader(Object[].class).readValues(cp);
 
         Object[] row;

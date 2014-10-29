@@ -63,6 +63,7 @@ public class CsvMapper extends ObjectMapper
     /**
      * @since 2.5
      */
+    @Override
     public CsvMapper copy()
     {
         _checkInvalidCopy(CsvMapper.class);
