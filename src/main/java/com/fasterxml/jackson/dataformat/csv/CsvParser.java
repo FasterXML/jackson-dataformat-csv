@@ -11,7 +11,7 @@ import com.fasterxml.jackson.core.json.DupDetector;
 import com.fasterxml.jackson.core.json.JsonReadContext;
 import com.fasterxml.jackson.core.util.BufferRecycler;
 import com.fasterxml.jackson.core.util.ByteArrayBuilder;
-import com.fasterxml.jackson.dataformat.csv.impl.CsvReader;
+import com.fasterxml.jackson.dataformat.csv.impl.CsvDecoder;
 import com.fasterxml.jackson.dataformat.csv.impl.TextBuffer;
 
 /**
@@ -20,7 +20,7 @@ import com.fasterxml.jackson.dataformat.csv.impl.TextBuffer;
  * with it.
  *<p>
  * Implementation is based on a state-machine that pulls information
- * using {@link CsvReader}.
+ * using {@link CsvDecoder}.
  */
 public class CsvParser
     extends ParserMinimalBase
@@ -214,7 +214,7 @@ public class CsvParser
     /**
      * Thing that actually reads the CSV content
      */
-    protected final CsvReader _reader;
+    protected final CsvDecoder _reader;
 
     /**
      * Buffer that contains contents of all values after processing
@@ -241,7 +241,7 @@ public class CsvParser
                 ? DupDetector.rootDetector(this) : null;
         _csvFeatures = csvFeatures;
         _parsingContext = JsonReadContext.createRootContext(dups);
-        _reader = new CsvReader(this, ctxt, reader, _schema, _textBuffer,
+        _reader = new CsvDecoder(this, ctxt, reader, _schema, _textBuffer,
                 isEnabled(JsonParser.Feature.AUTO_CLOSE_SOURCE),
                 isEnabled(Feature.TRIM_SPACES));
     }

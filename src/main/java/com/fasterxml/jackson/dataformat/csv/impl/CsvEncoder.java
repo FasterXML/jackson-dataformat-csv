@@ -10,10 +10,11 @@ import java.io.Writer;
 import java.util.Arrays;
 
 /**
- * Low-level helper class that handles actual output of CSV, purely
- * based on indexes given without worrying about reordering etc.
+ * Helper class that handles actual low-level construction of
+ * CSV output, based only on indexes given without worrying about reordering,
+ * or binding from logical properties.
  */
-public class CsvWriter
+public class CsvEncoder
 {
     /* As an optimization we try coalescing short writes into
      * buffer; but pass longer directly.
@@ -149,7 +150,7 @@ public class CsvWriter
     /**********************************************************
      */
 
-    public CsvWriter(IOContext ctxt, int csvFeatures, Writer out, CsvSchema schema)
+    public CsvEncoder(IOContext ctxt, int csvFeatures, Writer out, CsvSchema schema)
     {
         _ioContext = ctxt;
         _csvFeatures = csvFeatures;
@@ -175,7 +176,7 @@ public class CsvWriter
     }
 
     @Deprecated // since 2.4, remove in 2.5
-    public CsvWriter(IOContext ctxt, Writer out,
+    public CsvEncoder(IOContext ctxt, Writer out,
             char columnSeparator, char quoteChar, char[] linefeed)
     {
         this(ctxt, CsvGenerator.Feature.collectDefaults(),
@@ -183,7 +184,7 @@ public class CsvWriter
     }
 
     @Deprecated // since 2.4, remove in 2.5
-    public CsvWriter(IOContext ctxt, int csvFeatures, Writer out,
+    public CsvEncoder(IOContext ctxt, int csvFeatures, Writer out,
             char columnSeparator, char quoteChar, char[] linefeed)
     {
         _ioContext = ctxt;
@@ -210,7 +211,7 @@ public class CsvWriter
         _columnCount = -1;    
     }
 
-    public CsvWriter(CsvWriter base, CsvSchema newSchema)
+    public CsvEncoder(CsvEncoder base, CsvSchema newSchema)
     {
         _ioContext = base._ioContext;
         _csvFeatures = base._csvFeatures;
@@ -242,11 +243,11 @@ public class CsvWriter
         return min+1;
     }
 
-    public CsvWriter withSchema(CsvSchema schema) {
-        return new CsvWriter(this, schema);
+    public CsvEncoder withSchema(CsvSchema schema) {
+        return new CsvEncoder(this, schema);
     }
 
-    public CsvWriter setFeatures(int feat) {
+    public CsvEncoder setFeatures(int feat) {
         if (feat != _csvFeatures) {
             _csvFeatures = feat;
             _cfgOptimalQuoting = CsvGenerator.Feature.STRICT_CHECK_FOR_QUOTING.enabledIn(feat);

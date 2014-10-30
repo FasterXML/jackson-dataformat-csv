@@ -16,7 +16,7 @@ import com.fasterxml.jackson.dataformat.csv.CsvSchema;
  * Low-level helper class that handles actual reading of CSV,
  * purely based on indexes given without worrying about reordering etc.
  */
-public class CsvReader
+public class CsvDecoder
 {
     private final static int INT_SPACE = 0x0020;
 
@@ -287,7 +287,7 @@ public class CsvReader
     // !!!! Only to allow compilation to succeed; remove once done!
     protected JsonToken _currToken = null;
     
-    public CsvReader(CsvParser owner, IOContext ctxt, Reader r, CsvSchema schema, TextBuffer textBuffer,
+    public CsvDecoder(CsvParser owner, IOContext ctxt, Reader r, CsvSchema schema, TextBuffer textBuffer,
             boolean autoCloseInput, boolean trimSpaces)
     {
         _owner = owner;

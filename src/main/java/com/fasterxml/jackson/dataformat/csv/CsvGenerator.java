@@ -9,7 +9,7 @@ import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.base.GeneratorBase;
 import com.fasterxml.jackson.core.json.JsonWriteContext;
 import com.fasterxml.jackson.core.io.IOContext;
-import com.fasterxml.jackson.dataformat.csv.impl.CsvWriter;
+import com.fasterxml.jackson.dataformat.csv.impl.CsvEncoder;
 
 public class CsvGenerator extends GeneratorBase
 {
@@ -109,7 +109,7 @@ public class CsvGenerator extends GeneratorBase
     protected CsvSchema _schema = EMPTY_SCHEMA;
 
     // note: can not be final since we may need to re-create it for new schema
-    protected CsvWriter _writer;
+    protected CsvEncoder _writer;
     
     /*
     /**********************************************************
@@ -145,7 +145,7 @@ public class CsvGenerator extends GeneratorBase
             char columnSeparator, char quoteChar, char[] linefeed)
     {
         this(ctxt, jsonFeatures, csvFeatures, codec,
-                new CsvWriter(ctxt, csvFeatures, out, columnSeparator, quoteChar, linefeed));
+                new CsvEncoder(ctxt, csvFeatures, out, columnSeparator, quoteChar, linefeed));
     }
 
     /**
@@ -158,11 +158,11 @@ public class CsvGenerator extends GeneratorBase
         _ioContext = ctxt;
         _csvFeatures = csvFeatures;
         _schema = schema;
-        _writer = new CsvWriter(ctxt, csvFeatures, out, schema);
+        _writer = new CsvEncoder(ctxt, csvFeatures, out, schema);
     }
 
     public CsvGenerator(IOContext ctxt, int jsonFeatures, int csvFeatures,
-            ObjectCodec codec, CsvWriter csvWriter)
+            ObjectCodec codec, CsvEncoder csvWriter)
     {
         super(jsonFeatures, codec);
         _ioContext = ctxt;

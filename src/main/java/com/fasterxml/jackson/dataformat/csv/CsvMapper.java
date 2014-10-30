@@ -1,10 +1,13 @@
 package com.fasterxml.jackson.dataformat.csv;
 
+import com.fasterxml.jackson.core.FormatSchema;
+import com.fasterxml.jackson.core.type.TypeReference;
+
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 import com.fasterxml.jackson.databind.util.NameTransformer;
-import com.fasterxml.jackson.core.type.TypeReference;
+
 import com.fasterxml.jackson.dataformat.csv.impl.LRUMap;
 
 /**
@@ -69,7 +72,43 @@ public class CsvMapper extends ObjectMapper
         _checkInvalidCopy(CsvMapper.class);
         return new CsvMapper(this);
     }
+
+    /*
+    /**********************************************************************
+    /* Overrides: factory methods for ObjectReader/ObjectWriter
+    /**********************************************************************
+     */
+
+    @Override
+    protected CsvObjectReader _newReader(DeserializationConfig config) {
+        return new CsvObjectReader(this, config);
+    }
+
+    @Override
+    protected CsvObjectReader _newReader(DeserializationConfig config,
+            JavaType valueType, Object valueToUpdate,
+            FormatSchema schema, InjectableValues injectableValues) {
+        return new CsvObjectReader(this, config, valueType, valueToUpdate, schema, injectableValues);
+    }
+
+    /*
+    @Override
+    protected ObjectWriter _newWriter(SerializationConfig config) {
+        return new CsvObjectWriter(this, config);
+    }
+
+    @Override
+    protected ObjectWriter _newWriter(SerializationConfig config, FormatSchema schema) {
+        return new CsvObjectWriter(this, config, schema);
+    }
     
+    @Override
+    protected ObjectWriter _newWriter(SerializationConfig config,
+            JavaType rootType, PrettyPrinter pp) {
+        return new CsvObjectWriter(this, config, rootType, pp);
+    }
+    */
+
     /*
     /**********************************************************************
     /* Configuration
@@ -177,7 +216,7 @@ public class CsvMapper extends ObjectMapper
      *   but not for schema construction (no CSV types can be mapped to arrays
      *   or Collections)
      */
-    public ObjectReader readerWithSchemaFor(Class<?> pojoType)
+    public CsvObjectReader readerWithSchemaFor(Class<?> pojoType)
     {
         JavaType type = constructType(pojoType);
         /* sanity check: not useful for structured types, since
@@ -186,7 +225,7 @@ public class CsvMapper extends ObjectMapper
         if (type.isArrayType() || type.isCollectionLikeType()) {
             throw new IllegalArgumentException("Type can NOT be a Collection or array type");
         }
-        return reader(type).with(schemaFor(type));
+        return (CsvObjectReader) reader(type).with(schemaFor(type));
     }
 
     /**
@@ -198,7 +237,7 @@ public class CsvMapper extends ObjectMapper
      * specified type and uses "strict" {@link CsvSchema} introspected from
      * specified type (one where typing is inferred).
      */
-    public ObjectReader readerWithTypedSchemaFor(Class<?> pojoType)
+    public CsvObjectReader readerWithTypedSchemaFor(Class<?> pojoType)
     {
         JavaType type = constructType(pojoType);
         /* sanity check: not useful for structured types, since
@@ -207,7 +246,7 @@ public class CsvMapper extends ObjectMapper
         if (type.isArrayType() || type.isCollectionLikeType()) {
             throw new IllegalArgumentException("Type can NOT be a Collection or array type");
         }
-        return reader(type).with(typedSchemaFor(type));
+        return (CsvObjectReader) reader(type).with(typedSchemaFor(type));
     }
 
     /*
