@@ -43,7 +43,7 @@ public class TestGenerator extends ModuleTestBase
             this.desc = desc;
         }
     }
-    
+
     /*
     /**********************************************************************
     /* Unit tests
@@ -191,13 +191,28 @@ public class TestGenerator extends ModuleTestBase
             file.delete();
         }
     }
-    
+
+    // [dataformat-csv#53]
+    public void testCustomNullValue() throws Exception
+    {
+        ObjectMapper mapper = mapperForCsv();
+        CsvSchema schema = CsvSchema.builder()
+                .setNullValue("n/a")
+                .addColumn("id")
+                .addColumn("desc")
+                .build();
+        
+        String result = mapper.writer(schema).writeValueAsString(new IdDesc("id", null));
+        // MUST use doubling for quotes!
+        assertEquals("id,n/a\n", result);
+    }
+
     /*
     /**********************************************************************
     /* Secondary test methods
     /**********************************************************************
      */
-    
+
     private void _testSimpleWithAutoSchema(boolean wrapAsArray) throws Exception
     {
         CsvMapper mapper = mapperForCsv();

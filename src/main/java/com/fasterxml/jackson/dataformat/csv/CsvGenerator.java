@@ -528,8 +528,7 @@ public class CsvGenerator extends GeneratorBase
     public void writeNull() throws IOException, JsonGenerationException
     {
         _verifyValueWrite("write null value");
-        // !!! TODO: empty String vs String null?
-        _writer.write(_columnIndex(), "");
+        _writer.writeNull(_columnIndex());
     }
 
     @Override

@@ -46,9 +46,14 @@ public class CsvWriter
     final protected char _cfgColumnSeparator;
 
     final protected int _cfgQuoteCharacter;
-    
+
     final protected char[] _cfgLineSeparator;
 
+    /**
+     * @since 2.5
+     */
+    final protected char[] _cfgNullValue;
+    
     final protected int _cfgLineSeparatorLength;
 
     protected int _cfgMaxQuoteCheckChars;
@@ -160,6 +165,8 @@ public class CsvWriter
         _cfgQuoteCharacter = schema.getQuoteChar();
         _cfgLineSeparator = schema.getLineSeparator();
         _cfgLineSeparatorLength = (_cfgLineSeparator == null) ? 0 : _cfgLineSeparator.length;
+        _cfgNullValue = schema.getNullValue();
+        
         _columnCount = schema.size();
 
         _cfgMinSafeChar = _calcSafeChar();
@@ -193,7 +200,8 @@ public class CsvWriter
         _cfgQuoteCharacter = quoteChar;
         _cfgLineSeparator = linefeed;
         _cfgLineSeparatorLength = linefeed.length;
-
+        _cfgNullValue = CsvSchema.DEFAULT_NULL_VALUE;
+        
         _cfgMinSafeChar = _calcSafeChar();
 
         _cfgMaxQuoteCheckChars = MAX_QUOTE_CHECK;
@@ -219,6 +227,7 @@ public class CsvWriter
         _cfgQuoteCharacter = newSchema.getQuoteChar();
         _cfgLineSeparator = newSchema.getLineSeparator();
         _cfgLineSeparatorLength = _cfgLineSeparator.length;
+        _cfgNullValue = newSchema.getNullValue();
         _cfgMinSafeChar = _calcSafeChar();
         _columnCount = newSchema.size();
     }  
@@ -281,7 +290,7 @@ public class CsvWriter
         // !!! TODO: optimize
         write(columnIndex, new String(ch, offset, len));
     }
-    
+
     public final void write(int columnIndex, int value) throws IOException
     {
         // easy case: all in order
@@ -326,7 +335,6 @@ public class CsvWriter
         _buffer(columnIndex, BufferedValue.buffered(value));
     }
 
-
     public final void write(int columnIndex, boolean value) throws IOException
     {
         // easy case: all in order
@@ -338,6 +346,16 @@ public class CsvWriter
         _buffer(columnIndex, BufferedValue.buffered(value));
     }
     
+    public final void writeNull(int columnIndex) throws IOException
+    {
+        if (columnIndex == _nextColumnToWrite) {
+            appendNull();
+            ++_nextColumnToWrite;
+            return;
+        }
+        _buffer(columnIndex, BufferedValue.bufferedNull());
+    }
+
     public final void writeColumnName(String name) throws IOException
     {
         appendValue(name);
@@ -457,9 +475,15 @@ public class CsvWriter
         writeRaw(str);
     }
 
-    protected void appendValue(boolean value) throws IOException
-    {
-        char[] ch = value ? TRUE_CHARS : FALSE_CHARS;
+    protected void appendValue(boolean value) throws IOException {
+        _append(value ? TRUE_CHARS : FALSE_CHARS);
+    }
+
+    protected void appendNull() throws IOException {
+        _append(_cfgNullValue);
+    }
+
+    protected void _append(char[] ch) throws IOException {
         final int len = ch.length;
         if ((_outputTail + len) >= _outputTail) { // >= to include possible comma too
             _flushBuffer();
@@ -467,10 +491,12 @@ public class CsvWriter
         if (_nextColumnToWrite > 0) {
             _outputBuffer[_outputTail++] = _cfgColumnSeparator;
         }
-        System.arraycopy(ch, 0, _outputBuffer, _outputTail, len);
+        if (len > 0) {
+            System.arraycopy(ch, 0, _outputBuffer, _outputTail, len);
+        }
         _outputTail += len;
     }
-
+    
     protected void appendColumnSeparator() throws IOException {
         if (_outputTail >= _outputTail) {
             _flushBuffer();

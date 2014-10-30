@@ -9,14 +9,19 @@ import java.io.IOException;
 public abstract class BufferedValue
 {
     protected BufferedValue() { }
-    
+
     public abstract void write(CsvWriter w) throws IOException;
-    
+
     public static BufferedValue buffered(String v) { return new TextValue(v); }
     public static BufferedValue buffered(int v) { return new IntValue(v); }
     public static BufferedValue buffered(long v) { return new LongValue(v); }
     public static BufferedValue buffered(double v) { return new DoubleValue(v); }
-    public static BufferedValue buffered(boolean v) { return new BooleanValue(v); }
+    public static BufferedValue buffered(boolean v) {
+        return v ? BooleanValue.TRUE : BooleanValue.FALSE;
+    }
+    public static BufferedValue bufferedNull() {
+        return NullValue.std;
+    }
     
     protected final static class TextValue extends BufferedValue
     {
@@ -68,6 +73,9 @@ public abstract class BufferedValue
 
     protected final static class BooleanValue extends BufferedValue
     {
+        public final static BooleanValue FALSE = new BooleanValue(false);
+        public final static BooleanValue TRUE = new BooleanValue(true);
+
         private final boolean _value;
         
         public BooleanValue(boolean v) { _value = v; }
@@ -75,6 +83,17 @@ public abstract class BufferedValue
         @Override
         public void write(CsvWriter w) throws IOException {
             w.appendValue(_value);
+        }
+    }
+
+    protected final static class NullValue extends BufferedValue {
+        public final static NullValue std = new NullValue();
+        
+        private NullValue() { }
+
+        @Override
+        public void write(CsvWriter w) throws IOException {
+            w.appendNull();
         }
     }
 }

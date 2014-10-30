@@ -1,12 +1,18 @@
 Project: jackson-dataformat-csv
-Version: 2.4.3 (04-Oct-2014)
+
+------------------------------------------------------------------------
+=== Releases ===
+------------------------------------------------------------------------
+
+2.5.0 (not yet released)
+
+#53: Add a way to specify "null value" (String) for `CsvGenerator` to use when writing `null`s
+ (part of `CsvSchema`; method `withNullValue()`)
+
+2.4.3 (04-Oct-2014)
 
 - Support JDK serializability of CsvMapper
 - Add `CsvMapper.copy()`
-
-------------------------------------------------------------------------
-=== History: ===
-------------------------------------------------------------------------
 
 2.4.2 (15-Aug-2014)
 

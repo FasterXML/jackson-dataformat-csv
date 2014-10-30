@@ -22,5 +22,4 @@ public class LRUMap<K,V> extends LinkedHashMap<K,V>
     {
         return size() > _maxEntries;
     }
-
 }
