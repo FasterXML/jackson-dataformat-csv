@@ -22,3 +22,9 @@ Jason Dunkelberger (dirkraft@github)
 
 * Suggested #32: Allow disabling of quoteChar
  (2.4.0)
+
+Wei Li (wli600@github)
+
+* Contributed fix for 54: Encounter ArrayIndexOutOfBoundsException in the corner case delimiter
+  or end-of-line happened to be the leading character of a segment buffer
+ (2.4.4)

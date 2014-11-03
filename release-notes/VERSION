@@ -9,6 +9,12 @@ Project: jackson-dataformat-csv
 #53: Add a way to specify "null value" (String) for `CsvGenerator` to use when writing `null`s
  (part of `CsvSchema`; method `withNullValue()`)
 
+2.4.4 (not yet released)
+
+#54: Encounter ArrayIndexOutOfBoundsException in the corner case delimiter or end-of-line
+  happened to be the leading character of a segment buffer
+ (contributed by wli600@github)
+
 2.4.3 (04-Oct-2014)
 
 - Support JDK serializability of CsvMapper
