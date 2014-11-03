@@ -405,15 +405,17 @@ public final class TextBuffer
 
     /**
      * 
-     * @param lastSegmentEnd End offset in the currently active segment 
+     * @param lastSegmentEnd End offset in the currently active segment,
+     *                       could be 0 in the case of first character is
+     *                       delimiter or end-of-line
      * @param trimTrailingSpaces Whether trailing spaces should be trimmed or not
      */
     public String finishAndReturn(int lastSegmentEnd, boolean trimTrailingSpaces)
     {
         if (trimTrailingSpaces) {
             // First, see if it's enough to trim end of current segment:
-            int ptr = lastSegmentEnd-1;
-            if (_currentSegment[ptr] <= 0x0020) {
+            int ptr = lastSegmentEnd - 1;
+            if (ptr < 0 || _currentSegment[ptr] <= 0x0020) {
                 return _doTrim(ptr);
             }
         }

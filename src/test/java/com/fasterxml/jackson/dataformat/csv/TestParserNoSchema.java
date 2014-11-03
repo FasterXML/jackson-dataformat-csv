@@ -120,4 +120,37 @@ public class TestParserNoSchema extends ModuleTestBase
         it.close();
     }
 
+    // [Issue#54]
+    public void testDelimiterAtBufferBoundary() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        mapper.enable(CsvParser.Feature.TRIM_SPACES);
+
+        final String col1 = "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh" +
+                            "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh" +
+                            "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh" +
+                            "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh";
+        final String col2 = "H";
+
+        CsvParser cp = mapper.getFactory().createParser(col1 + "     ," + col2 +"\n" + col2 + "," + col1 + "\n");
+        MappingIterator<Object[]> it = mapper.reader(Object[].class).readValues(cp);
+
+        Object[] row;
+
+        assertTrue(it.hasNext());
+        row = it.next();
+        assertEquals(2, row.length);
+        assertEquals(col1, row[0]);
+        assertEquals(col2, row[1]);
+
+        assertTrue(it.hasNext());
+        row = it.next();
+        assertEquals(2, row.length);
+        assertEquals(col2, row[0]);
+        assertEquals(col1, row[1]);
+
+        cp.close();
+        it.close();
+    }
+
 }
