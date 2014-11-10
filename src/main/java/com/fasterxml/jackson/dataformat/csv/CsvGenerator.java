@@ -75,7 +75,7 @@ public class CsvGenerator extends GeneratorBase
             _mask = (1 << ordinal());
         }
         
-        public boolean enabledIn(int flags) { return (flags & getMask()) != 0; }
+        public boolean enabledIn(int flags) { return (flags & _mask) != 0; }
         public boolean enabledByDefault() { return _defaultState; }
         public int getMask() { return _mask; }
     }
@@ -110,7 +110,7 @@ public class CsvGenerator extends GeneratorBase
 
     // note: can not be final since we may need to re-create it for new schema
     protected CsvEncoder _writer;
-    
+
     /*
     /**********************************************************
     /* Output state
@@ -129,6 +129,14 @@ public class CsvGenerator extends GeneratorBase
      * field name call that was made.
      */
     protected int _nextColumnByName = -1;
+
+    /**
+     * Flag set when property to write is unknown, and the matching value
+     * is to be skipped quietly.
+     *
+     * @since 2.5
+     */
+    protected boolean _skipValue;
     
     /*
     /**********************************************************
@@ -251,7 +259,7 @@ public class CsvGenerator extends GeneratorBase
      */
 
     @Override
-    public final void writeFieldName(String name) throws IOException, JsonGenerationException
+    public final void writeFieldName(String name) throws IOException
     {
         if (_writeContext.writeFieldName(name) == JsonWriteContext.STATUS_EXPECT_VALUE) {
             _reportError("Can not write a field name, expecting a value");
@@ -260,8 +268,7 @@ public class CsvGenerator extends GeneratorBase
     }
 
     @Override
-    public final void writeFieldName(SerializableString name)
-        throws IOException, JsonGenerationException
+    public final void writeFieldName(SerializableString name) throws IOException
     {
         // Object is a value, need to verify it's allowed
         if (_writeContext.writeFieldName(name.getValue()) == JsonWriteContext.STATUS_EXPECT_VALUE) {
@@ -271,8 +278,7 @@ public class CsvGenerator extends GeneratorBase
     }
 
     @Override
-    public final void writeStringField(String fieldName, String value)
-        throws IOException, JsonGenerationException
+    public final void writeStringField(String fieldName, String value) throws IOException
     {
         if (_writeContext.writeFieldName(fieldName) == JsonWriteContext.STATUS_EXPECT_VALUE) {
             _reportError("Can not write a field name, expecting a value");
@@ -281,8 +287,7 @@ public class CsvGenerator extends GeneratorBase
         writeString(value);
     }
 
-    private final void _writeFieldName(String name)
-        throws IOException, JsonGenerationException
+    private final void _writeFieldName(String name) throws IOException
     {
         // just find the matching index -- must have schema for that
         if (_schema == null) {
@@ -290,29 +295,23 @@ public class CsvGenerator extends GeneratorBase
         }
         CsvSchema.Column col = _schema.column(name);
         if (col == null) {
+            if (isEnabled(JsonGenerator.Feature.IGNORE_UNKNOWN)) {
+                _skipValue = true;
+                _nextColumnByName = -1;
+                return;
+            }
             _reportError("Unrecognized column '"+name+"': known columns: "+_schema.getColumnDesc());
-            
         }
+        _skipValue = false;
         // and all we do is just note index to use for following value write
         _nextColumnByName = col.getIndex();
     }
-    
+
     /*
     /**********************************************************
     /* Extended API, configuration
     /**********************************************************
      */
-
-    public CsvGenerator enable(Feature f) {
-        _csvFeatures |= f.getMask();
-        _writer.setFeatures(_csvFeatures);
-        return this;
-    }
-
-    public CsvGenerator disable(Feature f) {
-        _csvFeatures &= ~f.getMask();
-        return this;
-    }
 
     public final boolean isEnabled(Feature f) {
         return (_csvFeatures & f.getMask()) != 0;
@@ -325,6 +324,17 @@ public class CsvGenerator extends GeneratorBase
         return disable(f);
     }
 
+    public CsvGenerator enable(Feature f) {
+        _csvFeatures |= f.getMask();
+        _writer.setFeatures(_csvFeatures);
+        return this;
+    }
+
+    public CsvGenerator disable(Feature f) {
+        _csvFeatures &= ~f.getMask();
+        return this;
+    }
+
     /*
     /**********************************************************
     /* Public API: low-level I/O
@@ -332,8 +342,7 @@ public class CsvGenerator extends GeneratorBase
      */
 
     @Override
-    public final void flush() throws IOException
-    {
+    public final void flush() throws IOException {
         _writer.flush(isEnabled(JsonGenerator.Feature.FLUSH_PASSED_TO_STREAM));
     }
     
@@ -416,34 +425,37 @@ public class CsvGenerator extends GeneratorBase
             return;
         }
         _verifyValueWrite("write String value");
-        _writer.write(_columnIndex(), text);
+        if (!_skipValue) {
+            _writer.write(_columnIndex(), text);
+        }
     }
 
     @Override
     public void writeString(char[] text, int offset, int len) throws IOException, JsonGenerationException
     {
         _verifyValueWrite("write String value");
-        _writer.write(_columnIndex(), text, offset, len);
+        if (!_skipValue) {
+            _writer.write(_columnIndex(), text, offset, len);
+        }
     }
 
     @Override
-    public final void writeString(SerializableString sstr)
-        throws IOException, JsonGenerationException
+    public final void writeString(SerializableString sstr) throws IOException, JsonGenerationException
     {
         _verifyValueWrite("write String value");
-        _writer.write(_columnIndex(), sstr.getValue());
+        if (!_skipValue) {
+            _writer.write(_columnIndex(), sstr.getValue());
+        }
     }
 
     @Override
-    public void writeRawUTF8String(byte[] text, int offset, int len)
-        throws IOException, JsonGenerationException
+    public void writeRawUTF8String(byte[] text, int offset, int len) throws IOException, JsonGenerationException
     {
         _reportUnsupportedOperation();
     }
 
     @Override
-    public final void writeUTF8String(byte[] text, int offset, int len)
-        throws IOException, JsonGenerationException
+    public final void writeUTF8String(byte[] text, int offset, int len) throws IOException, JsonGenerationException
     {
         writeString(new String(text, offset, len, "UTF-8"));
     }
@@ -503,12 +515,14 @@ public class CsvGenerator extends GeneratorBase
             return;
         }
         _verifyValueWrite("write Binary value");
-        // ok, better just Base64 encode as a String...
-        if (offset > 0 || (offset+len) != data.length) {
-            data = Arrays.copyOfRange(data, offset, offset+len);
+        if (!_skipValue) {
+            // ok, better just Base64 encode as a String...
+            if (offset > 0 || (offset+len) != data.length) {
+                data = Arrays.copyOfRange(data, offset, offset+len);
+            }
+            String encoded = b64variant.encode(data);
+            _writer.write(_columnIndex(), encoded);
         }
-        String encoded = b64variant.encode(data);
-        _writer.write(_columnIndex(), encoded);
     }
 
     /*
@@ -521,21 +535,27 @@ public class CsvGenerator extends GeneratorBase
     public void writeBoolean(boolean state) throws IOException, JsonGenerationException
     {
         _verifyValueWrite("write boolean value");
-        _writer.write(_columnIndex(), state);
+        if (!_skipValue) {
+            _writer.write(_columnIndex(), state);
+        }
     }
 
     @Override
     public void writeNull() throws IOException, JsonGenerationException
     {
         _verifyValueWrite("write null value");
-        _writer.writeNull(_columnIndex());
+        if (!_skipValue) {
+            _writer.writeNull(_columnIndex());
+        }
     }
 
     @Override
     public void writeNumber(int i) throws IOException, JsonGenerationException
     {
         _verifyValueWrite("write number");
-        _writer.write(_columnIndex(), i);
+        if (!_skipValue) {
+            _writer.write(_columnIndex(), i);
+        }
     }
 
     @Override
@@ -546,7 +566,9 @@ public class CsvGenerator extends GeneratorBase
             writeNumber((int) l);
             return;
         }
-        _verifyValueWrite("write number");
+        if (!_skipValue) {
+            _verifyValueWrite("write number");
+        }
         _writer.write(_columnIndex(), l);
     }
 
@@ -558,21 +580,27 @@ public class CsvGenerator extends GeneratorBase
             return;
         }
         _verifyValueWrite("write number");
-        _writer.write(_columnIndex(), v.toString());
+        if (!_skipValue) {
+            _writer.write(_columnIndex(), v.toString());
+        }
     }
     
     @Override
     public void writeNumber(double d) throws IOException, JsonGenerationException
     {
         _verifyValueWrite("write number");
-        _writer.write(_columnIndex(), d);
+        if (!_skipValue) {
+            _writer.write(_columnIndex(), d);
+        }
     }    
 
     @Override
     public void writeNumber(float f) throws IOException, JsonGenerationException
     {
         _verifyValueWrite("write number");
-        _writer.write(_columnIndex(), f);
+        if (!_skipValue) {
+            _writer.write(_columnIndex(), f);
+        }
     }
 
     @Override
@@ -583,20 +611,24 @@ public class CsvGenerator extends GeneratorBase
             return;
         }
         _verifyValueWrite("write number");
-        String str = isEnabled(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN) ?
-                dec.toPlainString() : dec.toString();
-        _writer.write(_columnIndex(), str);
+        if (!_skipValue) {
+            String str = isEnabled(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN) ?
+                    dec.toPlainString() : dec.toString();
+                    _writer.write(_columnIndex(), str);
+        }
     }
 
     @Override
-    public void writeNumber(String encodedValue) throws IOException,JsonGenerationException, UnsupportedOperationException
+    public void writeNumber(String encodedValue) throws IOException, JsonGenerationException, UnsupportedOperationException
     {
         if (encodedValue == null) {
             writeNull();
             return;
         }
         _verifyValueWrite("write number");
-        _writer.write(_columnIndex(), encodedValue);
+        if (!_skipValue) {
+            _writer.write(_columnIndex(), encodedValue);
+        }
     }
     
     /*
@@ -606,8 +638,7 @@ public class CsvGenerator extends GeneratorBase
      */
 
     @Override
-    public void writeOmittedField(String fieldName)
-        throws IOException, JsonGenerationException
+    public void writeOmittedField(String fieldName) throws IOException
     {
         // basically combination of "writeFieldName()" and "writeNull()"
         if (_writeContext.writeFieldName(fieldName) == JsonWriteContext.STATUS_EXPECT_VALUE) {
@@ -634,8 +665,7 @@ public class CsvGenerator extends GeneratorBase
      */
     
     @Override
-    protected final void _verifyValueWrite(String typeMsg)
-        throws IOException, JsonGenerationException
+    protected final void _verifyValueWrite(String typeMsg) throws IOException
     {
         int status = _writeContext.writeValue();
         if (status == JsonWriteContext.STATUS_EXPECT_NAME) {
@@ -671,13 +701,13 @@ public class CsvGenerator extends GeneratorBase
      * will flush possibly buffered column values, append linefeed
      * and reset state appropriately.
      */
-    protected void finishRow() throws IOException, JsonGenerationException
+    protected void finishRow() throws IOException
     {
         _writer.endRow();
         _nextColumnByName = -1;
     }
 
-    protected void _handleFirstLine() throws IOException, JsonGenerationException
+    protected void _handleFirstLine() throws IOException
     {
         _handleFirstLine = false;
         if (_schema.useHeader()) {

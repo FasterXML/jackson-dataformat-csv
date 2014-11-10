@@ -24,8 +24,7 @@ public class TestParser extends ModuleTestBase
             .addColumn("userImage")
             .addColumn("verified")
             .build();
-    
-    
+
     /*
     /**********************************************************
     /* Test methods
