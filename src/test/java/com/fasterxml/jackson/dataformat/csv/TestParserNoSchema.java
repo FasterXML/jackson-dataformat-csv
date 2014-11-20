@@ -55,8 +55,8 @@ public class TestParserNoSchema extends ModuleTestBase
         cp.close();
         it.close();
     }
-    
-    public void testUntypedAsArray() throws Exception
+
+    public void testUntypedAsObjectArray() throws Exception
     {
         CsvMapper mapper = mapperForCsv();
         mapper.enable(CsvParser.Feature.WRAP_AS_ARRAY);
@@ -82,6 +82,30 @@ public class TestParserNoSchema extends ModuleTestBase
         assertEquals("", row.get(1));
     }
 
+    public void testUntypedAsStringArray() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        mapper.enable(CsvParser.Feature.WRAP_AS_ARRAY);
+        // when wrapped as an array, we'll get array of Lists:
+        String[][] rows = mapper.readValue("1,\"xyz\"\n\ntrue,\n", String[][].class);
+        assertEquals(3, rows.length);
+        String[] row;
+
+        row = (String[]) rows[0];
+        assertEquals(2, row.length);
+        assertEquals("1",row[0]);
+        assertEquals("xyz", row[1]);
+
+        row =(String[]) rows[1];
+        assertEquals(1, row.length);
+        assertEquals("", row[0]);
+
+        row = (String[])rows[2];
+        assertEquals(2, row.length);
+        assertEquals("true", row[0]);
+        assertEquals("", row[1]);
+    }
+    
     /* Let's also allow varying number of columns, if no
      * schema has been defined.
      */
@@ -96,8 +120,8 @@ public class TestParserNoSchema extends ModuleTestBase
          */
         final String CSV = "1,2\n1,2,3,4\n";
         CsvParser cp = mapper.getFactory().createParser(CSV);
-        
-        MappingIterator<Object[]> it = mapper.reader(Object[].class).readValues(cp);
+
+        MappingIterator<String[]> it = mapper.reader(String[].class).readValues(cp);
 
         Object[] row;
         assertTrue(it.hasNext());

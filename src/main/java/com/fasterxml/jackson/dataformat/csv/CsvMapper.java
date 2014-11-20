@@ -29,7 +29,7 @@ public class CsvMapper extends ObjectMapper
      * to construct; this one is for typed schemas
      */
     protected final LRUMap<JavaType,CsvSchema> _typedSchemas;
-    
+
     /*
     /**********************************************************************
     /* Life-cycle
