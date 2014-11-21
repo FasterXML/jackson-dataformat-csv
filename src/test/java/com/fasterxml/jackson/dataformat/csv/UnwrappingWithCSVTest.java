@@ -53,7 +53,7 @@ public class UnwrappingWithCSVTest extends ModuleTestBase
             .addColumn("loc.x")
             .addColumn("loc.y")
             .build();
-        Unwrapping wrapper = mapper.reader(schema).withType(Unwrapping.class).readValue(CSV);
+        Unwrapping wrapper = mapper.reader(schema).forType(Unwrapping.class).readValue(CSV);
         assertNotNull(wrapper);
         assertNotNull(wrapper.location);
         assertEquals(15, wrapper.location.x);
@@ -79,7 +79,7 @@ public class UnwrappingWithCSVTest extends ModuleTestBase
         CsvMapper mapper = mapperForCsv();
         CsvSchema schema = mapper.schemaFor(Unwrapping.class);
         
-        Unwrapping wrapper = mapper.reader(schema).withType(Unwrapping.class).readValue(CSV);
+        Unwrapping wrapper = mapper.reader(schema).forType(Unwrapping.class).readValue(CSV);
         assertNotNull(wrapper);
         assertNotNull(wrapper.location);
         assertEquals(28, wrapper.location.x);

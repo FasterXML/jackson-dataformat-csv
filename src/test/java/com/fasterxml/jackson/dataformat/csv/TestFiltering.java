@@ -85,7 +85,7 @@ public class TestFiltering extends ModuleTestBase
                 new Company(1, "name1", "ticker1")
                 , new Company(2, "name2", "ticker2")
                 , new Company(3, "name3", "ticker3"));
-        String actual = mapper.writer(filterProvider).withSchema(schema).writeValueAsString(companies);
+        String actual = mapper.writer(filterProvider).with(schema).writeValueAsString(companies);
 //        System.out.println(actual);
 
         BufferedReader br = new BufferedReader(new StringReader(actual.trim()));

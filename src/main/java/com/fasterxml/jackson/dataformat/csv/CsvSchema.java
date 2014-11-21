@@ -727,8 +727,10 @@ public class CsvSchema
     public boolean useHeader() { return _useHeader; }
     public boolean skipFirstDataRow() { return _skipFirstDataRow; }
     public char getColumnSeparator() { return _columnSeparator; }
+    public int getArrayElementSeparator() { return _arrayElementSeparator; }
     public int getQuoteChar() { return _quoteChar; }
     public int getEscapeChar() { return _escapeChar; }
+
     public char[] getLineSeparator() { return _lineSeparator; }
 
     /**
@@ -738,6 +740,11 @@ public class CsvSchema
 
     public boolean usesQuoteChar() { return _quoteChar >= 0; }
     public boolean usesEscapeChar() { return _escapeChar >= 0; }
+
+    /**
+     * @since 2.5
+     */
+    public boolean hasArrayElementSeparator() { return _arrayElementSeparator >= 0; }
     
     /*
     /**********************************************************************

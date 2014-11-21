@@ -2,12 +2,10 @@ package com.fasterxml.jackson.dataformat.csv;
 
 import com.fasterxml.jackson.core.FormatSchema;
 import com.fasterxml.jackson.core.type.TypeReference;
-
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 import com.fasterxml.jackson.databind.util.NameTransformer;
-
 import com.fasterxml.jackson.dataformat.csv.impl.LRUMap;
 
 /**
@@ -157,49 +155,12 @@ public class CsvMapper extends ObjectMapper
     public final CsvFactory getFactory() {
         return (CsvFactory) _jsonFactory;
     }
-    
+
     /*
     /**********************************************************************
-    /* CsvSchema construction; overrides, new methods
+    /* Additional ObjectReader factory methods
     /**********************************************************************
      */
-
-    /**
-     * Method that can be used to determine a CSV schema to use for given
-     * POJO type, using default serialization settings including ordering.
-     * Definition will not be strictly typed (that is, all columns are
-     * just defined to be exposed as String tokens).
-     */
-    public CsvSchema schemaFor(JavaType pojoType) {
-        return _schemaFor(pojoType, _untypedSchemas, false);
-    }
-
-    public final CsvSchema schemaFor(Class<?> pojoType) {
-        return _schemaFor(constructType(pojoType), _untypedSchemas, false);
-    }
-
-    public final CsvSchema schemaFor(TypeReference<?> pojoTypeRef) {
-        return _schemaFor(constructType(pojoTypeRef.getType()), _untypedSchemas, false);
-    }
-
-    /**
-     * Method that can be used to determine a CSV schema to use for given
-     * POJO type, using default serialization settings including ordering.
-     * Definition WILL be strictly typed: that is, code will try to 
-     * determine type limitations which may make parsing more efficient
-     * (especially for numeric types like java.lang.Integer).
-     */
-    public CsvSchema typedSchemaFor(JavaType pojoType) {
-        return _schemaFor(pojoType, _typedSchemas, true);
-    }
-
-    public final CsvSchema typedSchemaFor(Class<?> pojoType) {
-        return _schemaFor(constructType(pojoType), _typedSchemas, true);
-    }
-
-    public final CsvSchema typedSchemaFor(TypeReference<?> pojoTypeRef) {
-        return _schemaFor(constructType(pojoTypeRef.getType()), _typedSchemas, true);
-    }
 
     /**
      * Convenience method which is functionally equivalent to:
@@ -247,6 +208,101 @@ public class CsvMapper extends ObjectMapper
             throw new IllegalArgumentException("Type can NOT be a Collection or array type");
         }
         return (CsvObjectReader) reader(type).with(typedSchemaFor(type));
+    }
+
+    /*
+    /**********************************************************************
+    /* Additional ObjectWriter factory methods
+    /**********************************************************************
+     */
+
+    /**
+     * Convenience method which is functionally equivalent to:
+     *<pre>
+     *  writer(pojoType).with(schemaFor(pojoType));
+     *</pre>
+     * that is, constructs a {@link ObjectWriter} which both binds to
+     * specified type and uses "loose" {@link CsvSchema} introspected from
+     * specified type (one without strict inferred typing).
+     *<p>
+     * @param pojoType Type used both for data-binding (result type) and for
+     *   schema introspection. NOTE: must NOT be an array or Collection type, since
+     *   these only make sense for data-binding (like arrays of objects to bind),
+     *   but not for schema construction (no root-level CSV types can be mapped to arrays
+     *   or Collections)
+     */
+    @SuppressWarnings("unchecked")
+    public <W extends ObjectWriter> W writerWithSchemaFor(Class<?> pojoType)
+    {
+        JavaType type = constructType(pojoType);
+        // sanity check as per javadoc above
+        if (type.isArrayType() || type.isCollectionLikeType()) {
+            throw new IllegalArgumentException("Type can NOT be a Collection or array type");
+        }
+        return (W) writerFor(type).with(schemaFor(type));
+    }
+
+    /**
+     * Convenience method which is functionally equivalent to:
+     *<pre>
+     *  writer(pojoType).with(typedSchemaFor(pojoType));
+     *</pre>
+     * that is, constructs a {@link ObjectWriter} which both binds to
+     * specified type and uses "strict" {@link CsvSchema} introspected from
+     * specified type (one where typing is inferred).
+     */
+    @SuppressWarnings("unchecked")
+    public <W extends ObjectWriter> W writerWithTypedSchemaFor(Class<?> pojoType)
+    {
+        JavaType type = constructType(pojoType);
+        // sanity check as per javadoc above
+        if (type.isArrayType() || type.isCollectionLikeType()) {
+            throw new IllegalArgumentException("Type can NOT be a Collection or array type");
+        }
+        return (W) writerFor(type).with(typedSchemaFor(type));
+    }
+
+    /*
+    /**********************************************************************
+    /* CsvSchema construction; overrides, new methods
+    /**********************************************************************
+     */
+
+    /**
+     * Method that can be used to determine a CSV schema to use for given
+     * POJO type, using default serialization settings including ordering.
+     * Definition will not be strictly typed (that is, all columns are
+     * just defined to be exposed as String tokens).
+     */
+    public CsvSchema schemaFor(JavaType pojoType) {
+        return _schemaFor(pojoType, _untypedSchemas, false);
+    }
+
+    public final CsvSchema schemaFor(Class<?> pojoType) {
+        return _schemaFor(constructType(pojoType), _untypedSchemas, false);
+    }
+
+    public final CsvSchema schemaFor(TypeReference<?> pojoTypeRef) {
+        return _schemaFor(constructType(pojoTypeRef.getType()), _untypedSchemas, false);
+    }
+
+    /**
+     * Method that can be used to determine a CSV schema to use for given
+     * POJO type, using default serialization settings including ordering.
+     * Definition WILL be strictly typed: that is, code will try to 
+     * determine type limitations which may make parsing more efficient
+     * (especially for numeric types like java.lang.Integer).
+     */
+    public CsvSchema typedSchemaFor(JavaType pojoType) {
+        return _schemaFor(pojoType, _typedSchemas, true);
+    }
+
+    public final CsvSchema typedSchemaFor(Class<?> pojoType) {
+        return _schemaFor(constructType(pojoType), _typedSchemas, true);
+    }
+
+    public final CsvSchema typedSchemaFor(TypeReference<?> pojoTypeRef) {
+        return _schemaFor(constructType(pojoTypeRef.getType()), _typedSchemas, true);
     }
 
     /*

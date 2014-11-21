@@ -41,7 +41,7 @@ public class TestParser extends ModuleTestBase
 
     private void _testSimpleExplicit(ObjectReader r, boolean useBytes) throws Exception
     {
-        r = r.withType(FiveMinuteUser.class);
+        r = r.forType(FiveMinuteUser.class);
         FiveMinuteUser user;
         final String INPUT = "Bob,Robertson,MALE,AQIDBAU=,false\n";
         if (useBytes) {
@@ -60,7 +60,7 @@ public class TestParser extends ModuleTestBase
     {
         ObjectMapper mapper = mapperForCsv();
         ObjectReader r = mapper.reader(SIMPLE_SCHEMA);
-        r = r.withType(FiveMinuteUser.class);
+        r = r.forType(FiveMinuteUser.class);
         FiveMinuteUser user;
 
         ByteArrayOutputStream b = new ByteArrayOutputStream();
@@ -87,7 +87,7 @@ public class TestParser extends ModuleTestBase
         CsvMapper mapper = mapperForCsv();
         CsvSchema schema = mapper.schemaFor(FiveMinuteUser.class);
         // NOTE: order different from above test (as per POJO def!)
-        FiveMinuteUser user = mapper.reader(schema).withType(FiveMinuteUser.class).readValue("Joe,Josephson,MALE,true,AwE=\n");
+        FiveMinuteUser user = mapper.reader(schema).forType(FiveMinuteUser.class).readValue("Joe,Josephson,MALE,true,AwE=\n");
         assertEquals("Joe", user.firstName);
         assertEquals("Josephson", user.lastName);
         assertEquals(Gender.MALE, user.getGender());
@@ -103,7 +103,7 @@ public class TestParser extends ModuleTestBase
     {
         CsvMapper mapper = mapperForCsv();
         CsvSchema schema = mapper.schemaFor(FiveMinuteUser.class);
-        MappingIterator<Map<?,?>> it = mapper.reader(schema).withType(Map.class).readValues(
+        MappingIterator<Map<?,?>> it = mapper.reader(schema).forType(Map.class).readValues(
                 "Joe,Smith,MALE,false,"
                 );
         assertTrue(it.hasNext());

@@ -27,7 +27,7 @@ public class TestParserEscapes extends ModuleTestBase
         final String id = "abc\\\\def"; // doubled for javac
         final String desc = "Desc with\\\nlinefeed";
         String input = quote(id)+"|"+quote(desc)+"\n";
-        Desc result = mapper.reader(schema).withType(Desc.class).readValue(input);
+        Desc result = mapper.reader(schema).forType(Desc.class).readValue(input);
         assertEquals("abc\\def", result.id);
         assertEquals("Desc with\nlinefeed", result.desc);
     }
@@ -43,7 +43,7 @@ public class TestParserEscapes extends ModuleTestBase
         final String id = "abc\\\\def"; // doubled for javac
         final String desc = "Desc with\\\nlinefeed";
         String input = id+"|"+desc+"\n";
-        Desc result = mapper.reader(schema).withType(Desc.class).readValue(input);
+        Desc result = mapper.reader(schema).forType(Desc.class).readValue(input);
         assertEquals("abc\\def", result.id);
         assertEquals("Desc with\nlinefeed", result.desc);
     }

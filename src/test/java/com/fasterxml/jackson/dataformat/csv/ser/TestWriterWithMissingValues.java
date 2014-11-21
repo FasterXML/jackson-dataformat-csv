@@ -19,7 +19,7 @@ public class TestWriterWithMissingValues extends ModuleTestBase
         .addColumn("value", CsvSchema.ColumnType.NUMBER)
         .addColumn("id", CsvSchema.ColumnType.STRING)
         .build();
-    final ObjectWriter WRITER = new CsvMapper().writer().withSchema(SCHEMA);
+    final ObjectWriter WRITER = new CsvMapper().writer().with(SCHEMA);
     
     @Test
     public void testWrite_NoNulls() throws JsonProcessingException {
@@ -51,13 +51,13 @@ public class TestWriterWithMissingValues extends ModuleTestBase
     {
         CsvMapper mapper = new CsvMapper();
         assertFalse(mapper.getFactory().isEnabled(CsvGenerator.Feature.OMIT_MISSING_TAIL_COLUMNS));
-        String csv = mapper.writer().withSchema(SCHEMA).writeValueAsString(
+        String csv = mapper.writer(SCHEMA).writeValueAsString(
                 ImmutableMap.of("timestamp", "2014-03-10T23:32:47+00:00",
                         "value", 42));
 
         assertEquals("\"2014-03-10T23:32:47+00:00\",42,\n", csv);
         mapper.getFactory().enable(CsvGenerator.Feature.OMIT_MISSING_TAIL_COLUMNS);
-        csv = mapper.writer().withSchema(SCHEMA).writeValueAsString(
+        csv = mapper.writer(SCHEMA).writeValueAsString(
                 ImmutableMap.of("timestamp", "2014-03-10T23:32:47+00:00",
                         "value", 42));
         assertEquals("\"2014-03-10T23:32:47+00:00\",42\n", csv);

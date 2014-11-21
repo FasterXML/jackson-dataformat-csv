@@ -25,7 +25,7 @@ public class TestParserWorkarounds extends ModuleTestBase
             .build();
 
         @SuppressWarnings("resource")
-        MappingIterator<Map<?,?>> it = mapper.reader(schema).withType(Map.class).readValues(
+        MappingIterator<Map<?,?>> it = mapper.reader(schema).forType(Map.class).readValues(
                 "a,b\nc,d,\ne,f,  \nfoo,bar,x\n");
         assertTrue(it.hasNext());
         
