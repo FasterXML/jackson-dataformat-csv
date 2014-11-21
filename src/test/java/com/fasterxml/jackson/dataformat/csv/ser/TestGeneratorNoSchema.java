@@ -1,8 +1,12 @@
-package com.fasterxml.jackson.dataformat.csv;
+package com.fasterxml.jackson.dataformat.csv.ser;
 
 import java.io.*;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.dataformat.csv.CsvGenerator;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.fasterxml.jackson.dataformat.csv.ModuleTestBase;
 
 public class TestGeneratorNoSchema extends ModuleTestBase
 {

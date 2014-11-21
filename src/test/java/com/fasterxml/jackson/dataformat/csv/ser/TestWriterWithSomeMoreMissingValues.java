@@ -1,9 +1,12 @@
-package com.fasterxml.jackson.dataformat.csv;
+package com.fasterxml.jackson.dataformat.csv.ser;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.fasterxml.jackson.dataformat.csv.ModuleTestBase;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema.Builder;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema.ColumnType;
 import com.google.common.collect.ImmutableMap;
 
 public class TestWriterWithSomeMoreMissingValues extends ModuleTestBase {

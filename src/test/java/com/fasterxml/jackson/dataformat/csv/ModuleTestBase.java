@@ -8,12 +8,13 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 public abstract class ModuleTestBase extends junit.framework.TestCase
 {
+    public enum Gender { MALE, FEMALE };
+
     /**
      * Slightly modified sample class from Jackson tutorial ("JacksonInFiveMinutes")
      */
     @JsonPropertyOrder({"firstName", "lastName", "gender" ,"verified", "userImage"})
     protected static class FiveMinuteUser {
-        public enum Gender { MALE, FEMALE };
 
         private Gender _gender;
 
