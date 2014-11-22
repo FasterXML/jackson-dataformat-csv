@@ -157,7 +157,15 @@ public class CsvSchema
          * depending on best match.
          * Values are also trimmed (leading/trailing white space)
          */
-        NUMBER_OR_STRING
+        NUMBER_OR_STRING,
+
+        /**
+         * Value will be a multi-value sequence, separated by array element
+         * separator. Element type itself may be any scalar type (that is, number
+         * or String) and will not be optimized.
+         * Separator may be overridden on per-column basis.
+         */
+        ARRAY,
         
         ;
     }
@@ -173,27 +181,50 @@ public class CsvSchema
         private final int _index;
         private final ColumnType _type;
 
+        /**
+         * @since 2.5
+         */
+        private final int _arrayElementSeparator;
+
         public Column(int index, String name) {
-            this(index, name, ColumnType.STRING);
+            this(index, name, ColumnType.STRING, -1);
         }
 
         public Column(int index, String name, ColumnType type)
         {
+            this(index, name, type, -1);
+        }
+
+        public Column(int index, String name, ColumnType type, int arrayElementSep)
+        {
             _index = index;
             _name = name;
             _type = type;
+            _arrayElementSeparator = arrayElementSep;
         }
 
         public Column withName(String newName) {
-            return new Column(_index, newName, _type);
+            return new Column(_index, newName, _type, _arrayElementSeparator);
         }
         public Column withType(ColumnType newType) {
-            return new Column(_index, _name, newType);
+            return new Column(_index, _name, newType, _arrayElementSeparator);
+        }
+        public Column withElementSeparator(int sep) {
+            return new Column(_index, _name, _type, sep);
         }
         
         public int getIndex() { return _index; }
         public String getName() { return _name; }
         public ColumnType getType() { return _type; }
+        
+        /**
+         * @since 2.5
+         */
+        public int getArrayElementSeparator() { return _arrayElementSeparator; }
+
+        public boolean isArray() {
+            return (_type == ColumnType.ARRAY);
+        }
     }
     
     /**
@@ -254,10 +285,21 @@ public class CsvSchema
             int index = _columns.size();
             return addColumn(new Column(index, name, type));
         }
+
         public Builder addColumn(Column c) {
             _columns.add(c);
             return this;
         }
+
+        public Builder addArrayColumn(String name, int elementSeparator) {
+            int index = _columns.size();
+            return addColumn(new Column(index, name, ColumnType.ARRAY, elementSeparator));
+        }
+        public Builder addNumberColumn(String name) {
+            int index = _columns.size();
+            return addColumn(new Column(index, name, ColumnType.NUMBER));
+        }
+
         public void replaceColumn(int index, Column c) {
             _checkIndex(index);
             _columns.set(index, c);
@@ -269,6 +311,14 @@ public class CsvSchema
         public void setColumnType(int index, ColumnType type) {
             _checkIndex(index);
             _columns.set(index, _columns.get(index).withType(type));
+        }
+        public void removeArrayElementSeparator(int index) {
+            _checkIndex(index);
+            _columns.set(index, _columns.get(index).withElementSeparator(-1));
+        }
+        public void setArrayElementSeparator(int index, char sep) {
+            _checkIndex(index);
+            _columns.set(index, _columns.get(index).withElementSeparator(sep));
         }
 
         public Builder clearColumns() {

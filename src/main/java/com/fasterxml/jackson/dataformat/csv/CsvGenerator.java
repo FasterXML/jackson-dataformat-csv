@@ -144,7 +144,7 @@ public class CsvGenerator extends GeneratorBase
      * 
      * @since 2.5
      */
-    protected boolean _writingArray;
+    protected int _arraySeparator = -1;
 
     protected StringBuilder _arrayContents;
     
@@ -380,18 +380,30 @@ public class CsvGenerator extends GeneratorBase
          * can not nest arrays in objects
          */
         if (_writeContext.inObject()) {
-            if (!_schema.hasArrayElementSeparator()) {
-                _reportError("CSV generator does not support Array values for properties without setting 'arrayElementSeparator' in schema");
-            }
             if (!_skipValue) {
-                _writingArray = true;
+                // First: column may have its own separator
+                int sep;
+                
+                if (_nextColumnByName >= 0) {
+                    CsvSchema.Column col = _schema.column(_nextColumnByName);
+                    sep = col.isArray() ? col.getArrayElementSeparator() : -1;
+                } else {
+                    sep = -1;
+                }
+                if (sep <= 0) {
+                    if (!_schema.hasArrayElementSeparator()) {
+                        _reportError("CSV generator does not support Array values for properties without setting 'arrayElementSeparator' in schema");
+                    }
+                    sep = _schema.getArrayElementSeparator();
+                }
+                _arraySeparator = sep;
                 if (_arrayContents == null) {
                     _arrayContents = new StringBuilder();
                 } else {
                     _arrayContents.setLength(0);
                 }
             }
-        } else if (_writingArray) {
+        } else if (_arraySeparator >= 0) {
             // also: no nested arrays, yet
             _reportError("CSV generator does not support nested Array values");
         }
@@ -406,8 +418,8 @@ public class CsvGenerator extends GeneratorBase
         if (!_writeContext.inArray()) {
             _reportError("Current context not an ARRAY but "+_writeContext.getTypeDesc());
         }
-        if (_writingArray) {
-            _writingArray = false;
+        if (_arraySeparator >= 0) {
+            _arraySeparator = -1;
             _writer.write(_columnIndex(), _arrayContents.toString());
         }
         _writeContext = _writeContext.getParent();
@@ -458,7 +470,7 @@ public class CsvGenerator extends GeneratorBase
         }
         _verifyValueWrite("write String value");
         if (!_skipValue) {
-            if (_writingArray) {
+            if (_arraySeparator >= 0) {
                 _addToArray(text);
             } else {
                 _writer.write(_columnIndex(), text);
@@ -471,7 +483,7 @@ public class CsvGenerator extends GeneratorBase
     {
         _verifyValueWrite("write String value");
         if (!_skipValue) {
-            if (_writingArray) {
+            if (_arraySeparator >= 0) {
                 _addToArray(new String(text, offset, len));
             } else {
                 _writer.write(_columnIndex(), text, offset, len);
@@ -484,7 +496,7 @@ public class CsvGenerator extends GeneratorBase
     {
         _verifyValueWrite("write String value");
         if (!_skipValue) {
-            if (_writingArray) {
+            if (_arraySeparator >= 0) {
                 _addToArray(sstr.getValue());
             } else {
                 _writer.write(_columnIndex(), sstr.getValue());
@@ -565,7 +577,7 @@ public class CsvGenerator extends GeneratorBase
             }
             String encoded = b64variant.encode(data);
 
-            if (_writingArray) {
+            if (_arraySeparator >= 0) {
                 _addToArray(encoded);
             } else {
                 _writer.write(_columnIndex(), encoded);
@@ -584,7 +596,7 @@ public class CsvGenerator extends GeneratorBase
     {
         _verifyValueWrite("write boolean value");
         if (!_skipValue) {
-            if (_writingArray) {
+            if (_arraySeparator >= 0) {
                 _addToArray(state ? "true" : "false");
             } else {
                 _writer.write(_columnIndex(), state);
@@ -597,7 +609,7 @@ public class CsvGenerator extends GeneratorBase
     {
         _verifyValueWrite("write null value");
         if (!_skipValue) {
-            if (_writingArray) {
+            if (_arraySeparator >= 0) {
                 _addToArray(_schema.getNullValue());
             } else {
                 _writer.writeNull(_columnIndex());
@@ -610,7 +622,7 @@ public class CsvGenerator extends GeneratorBase
     {
         _verifyValueWrite("write number");
         if (!_skipValue) {
-            if (_writingArray) {
+            if (_arraySeparator >= 0) {
                 _addToArray(String.valueOf(v));
             } else {
                 _writer.write(_columnIndex(), v);
@@ -628,7 +640,7 @@ public class CsvGenerator extends GeneratorBase
         }
         _verifyValueWrite("write number");
         if (!_skipValue) {
-            if (_writingArray) {
+            if (_arraySeparator >= 0) {
                 _addToArray(String.valueOf(v));
             } else {
                 _writer.write(_columnIndex(), v);
@@ -645,7 +657,7 @@ public class CsvGenerator extends GeneratorBase
         }
         _verifyValueWrite("write number");
         if (!_skipValue) {
-            if (_writingArray) {
+            if (_arraySeparator >= 0) {
                 _addToArray(String.valueOf(v));
             } else {
                 _writer.write(_columnIndex(), v.toString());
@@ -659,7 +671,7 @@ public class CsvGenerator extends GeneratorBase
     {
         _verifyValueWrite("write number");
         if (!_skipValue) {
-            if (_writingArray) {
+            if (_arraySeparator >= 0) {
                 _addToArray(String.valueOf(v));
             } else {
                 _writer.write(_columnIndex(), v);
@@ -672,7 +684,7 @@ public class CsvGenerator extends GeneratorBase
     {
         _verifyValueWrite("write number");
         if (!_skipValue) {
-            if (_writingArray) {
+            if (_arraySeparator >= 0) {
                 _addToArray(String.valueOf(v));
             } else {
                 _writer.write(_columnIndex(), v);
@@ -691,7 +703,7 @@ public class CsvGenerator extends GeneratorBase
         if (!_skipValue) {
             String str = isEnabled(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN)
                     ? v.toPlainString() : v.toString();
-            if (_writingArray) {
+            if (_arraySeparator >= 0) {
                 _addToArray(String.valueOf(v));
             } else {
                 _writer.write(_columnIndex(), str);
@@ -708,7 +720,7 @@ public class CsvGenerator extends GeneratorBase
         }
         _verifyValueWrite("write number");
         if (!_skipValue) {
-            if (_writingArray) {
+            if (_arraySeparator >= 0) {
                 _addToArray(encodedValue);
             } else {
                 _writer.write(_columnIndex(), encodedValue);
@@ -809,14 +821,14 @@ public class CsvGenerator extends GeneratorBase
 
     protected void _addToArray(String value) {
         if (_arrayContents.length() > 0) {
-            _arrayContents.append((char) _schema.getArrayElementSeparator());
+            _arrayContents.append((char) _arraySeparator);
         }
         _arrayContents.append(value);
     }
     
     protected void _addToArray(char[] value) {
         if (_arrayContents.length() > 0) {
-            _arrayContents.append((char) _schema.getArrayElementSeparator());
+            _arrayContents.append((char) _arraySeparator);
         }
         _arrayContents.append(value);
     }

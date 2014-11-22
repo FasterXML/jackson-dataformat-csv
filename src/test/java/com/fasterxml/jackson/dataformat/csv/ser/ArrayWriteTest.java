@@ -24,7 +24,7 @@ public class ArrayWriteTest extends ModuleTestBase
     /* Test methods
     /**********************************************************************
      */
-    
+
     public void testSimpleExplicit() throws Exception
     {
         CsvMapper mapper = mapperForCsv();
@@ -33,5 +33,20 @@ public class ArrayWriteTest extends ModuleTestBase
                 .writeValueAsString(input)
                 .trim();
         assertEquals("foo,1;2;3,stuff", csv);
+    }
+
+    public void testSeparatorOverride() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        ValueEntry input = new ValueEntry("foo", "stuff", 1, 2, 3);
+        String csv = mapper.writer(CsvSchema.builder()
+                .addColumn("id")
+                .addArrayColumn("values", ' ')
+                .addColumn("extra")
+                .build())
+                .writeValueAsString(input)
+                .trim();
+        // gets quoted due to white space
+        assertEquals("foo,\"1 2 3\",stuff", csv);
     }
 }
