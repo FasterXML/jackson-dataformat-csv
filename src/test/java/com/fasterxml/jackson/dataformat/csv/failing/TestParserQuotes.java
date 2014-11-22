@@ -10,7 +10,7 @@ public class TestParserQuotes extends ModuleTestBase
     protected static class ThreeString {
         public String s1, s2, s3;
     }
-    
+
     /*
     /**********************************************************************
     /* Test methods

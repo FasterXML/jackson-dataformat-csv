@@ -80,6 +80,7 @@ public class CsvParser
             _mask = (1 << ordinal());
         }
         
+        public boolean enabledIn(int flags) { return (flags & _mask) != 0; }
         public boolean enabledByDefault() { return _defaultState; }
         public int getMask() { return _mask; }
     }
@@ -351,8 +352,6 @@ public class CsvParser
         return (_csvFeatures & f.getMask()) != 0;
     }
 
-    // SHOULD have been in 2.0; but is only in 2.1 for JsonParser:
-    //@Override
     /**
      * Accessor for getting active schema definition: it may be
      * "empty" (no column definitions), but will never be null
@@ -395,8 +394,31 @@ public class CsvParser
     /**********************************************************
      */
 
+    /**
+     * We need to override this method to support coercion from basic
+     * String value into array, in cases where schema does not
+     * specify actual type.
+     */
     @Override
-    public String getCurrentName() throws IOException, JsonParseException {
+    public boolean isExpectedStartArrayToken() {
+        if (_currToken == null) {
+            return false;
+        }
+        switch (_currToken.id()) {
+        case JsonTokenId.ID_FIELD_NAME:
+        case JsonTokenId.ID_START_OBJECT:
+        case JsonTokenId.ID_END_OBJECT:
+        case JsonTokenId.ID_END_ARRAY:
+            return false;
+        case JsonTokenId.ID_START_ARRAY:
+            return true;
+        }
+        // Otherwise: may coerce into array, unless column type prevents it
+        return false;
+    }
+    
+    @Override
+    public String getCurrentName() throws IOException {
         return _currentName;
     }
 
@@ -406,7 +428,7 @@ public class CsvParser
     }
     
     @Override
-    public JsonToken nextToken() throws IOException, JsonParseException
+    public JsonToken nextToken() throws IOException
     {
         _binaryValue = null;
         switch (_state) {

@@ -132,6 +132,11 @@ public class CsvSchema
          * be presented as <code>VALUE_STRING</code> by parser,
          * that is, no type-inference is performed, and value is
          * not trimmed.
+         *<p>
+         * Note that this type allows coercion into array, if higher
+         * level application calls
+         * {@link com.fasterxml.jackson.core.JsonParser#isExpectedStartArrayToken},
+         * unlike more explicit types.
          */
         STRING,
 
@@ -147,7 +152,7 @@ public class CsvSchema
          * Value should be a number, but literals "null", "true" and "false"
          * are also understood, and an empty String is considered null.
          * Values are also trimmed (leading/trailing white space)
-         * Other non-numeric Strings will cause parsing exception.
+         * Other non-numeric Strings may cause parsing exception.
          */
         NUMBER,
 
@@ -160,10 +165,26 @@ public class CsvSchema
         NUMBER_OR_STRING,
 
         /**
+         * Value is expected to be a boolean ("true", "false") String,
+         * or "null", or empty String (equivalent to null).
+         * Values are trimmed (leading/trailing white space).
+         * Values other than indicated above may result in an exception.
+         * 
+         * @since 2.5
+         */
+        BOOLEAN,
+        
+        /**
          * Value will be a multi-value sequence, separated by array element
          * separator. Element type itself may be any scalar type (that is, number
          * or String) and will not be optimized.
          * Separator may be overridden on per-column basis.
+         *<p>
+         * Note that this type is used for generic concept of multiple values, and
+         * not specifically to match Java arrays: data-binding may match such columns
+         * to {@link java.util.Collection}s as well, or even other types as necessary.
+         * 
+         * @since 2.5
          */
         ARRAY,
         

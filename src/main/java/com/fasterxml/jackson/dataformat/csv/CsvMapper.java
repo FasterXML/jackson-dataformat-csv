@@ -1,5 +1,7 @@
 package com.fasterxml.jackson.dataformat.csv;
 
+import java.util.Collection;
+
 import com.fasterxml.jackson.core.FormatSchema;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.*;
@@ -89,6 +91,9 @@ public class CsvMapper extends ObjectMapper
         return new CsvObjectReader(this, config, valueType, valueToUpdate, schema, injectableValues);
     }
 
+    // 22-Nov-2014, tatu: can be uncommented if we need to support CSV-specific
+    //    writers
+    
     /*
     @Override
     protected ObjectWriter _newWriter(SerializationConfig config) {
@@ -152,7 +157,7 @@ public class CsvMapper extends ObjectMapper
      * is always of type {@link CsvFactory}
      */
     @Override
-    public final CsvFactory getFactory() {
+    public CsvFactory getFactory() {
         return (CsvFactory) _jsonFactory;
     }
 
@@ -369,15 +374,35 @@ public class CsvMapper extends ObjectMapper
     // should not be null since couldSerialize() returned true, so:
     protected CsvSchema.ColumnType _determineType(Class<?> propType)
     {
+        // very first thing: arrays
+        if (propType.isArray()) {
+            // one exception; byte[] assumed to come in as Base64 encoded
+            if (propType == byte[].class) {
+                return CsvSchema.ColumnType.STRING;
+            }
+            return CsvSchema.ColumnType.ARRAY;
+        }
+        
         // First let's check certain cases that ought to be just presented as Strings...
         if (propType == String.class
                 || propType == Character.TYPE
                 || propType == Character.class) {
             return CsvSchema.ColumnType.STRING;
         }
-        // all primitive types are good, since "numeric" allows boolean
-        if (propType.isPrimitive() || Number.class.isAssignableFrom(propType)) {
+        if (propType == Boolean.class
+                || propType == Boolean.TYPE) {
+            return CsvSchema.ColumnType.BOOLEAN;
+        }
+
+        // all primitive types are good for NUMBER, since 'char', 'boolean' handled above
+        if (propType.isPrimitive()) {
             return CsvSchema.ColumnType.NUMBER;
+        }
+        if (Number.class.isAssignableFrom(propType)) {
+            return CsvSchema.ColumnType.NUMBER;
+        }
+        if (Collection.class.isAssignableFrom(propType)) { // since 2.5
+            return CsvSchema.ColumnType.ARRAY;
         }
         // but in general we will just do what we can:
         return CsvSchema.ColumnType.NUMBER_OR_STRING;
