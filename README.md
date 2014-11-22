@@ -21,6 +21,7 @@ All Jackson layers (streaming, databind, tree model) are supported.
 Areas that are planned to be improved include things like:
 
  * Optimizations to make number handling as efficient as from JSON (but note: even with existing code, performance is typically limited by I/O and NOT parsing or generation)
+    * Although, as per [Java CSV parser comparison](https://github.com/uniVocity/csv-parsers-comparison), this module is actually performing quite well already (at 2.4)
  * Extensive performance measurements
  * Tests for various "exotic" CSV -- while basic escaping and quoting are tested, CSV is notoriously vaguely specified.
 
@@ -151,6 +152,7 @@ This is useful if functionality expects a single ("JSON") Array; this was the ca
 # Documentation
 
 * [Wiki](../../wiki) (includes javadocs)
-* External articles:
- * [CSV with Jackson 2.0](http://www.cowtowncoder.com/blog/archives/2012/03/entry_468.html)
-
+* How-to
+    * [CSV with Jackson 2.0](http://www.cowtowncoder.com/blog/archives/2012/03/entry_468.html)
+* Performance
+    * [Java CSV parser comparison](https://github.com/uniVocity/csv-parsers-comparison)
