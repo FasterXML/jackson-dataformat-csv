@@ -312,6 +312,10 @@ public class CsvSchema
             return this;
         }
 
+        public Builder addArrayColumn(String name) {
+            int index = _columns.size();
+            return addColumn(new Column(index, name, ColumnType.ARRAY, -1));
+        }
         public Builder addArrayColumn(String name, int elementSeparator) {
             int index = _columns.size();
             return addColumn(new Column(index, name, ColumnType.ARRAY, elementSeparator));
@@ -319,6 +323,10 @@ public class CsvSchema
         public Builder addNumberColumn(String name) {
             int index = _columns.size();
             return addColumn(new Column(index, name, ColumnType.NUMBER));
+        }
+        public Builder addBooleanColumn(String name) {
+            int index = _columns.size();
+            return addColumn(new Column(index, name, ColumnType.BOOLEAN));
         }
 
         public void replaceColumn(int index, Column c) {

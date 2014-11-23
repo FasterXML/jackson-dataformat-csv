@@ -414,6 +414,9 @@ public class CsvParser
             return true;
         }
         // Otherwise: may coerce into array, unless column type prevents it
+
+        // !!! TODO
+        
         return false;
     }
     
@@ -466,7 +469,7 @@ public class CsvParser
      * Method called to handle details of initializing things to return
      * the very first token.
      */
-    protected JsonToken _handleStartDoc() throws IOException, JsonParseException
+    protected JsonToken _handleStartDoc() throws IOException
     {
         // First things first: are we expecting header line? If so, read, process
         if (_schema.useHeader()) {
@@ -499,7 +502,7 @@ public class CsvParser
         return _handleRecordStart();
     }
 
-    protected JsonToken _handleRecordStart() throws IOException, JsonParseException
+    protected JsonToken _handleRecordStart() throws IOException
     {
         _columnIndex = 0;
         if (_columnCount == 0) { // no schema; exposed as an array
@@ -513,7 +516,7 @@ public class CsvParser
         return JsonToken.START_OBJECT;
     }
 
-    protected JsonToken _handleNextEntry() throws IOException, JsonParseException
+    protected JsonToken _handleNextEntry() throws IOException
     {
         // NOTE: only called when we do have real Schema
         String next = _reader.nextString();
@@ -543,7 +546,7 @@ public class CsvParser
                     /* if so, need to verify we then get the end-of-record;
                      * easiest to do by just calling ourselves again...
                      */
-                    return _handleNextEntry();                   
+                    return _handleNextEntryExpectEOL();
                 }
             }
             _reportError("Too many entries: expected at most "+_columnCount+" (value #"+_columnCount+" ("+next.length()+" chars) \""+next+"\")");
@@ -552,14 +555,30 @@ public class CsvParser
         return JsonToken.FIELD_NAME;
     }
 
-    protected JsonToken _handleNamedValue() throws IOException, JsonParseException
+    protected JsonToken _handleNextEntryExpectEOL() throws IOException
+    {
+        String next = _reader.nextString();
+
+        if (next != null) { // should end of record or input
+            _reportError("Too many entries: expected at most "+_columnCount+" (value #"+_columnCount+" ("+next.length()+" chars) \""+next+"\")");
+        }
+        _parsingContext = _parsingContext.getParent();
+        if (!_reader.startNewLine()) {
+            _state = STATE_DOC_END;
+        } else {
+            _state = STATE_RECORD_START;
+        }
+        return JsonToken.END_OBJECT;
+    }
+    
+    protected JsonToken _handleNamedValue() throws IOException
     {
         _state = STATE_NEXT_ENTRY;
         ++_columnIndex;
         return JsonToken.VALUE_STRING;
     }
 
-    protected JsonToken _handleUnnamedValue() throws IOException, JsonParseException
+    protected JsonToken _handleUnnamedValue() throws IOException
     {
         String next = _reader.nextString();
         if (next == null) { // end of record or input...
@@ -581,7 +600,7 @@ public class CsvParser
     /**
      * Method called to process the expected header line
      */
-    protected void _readHeaderLine() throws IOException, JsonParseException
+    protected void _readHeaderLine() throws IOException
     {
         /* Two separate cases:
          * 
@@ -622,7 +641,7 @@ public class CsvParser
         // otherwise we will use what we got
         setSchema(builder.build());
     }
-    
+
     /*
     /**********************************************************
     /* String value handling
@@ -639,7 +658,7 @@ public class CsvParser
     }
 
     @Override
-    public String getText() throws IOException, JsonParseException {
+    public String getText() throws IOException {
         if (_currToken == JsonToken.FIELD_NAME) {
             return _currentName;
         }
@@ -647,7 +666,7 @@ public class CsvParser
     }
 
     @Override
-    public char[] getTextCharacters() throws IOException, JsonParseException {
+    public char[] getTextCharacters() throws IOException {
         if (_currToken == JsonToken.FIELD_NAME) {
             return _currentName.toCharArray();
         }
@@ -655,7 +674,7 @@ public class CsvParser
     }
 
     @Override
-    public int getTextLength() throws IOException, JsonParseException {
+    public int getTextLength() throws IOException {
         if (_currToken == JsonToken.FIELD_NAME) {
             return _currentName.length();
         }
@@ -663,10 +682,10 @@ public class CsvParser
     }
 
     @Override
-    public int getTextOffset() throws IOException, JsonParseException {
+    public int getTextOffset() throws IOException {
         return 0;
     }
-    
+
     /*
     /**********************************************************************
     /* Binary (base64)
@@ -674,13 +693,14 @@ public class CsvParser
      */
 
     @Override
-    public Object getEmbeddedObject() throws IOException, JsonParseException {
-        return null;
+    public Object getEmbeddedObject() throws IOException {
+        // in theory may access binary data using this method so...
+        return _binaryValue;
     }
-    
+
     @SuppressWarnings("resource")
     @Override
-    public byte[] getBinaryValue(Base64Variant variant) throws IOException, JsonParseException
+    public byte[] getBinaryValue(Base64Variant variant) throws IOException
     {
         if (_binaryValue == null) {
             if (_currToken != JsonToken.VALUE_STRING) {
@@ -700,42 +720,42 @@ public class CsvParser
      */
 
     @Override
-    public NumberType getNumberType() throws IOException, JsonParseException {
+    public NumberType getNumberType() throws IOException {
         return _reader.getNumberType();
     }
     
     @Override
-    public Number getNumberValue() throws IOException, JsonParseException {
+    public Number getNumberValue() throws IOException {
         return _reader.getNumberValue();
     }
 
     @Override
-    public int getIntValue() throws IOException, JsonParseException {
+    public int getIntValue() throws IOException {
         return _reader.getIntValue();
     }
     
     @Override
-    public long getLongValue() throws IOException, JsonParseException {
+    public long getLongValue() throws IOException {
         return _reader.getLongValue();
     }
     
     @Override
-    public BigInteger getBigIntegerValue() throws IOException, JsonParseException {
+    public BigInteger getBigIntegerValue() throws IOException {
         return _reader.getBigIntegerValue();
     }
     
     @Override
-    public float getFloatValue() throws IOException, JsonParseException {
+    public float getFloatValue() throws IOException {
         return _reader.getFloatValue();
     }
     
     @Override
-    public double getDoubleValue() throws IOException, JsonParseException {
+    public double getDoubleValue() throws IOException {
         return _reader.getDoubleValue();
     }
     
     @Override
-    public BigDecimal getDecimalValue() throws IOException, JsonParseException {
+    public BigDecimal getDecimalValue() throws IOException {
         return _reader.getDecimalValue();
     }
     
