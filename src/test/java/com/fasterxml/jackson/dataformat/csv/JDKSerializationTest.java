@@ -15,7 +15,7 @@ public class JDKSerializationTest extends ModuleTestBase
     @JsonPropertyOrder({ "x", "y" })
     static class MyPojo {
         public int x;
-        private int y;
+        protected int y;
         
         public MyPojo() { }
         public MyPojo(int x0, int y0) {
@@ -51,20 +51,20 @@ public class JDKSerializationTest extends ModuleTestBase
     {
         final String EXP_CSV = "2,3";
         final MyPojo p = new MyPojo(2, 3);
-        assertEquals(EXP_CSV, MAPPER.writerWithType(MyPojo.class)
+        assertEquals(EXP_CSV, MAPPER.writerFor(MyPojo.class)
                 .withSchema(SCHEMA_POJO).writeValueAsString(p).trim());
 
         byte[] bytes = jdkSerialize(MAPPER);
         CsvMapper mapper2 = jdkDeserialize(bytes);
 
-        assertEquals(EXP_CSV, mapper2.writerWithType(MyPojo.class)
+        assertEquals(EXP_CSV, mapper2.writerFor(MyPojo.class)
                 .withSchema(SCHEMA_POJO).writeValueAsString(p).trim());
         MyPojo p2 = mapper2.reader(MyPojo.class).with(SCHEMA_POJO).readValue(EXP_CSV);
         assertEquals(p.x, p2.x);
         assertEquals(p.y, p2.y);
 
         // and just to be sure, try something different...
-        String csv = mapper2.writerWithType(MyPojo2.class)
+        String csv = mapper2.writerFor(MyPojo2.class)
                 .withSchema(mapper2.schemaFor(MyPojo2.class))
                 .writeValueAsString(new MyPojo2());
         assertNotNull(csv);
