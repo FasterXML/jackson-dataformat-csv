@@ -129,7 +129,16 @@ public class CsvParser
      * end-array is returned.
      */
     protected final static int STATE_UNNAMED_VALUE = 4;
-    
+
+    /**
+     * State in which a column value has been determined to be of
+     * an array type, and will need to be split into multiple
+     * values. This can currently only occur for named values.
+     * 
+     * @since 2.5
+     */
+    protected final static int STATE_IN_ARRAY = 5;
+
     /**
      * State in which end marker is returned; either
      * null (if no array wrapping), or
@@ -137,8 +146,8 @@ public class CsvParser
      * This step will loop, returning series of nulls
      * if {@link #nextToken} is called multiple times.
      */
-    protected final static int STATE_DOC_END = 5;
-    
+    protected final static int STATE_DOC_END = 6;
+
     /*
     /**********************************************************************
     /* Configuration
@@ -150,7 +159,7 @@ public class CsvParser
      */
     protected ObjectCodec _objectCodec;
 
-    protected int _csvFeatures;
+    protected int _formatFeatures;
     
     /**
      * Definition of columns being read. Initialized to "empty" instance, which
@@ -206,6 +215,18 @@ public class CsvParser
      */
     protected byte[] _binaryValue;
 
+    /**
+     * Pointer to the first character of the next array value to return.
+     */
+    protected int _arrayValueStart;
+
+    /**
+     * Contents of the cell, to be split into distinct array values.
+     */
+    protected String _arrayValue;
+
+    protected char _arraySeparator;
+    
     /*
     /**********************************************************************
     /* Helper objects
@@ -240,7 +261,7 @@ public class CsvParser
         _textBuffer = new TextBuffer(br);
         DupDetector dups = JsonParser.Feature.STRICT_DUPLICATE_DETECTION.enabledIn(parserFeatures)
                 ? DupDetector.rootDetector(this) : null;
-        _csvFeatures = csvFeatures;
+        _formatFeatures = csvFeatures;
         _parsingContext = JsonReadContext.createRootContext(dups);
         _reader = new CsvDecoder(this, ctxt, reader, _schema, _textBuffer,
                 isEnabled(JsonParser.Feature.AUTO_CLOSE_SOURCE),
@@ -316,7 +337,7 @@ public class CsvParser
      */
     public JsonParser enable(Feature f)
     {
-        _csvFeatures |= f.getMask();
+        _formatFeatures |= f.getMask();
         return this;
     }
 
@@ -326,7 +347,7 @@ public class CsvParser
      */
     public JsonParser disable(Feature f)
     {
-        _csvFeatures &= ~f.getMask();
+        _formatFeatures &= ~f.getMask();
         return this;
     }
 
@@ -349,7 +370,7 @@ public class CsvParser
      * is enabled.
      */
     public boolean isEnabled(Feature f) {
-        return (_csvFeatures & f.getMask()) != 0;
+        return (_formatFeatures & f.getMask()) != 0;
     }
 
     /**
@@ -413,13 +434,15 @@ public class CsvParser
         case JsonTokenId.ID_START_ARRAY:
             return true;
         }
-        // Otherwise: may coerce into array, unless column type prevents it
-
-        // !!! TODO
-        
+        // Otherwise: may coerce into array, iff we have essentially "untyped" column
+        CsvSchema.Column column = _schema.column(_columnIndex);
+        if (column.getType() == CsvSchema.ColumnType.STRING) {
+            _startArray(column);
+            return true;
+        }
         return false;
     }
-    
+
     @Override
     public String getCurrentName() throws IOException {
         return _currentName;
@@ -445,6 +468,8 @@ public class CsvParser
             return (_currToken = _handleNamedValue());
         case STATE_UNNAMED_VALUE:
             return (_currToken = _handleUnnamedValue());
+        case STATE_IN_ARRAY:
+            return (_currToken = _handleArrayValue());
         case STATE_DOC_END:
             _reader.close();
             if (_parsingContext.inRoot()) {
@@ -483,17 +508,18 @@ public class CsvParser
         /* Only one real complication, actually; empy documents (zero bytes).
          * Those have no entries. Should be easy enough to detect like so:
          */
+        final boolean wrapAsArray = Feature.WRAP_AS_ARRAY.enabledIn(_formatFeatures);
         if (!_reader.hasMoreInput()) {
             _state = STATE_DOC_END;
             // but even empty sequence must still be wrapped in logical array
-            if (isEnabled(Feature.WRAP_AS_ARRAY)) {
+            if (wrapAsArray) {
                 _parsingContext = _reader.childArrayContext(_parsingContext);
                 return JsonToken.START_ARRAY;
             }
             return null;
         }
         
-        if (isEnabled(Feature.WRAP_AS_ARRAY)) {
+        if (wrapAsArray) {
             _parsingContext = _reader.childArrayContext(_parsingContext);
             _state = STATE_RECORD_START;
             return JsonToken.START_ARRAY;
@@ -573,8 +599,13 @@ public class CsvParser
     
     protected JsonToken _handleNamedValue() throws IOException
     {
-        _state = STATE_NEXT_ENTRY;
+        CsvSchema.Column column = _schema.column(_columnIndex);
         ++_columnIndex;
+        if (column.isArray()) {
+            _startArray(column);
+            return JsonToken.START_ARRAY;
+        }
+        _state = STATE_NEXT_ENTRY;
         return JsonToken.VALUE_STRING;
     }
 
@@ -594,6 +625,26 @@ public class CsvParser
         // state remains the same
         _currentValue = next;
         ++_columnIndex;
+        return JsonToken.VALUE_STRING;
+    }
+
+    protected JsonToken _handleArrayValue() throws IOException
+    {
+        int offset = _arrayValueStart;
+        if (offset < 0) { // just returned last value
+            _parsingContext = _parsingContext.getParent();
+            // no arrays in arrays (at least for now), so must be back to named value
+            _state = STATE_NEXT_ENTRY;
+             return JsonToken.END_ARRAY;
+        }
+        int end = _arrayValue.indexOf(_arraySeparator, offset);
+        if (end < 0) { // last value
+            _currentValue = (offset == 0) ? _arrayValue : _arrayValue.substring(offset);
+            _arrayValueStart = end;
+        } else {
+            _currentValue = _arrayValue.substring(offset, end);
+            _arrayValueStart = end+1;
+        }
         return JsonToken.VALUE_STRING;
     }
 
@@ -738,27 +789,27 @@ public class CsvParser
     public long getLongValue() throws IOException {
         return _reader.getLongValue();
     }
-    
+
     @Override
     public BigInteger getBigIntegerValue() throws IOException {
         return _reader.getBigIntegerValue();
     }
-    
+
     @Override
     public float getFloatValue() throws IOException {
         return _reader.getFloatValue();
     }
-    
+
     @Override
     public double getDoubleValue() throws IOException {
         return _reader.getDoubleValue();
     }
-    
+
     @Override
     public BigDecimal getDecimalValue() throws IOException {
         return _reader.getDecimalValue();
     }
-    
+
     /*
     /**********************************************************************
     /* Helper methods from base class
@@ -800,5 +851,20 @@ public class CsvParser
             _byteArrayBuilder.reset();
         }
         return _byteArrayBuilder;
+    }
+
+    protected void _startArray(CsvSchema.Column column)
+    {
+        _currToken = JsonToken.START_ARRAY;
+        _parsingContext = _parsingContext.createChildArrayContext(_reader.getCurrentRow(),
+                _reader.getCurrentColumn());
+        _state = STATE_IN_ARRAY;
+        _arrayValueStart = 0;
+        _arrayValue = _currentValue;
+        int sep = column.getArrayElementSeparator();
+        if (sep <= 0) {
+            sep = _schema.getArrayElementSeparator();
+        }
+        _arraySeparator = (char) sep;
     }
 }

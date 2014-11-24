@@ -9,7 +9,7 @@ Project: jackson-dataformat-csv
 #50: Support `JsonGenerator.Feature.IGNORE_KNOWN` for CSV, to ignoring extra columns
 #53: Add a way to specify "null value" (String) for `CsvGenerator` to use when writing `null`s
  (part of `CsvSchema`; method `withNullValue()`)
-
+#57: Support simple array types
 
 2.4.4 (not yet released)
 

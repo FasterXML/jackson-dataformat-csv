@@ -3,10 +3,7 @@ package com.fasterxml.jackson.dataformat.csv.deser;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.dataformat.csv.CsvMapper;
-import com.fasterxml.jackson.dataformat.csv.CsvParser;
-import com.fasterxml.jackson.dataformat.csv.ModuleTestBase;
-import com.fasterxml.jackson.dataformat.csv.CsvParser.Feature;
+import com.fasterxml.jackson.dataformat.csv.*;
 
 /**
  * Test to verify that CSV content can be parsed without schema

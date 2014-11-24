@@ -385,6 +385,20 @@ public class CsvDecoder
         return new JsonLocation(_inputSource,
                 _currInputProcessed + ptr - 1, _currInputRow, col);
     }
+
+    public final int getCurrentRow() {
+        return _currInputRow;
+    }
+
+    public final int getCurrentColumn() {
+        int ptr = _inputPtr;
+        // One twist: when dealing with a "pending LF", need to
+        // go back one position when calculating location
+        if (_pendingLF > 1) { // 1 is used as marker for end-of-input
+            --ptr;
+        }
+        return ptr - _currInputRowStart + 1; // 1-based
+    }
     
     /*
     /**********************************************************************
