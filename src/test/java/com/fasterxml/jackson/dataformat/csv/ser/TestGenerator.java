@@ -1,12 +1,12 @@
-package com.fasterxml.jackson.dataformat.csv;
+package com.fasterxml.jackson.dataformat.csv.ser;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonGenerationException;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.dataformat.csv.ModuleTestBase.FiveMinuteUser.Gender;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.fasterxml.jackson.dataformat.csv.ModuleTestBase;
 
 import java.io.File;
 
@@ -46,7 +46,7 @@ public class TestGenerator extends ModuleTestBase
 
     /*
     /**********************************************************************
-    /* Unit tests
+    /* Test methods
     /**********************************************************************
      */
 

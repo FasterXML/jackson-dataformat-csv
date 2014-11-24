@@ -1,4 +1,4 @@
-package com.fasterxml.jackson.dataformat.csv;
+package com.fasterxml.jackson.dataformat.csv.deser;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
@@ -7,6 +7,9 @@ import java.util.*;
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter.FilterExceptFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.fasterxml.jackson.dataformat.csv.ModuleTestBase;
 
 public class TestFiltering extends ModuleTestBase
 {
@@ -85,7 +88,7 @@ public class TestFiltering extends ModuleTestBase
                 new Company(1, "name1", "ticker1")
                 , new Company(2, "name2", "ticker2")
                 , new Company(3, "name3", "ticker3"));
-        String actual = mapper.writer(filterProvider).withSchema(schema).writeValueAsString(companies);
+        String actual = mapper.writer(filterProvider).with(schema).writeValueAsString(companies);
 //        System.out.println(actual);
 
         BufferedReader br = new BufferedReader(new StringReader(actual.trim()));

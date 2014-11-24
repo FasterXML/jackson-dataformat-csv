@@ -137,6 +137,16 @@ public class CsvGenerator extends GeneratorBase
      * @since 2.5
      */
     protected boolean _skipValue;
+
+    /**
+     * Flag set during writing of (simple) array value, to be encoded as a
+     * single column value.
+     * 
+     * @since 2.5
+     */
+    protected int _arraySeparator = -1;
+
+    protected StringBuilder _arrayContents;
     
     /*
     /**********************************************************
@@ -363,32 +373,66 @@ public class CsvGenerator extends GeneratorBase
      */
 
     @Override
-    public final void writeStartArray() throws IOException, JsonGenerationException
+    public final void writeStartArray() throws IOException
     {
         _verifyValueWrite("start an array");
         /* Ok to create root-level array to contain Objects/Arrays, but
          * can not nest arrays in objects
          */
         if (_writeContext.inObject()) {
-            _reportError("CSV generator does not support Array values for properties");
+            if (!_skipValue) {
+                // First: column may have its own separator
+                int sep;
+                
+                if (_nextColumnByName >= 0) {
+                    CsvSchema.Column col = _schema.column(_nextColumnByName);
+                    sep = col.isArray() ? col.getArrayElementSeparator() : -1;
+                } else {
+                    sep = -1;
+                }
+                if (sep <= 0) {
+                    if (!_schema.hasArrayElementSeparator()) {
+                        _reportError("CSV generator does not support Array values for properties without setting 'arrayElementSeparator' in schema");
+                    }
+                    sep = _schema.getArrayElementSeparator();
+                }
+                _arraySeparator = sep;
+                if (_arrayContents == null) {
+                    _arrayContents = new StringBuilder();
+                } else {
+                    _arrayContents.setLength(0);
+                }
+            }
+        } else if (_arraySeparator >= 0) {
+            // also: no nested arrays, yet
+            _reportError("CSV generator does not support nested Array values");
         }
+            
         _writeContext = _writeContext.createChildArrayContext();
         // and that's about it, really
     }
 
     @Override
-    public final void writeEndArray() throws IOException, JsonGenerationException
+    public final void writeEndArray() throws IOException
     {
         if (!_writeContext.inArray()) {
             _reportError("Current context not an ARRAY but "+_writeContext.getTypeDesc());
         }
+        if (_arraySeparator >= 0) {
+            _arraySeparator = -1;
+            _writer.write(_columnIndex(), _arrayContents.toString());
+        }
         _writeContext = _writeContext.getParent();
-        // not 100% fool-proof, but chances are row should be done now
-        finishRow();
+        /* 20-Nov-2014, tatu: When doing "untyped"/"raw" output, this means that row
+         *    is now done. But not if writing such an array field, so:
+         */
+        if (!_writeContext.inObject()) {
+            finishRow();
+        }
     }
 
     @Override
-    public final void writeStartObject() throws IOException, JsonGenerationException
+    public final void writeStartObject() throws IOException
     {
         _verifyValueWrite("start an object");
         /* No nesting for objects; can write Objects inside logical
@@ -401,7 +445,7 @@ public class CsvGenerator extends GeneratorBase
     }
 
     @Override
-    public final void writeEndObject() throws IOException, JsonGenerationException
+    public final void writeEndObject() throws IOException
     {
         if (!_writeContext.inObject()) {
             _reportError("Current context not an object but "+_writeContext.getTypeDesc());
@@ -418,7 +462,7 @@ public class CsvGenerator extends GeneratorBase
      */
 
     @Override
-    public void writeString(String text) throws IOException,JsonGenerationException
+    public void writeString(String text) throws IOException
     {
         if (text == null) {
             writeNull();
@@ -426,37 +470,48 @@ public class CsvGenerator extends GeneratorBase
         }
         _verifyValueWrite("write String value");
         if (!_skipValue) {
-            _writer.write(_columnIndex(), text);
+            if (_arraySeparator >= 0) {
+                _addToArray(text);
+            } else {
+                _writer.write(_columnIndex(), text);
+            }
         }
     }
 
     @Override
-    public void writeString(char[] text, int offset, int len) throws IOException, JsonGenerationException
+    public void writeString(char[] text, int offset, int len) throws IOException
     {
         _verifyValueWrite("write String value");
         if (!_skipValue) {
-            _writer.write(_columnIndex(), text, offset, len);
+            if (_arraySeparator >= 0) {
+                _addToArray(new String(text, offset, len));
+            } else {
+                _writer.write(_columnIndex(), text, offset, len);
+            }
         }
     }
 
     @Override
-    public final void writeString(SerializableString sstr) throws IOException, JsonGenerationException
+    public final void writeString(SerializableString sstr) throws IOException
     {
         _verifyValueWrite("write String value");
         if (!_skipValue) {
-            _writer.write(_columnIndex(), sstr.getValue());
+            if (_arraySeparator >= 0) {
+                _addToArray(sstr.getValue());
+            } else {
+                _writer.write(_columnIndex(), sstr.getValue());
+            }
         }
     }
 
     @Override
-    public void writeRawUTF8String(byte[] text, int offset, int len) throws IOException, JsonGenerationException
+    public void writeRawUTF8String(byte[] text, int offset, int len) throws IOException
     {
         _reportUnsupportedOperation();
     }
 
     @Override
-    public final void writeUTF8String(byte[] text, int offset, int len) throws IOException, JsonGenerationException
-    {
+    public void writeUTF8String(byte[] text, int offset, int len) throws IOException {
         writeString(new String(text, offset, len, "UTF-8"));
     }
 
@@ -467,37 +522,37 @@ public class CsvGenerator extends GeneratorBase
      */
 
     @Override
-    public void writeRaw(String text) throws IOException, JsonGenerationException {
+    public void writeRaw(String text) throws IOException {
         _reportUnsupportedOperation();
     }
 
     @Override
-    public void writeRaw(String text, int offset, int len) throws IOException, JsonGenerationException {
+    public void writeRaw(String text, int offset, int len) throws IOException {
         _reportUnsupportedOperation();
     }
 
     @Override
-    public void writeRaw(char[] text, int offset, int len) throws IOException, JsonGenerationException {
+    public void writeRaw(char[] text, int offset, int len) throws IOException {
         _reportUnsupportedOperation();
     }
 
     @Override
-    public void writeRaw(char c) throws IOException, JsonGenerationException {
+    public void writeRaw(char c) throws IOException {
         _reportUnsupportedOperation();
     }
 
     @Override
-    public void writeRawValue(String text) throws IOException, JsonGenerationException {
+    public void writeRawValue(String text) throws IOException {
         _reportUnsupportedOperation();
     }
 
     @Override
-    public void writeRawValue(String text, int offset, int len) throws IOException, JsonGenerationException {
+    public void writeRawValue(String text, int offset, int len) throws IOException {
         _reportUnsupportedOperation();
     }
 
     @Override
-    public void writeRawValue(char[] text, int offset, int len) throws IOException, JsonGenerationException {
+    public void writeRawValue(char[] text, int offset, int len) throws IOException {
         _reportUnsupportedOperation();
     }
 
@@ -521,7 +576,12 @@ public class CsvGenerator extends GeneratorBase
                 data = Arrays.copyOfRange(data, offset, offset+len);
             }
             String encoded = b64variant.encode(data);
-            _writer.write(_columnIndex(), encoded);
+
+            if (_arraySeparator >= 0) {
+                _addToArray(encoded);
+            } else {
+                _writer.write(_columnIndex(), encoded);
+            }
         }
     }
 
@@ -532,48 +592,64 @@ public class CsvGenerator extends GeneratorBase
      */
 
     @Override
-    public void writeBoolean(boolean state) throws IOException, JsonGenerationException
+    public void writeBoolean(boolean state) throws IOException
     {
         _verifyValueWrite("write boolean value");
         if (!_skipValue) {
-            _writer.write(_columnIndex(), state);
+            if (_arraySeparator >= 0) {
+                _addToArray(state ? "true" : "false");
+            } else {
+                _writer.write(_columnIndex(), state);
+            }
         }
     }
 
     @Override
-    public void writeNull() throws IOException, JsonGenerationException
+    public void writeNull() throws IOException
     {
         _verifyValueWrite("write null value");
         if (!_skipValue) {
-            _writer.writeNull(_columnIndex());
+            if (_arraySeparator >= 0) {
+                _addToArray(_schema.getNullValue());
+            } else {
+                _writer.writeNull(_columnIndex());
+            }
         }
     }
 
     @Override
-    public void writeNumber(int i) throws IOException, JsonGenerationException
+    public void writeNumber(int v) throws IOException
     {
         _verifyValueWrite("write number");
         if (!_skipValue) {
-            _writer.write(_columnIndex(), i);
+            if (_arraySeparator >= 0) {
+                _addToArray(String.valueOf(v));
+            } else {
+                _writer.write(_columnIndex(), v);
+            }
         }
     }
 
     @Override
-    public void writeNumber(long l) throws IOException, JsonGenerationException
+    public void writeNumber(long v) throws IOException
     {
         // First: maybe 32 bits is enough?
-        if (l <= MAX_INT_AS_LONG && l >= MIN_INT_AS_LONG) {
-            writeNumber((int) l);
+        if (v <= MAX_INT_AS_LONG && v >= MIN_INT_AS_LONG) {
+            writeNumber((int) v);
             return;
         }
+        _verifyValueWrite("write number");
         if (!_skipValue) {
-            _verifyValueWrite("write number");
+            if (_arraySeparator >= 0) {
+                _addToArray(String.valueOf(v));
+            } else {
+                _writer.write(_columnIndex(), v);
+            }
         }
-        _writer.write(_columnIndex(), l);
     }
 
     @Override
-    public void writeNumber(BigInteger v) throws IOException, JsonGenerationException
+    public void writeNumber(BigInteger v) throws IOException
     {
         if (v == null) {
             writeNull();
@@ -581,45 +657,62 @@ public class CsvGenerator extends GeneratorBase
         }
         _verifyValueWrite("write number");
         if (!_skipValue) {
-            _writer.write(_columnIndex(), v.toString());
+            if (_arraySeparator >= 0) {
+                _addToArray(String.valueOf(v));
+            } else {
+                _writer.write(_columnIndex(), v.toString());
+
+            }
         }
     }
     
     @Override
-    public void writeNumber(double d) throws IOException, JsonGenerationException
+    public void writeNumber(double v) throws IOException
     {
         _verifyValueWrite("write number");
         if (!_skipValue) {
-            _writer.write(_columnIndex(), d);
+            if (_arraySeparator >= 0) {
+                _addToArray(String.valueOf(v));
+            } else {
+                _writer.write(_columnIndex(), v);
+            }
         }
     }    
 
     @Override
-    public void writeNumber(float f) throws IOException, JsonGenerationException
+    public void writeNumber(float v) throws IOException
     {
         _verifyValueWrite("write number");
         if (!_skipValue) {
-            _writer.write(_columnIndex(), f);
+            if (_arraySeparator >= 0) {
+                _addToArray(String.valueOf(v));
+            } else {
+                _writer.write(_columnIndex(), v);
+            }
         }
     }
 
     @Override
-    public void writeNumber(BigDecimal dec) throws IOException, JsonGenerationException
+    public void writeNumber(BigDecimal v) throws IOException
     {
-        if (dec == null) {
+        if (v == null) {
             writeNull();
             return;
         }
         _verifyValueWrite("write number");
         if (!_skipValue) {
-            String str = isEnabled(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN) ?
-                    dec.toPlainString() : dec.toString();
-                    _writer.write(_columnIndex(), str);
+            String str = isEnabled(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN)
+                    ? v.toPlainString() : v.toString();
+            if (_arraySeparator >= 0) {
+                _addToArray(String.valueOf(v));
+            } else {
+                _writer.write(_columnIndex(), str);
+            }
         }
     }
 
     @Override
-    public void writeNumber(String encodedValue) throws IOException, JsonGenerationException, UnsupportedOperationException
+    public void writeNumber(String encodedValue) throws IOException
     {
         if (encodedValue == null) {
             writeNull();
@@ -627,7 +720,11 @@ public class CsvGenerator extends GeneratorBase
         }
         _verifyValueWrite("write number");
         if (!_skipValue) {
-            _writer.write(_columnIndex(), encodedValue);
+            if (_arraySeparator >= 0) {
+                _addToArray(encodedValue);
+            } else {
+                _writer.write(_columnIndex(), encodedValue);
+            }
         }
     }
     
@@ -720,5 +817,19 @@ public class CsvGenerator extends GeneratorBase
             }
             _writer.endRow();
         }
+    }
+
+    protected void _addToArray(String value) {
+        if (_arrayContents.length() > 0) {
+            _arrayContents.append((char) _arraySeparator);
+        }
+        _arrayContents.append(value);
+    }
+    
+    protected void _addToArray(char[] value) {
+        if (_arrayContents.length() > 0) {
+            _arrayContents.append((char) _arraySeparator);
+        }
+        _arrayContents.append(value);
     }
 }

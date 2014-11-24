@@ -1,10 +1,11 @@
-package com.fasterxml.jackson.dataformat.csv;
+package com.fasterxml.jackson.dataformat.csv.deser;
 
 import java.io.ByteArrayOutputStream;
 import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.dataformat.csv.*;
 
 import static org.junit.Assert.assertArrayEquals;
 
@@ -41,7 +42,7 @@ public class TestParser extends ModuleTestBase
 
     private void _testSimpleExplicit(ObjectReader r, boolean useBytes) throws Exception
     {
-        r = r.withType(FiveMinuteUser.class);
+        r = r.forType(FiveMinuteUser.class);
         FiveMinuteUser user;
         final String INPUT = "Bob,Robertson,MALE,AQIDBAU=,false\n";
         if (useBytes) {
@@ -51,7 +52,7 @@ public class TestParser extends ModuleTestBase
         }
         assertEquals("Bob", user.firstName);
         assertEquals("Robertson", user.lastName);
-        assertEquals(FiveMinuteUser.Gender.MALE, user.getGender());
+        assertEquals(Gender.MALE, user.getGender());
         assertFalse(user.isVerified());
         assertArrayEquals(new byte[] { 1, 2, 3, 4, 5}, user.getUserImage());
     }
@@ -60,7 +61,7 @@ public class TestParser extends ModuleTestBase
     {
         ObjectMapper mapper = mapperForCsv();
         ObjectReader r = mapper.reader(SIMPLE_SCHEMA);
-        r = r.withType(FiveMinuteUser.class);
+        r = r.forType(FiveMinuteUser.class);
         FiveMinuteUser user;
 
         ByteArrayOutputStream b = new ByteArrayOutputStream();
@@ -77,7 +78,7 @@ public class TestParser extends ModuleTestBase
             fail("Expected 'Bob' (3), got '"+fn+"' ("+fn.length()+")");
         }
         assertEquals("Robertson", user.lastName);
-        assertEquals(FiveMinuteUser.Gender.MALE, user.getGender());
+        assertEquals(Gender.MALE, user.getGender());
         assertFalse(user.isVerified());
         assertArrayEquals(new byte[] { 1, 2, 3, 4, 5}, user.getUserImage());
     }
@@ -87,10 +88,10 @@ public class TestParser extends ModuleTestBase
         CsvMapper mapper = mapperForCsv();
         CsvSchema schema = mapper.schemaFor(FiveMinuteUser.class);
         // NOTE: order different from above test (as per POJO def!)
-        FiveMinuteUser user = mapper.reader(schema).withType(FiveMinuteUser.class).readValue("Joe,Josephson,MALE,true,AwE=\n");
+        FiveMinuteUser user = mapper.reader(schema).forType(FiveMinuteUser.class).readValue("Joe,Josephson,MALE,true,AwE=\n");
         assertEquals("Joe", user.firstName);
         assertEquals("Josephson", user.lastName);
-        assertEquals(FiveMinuteUser.Gender.MALE, user.getGender());
+        assertEquals(Gender.MALE, user.getGender());
         assertTrue(user.isVerified());
         assertArrayEquals(new byte[] { 3, 1 }, user.getUserImage());
     }
@@ -103,7 +104,7 @@ public class TestParser extends ModuleTestBase
     {
         CsvMapper mapper = mapperForCsv();
         CsvSchema schema = mapper.schemaFor(FiveMinuteUser.class);
-        MappingIterator<Map<?,?>> it = mapper.reader(schema).withType(Map.class).readValues(
+        MappingIterator<Map<?,?>> it = mapper.reader(schema).forType(Map.class).readValues(
                 "Joe,Smith,MALE,false,"
                 );
         assertTrue(it.hasNext());

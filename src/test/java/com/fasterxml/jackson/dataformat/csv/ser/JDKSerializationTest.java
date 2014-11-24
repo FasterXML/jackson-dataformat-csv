@@ -1,8 +1,11 @@
-package com.fasterxml.jackson.dataformat.csv;
+package com.fasterxml.jackson.dataformat.csv.ser;
 
 import java.io.*;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.fasterxml.jackson.dataformat.csv.ModuleTestBase;
 
 /**
  * Tests to verify that most core Jackson components can be serialized
@@ -52,20 +55,20 @@ public class JDKSerializationTest extends ModuleTestBase
         final String EXP_CSV = "2,3";
         final MyPojo p = new MyPojo(2, 3);
         assertEquals(EXP_CSV, MAPPER.writerFor(MyPojo.class)
-                .withSchema(SCHEMA_POJO).writeValueAsString(p).trim());
+                .with(SCHEMA_POJO).writeValueAsString(p).trim());
 
         byte[] bytes = jdkSerialize(MAPPER);
         CsvMapper mapper2 = jdkDeserialize(bytes);
 
         assertEquals(EXP_CSV, mapper2.writerFor(MyPojo.class)
-                .withSchema(SCHEMA_POJO).writeValueAsString(p).trim());
+                .with(SCHEMA_POJO).writeValueAsString(p).trim());
         MyPojo p2 = mapper2.reader(MyPojo.class).with(SCHEMA_POJO).readValue(EXP_CSV);
         assertEquals(p.x, p2.x);
         assertEquals(p.y, p2.y);
 
         // and just to be sure, try something different...
         String csv = mapper2.writerFor(MyPojo2.class)
-                .withSchema(mapper2.schemaFor(MyPojo2.class))
+                .with(mapper2.schemaFor(MyPojo2.class))
                 .writeValueAsString(new MyPojo2());
         assertNotNull(csv);
     }

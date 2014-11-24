@@ -1,10 +1,13 @@
-package com.fasterxml.jackson.dataformat.csv;
+package com.fasterxml.jackson.dataformat.csv.deser;
 
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.*;
+
+import com.fasterxml.jackson.databind.*;
+
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.fasterxml.jackson.dataformat.csv.ModuleTestBase;
 
 /**
  * Tests that verify that various minor workarounds
@@ -25,7 +28,7 @@ public class TestParserWorkarounds extends ModuleTestBase
             .build();
 
         @SuppressWarnings("resource")
-        MappingIterator<Map<?,?>> it = mapper.reader(schema).withType(Map.class).readValues(
+        MappingIterator<Map<?,?>> it = mapper.reader(schema).forType(Map.class).readValues(
                 "a,b\nc,d,\ne,f,  \nfoo,bar,x\n");
         assertTrue(it.hasNext());
         
@@ -55,6 +58,35 @@ public class TestParserWorkarounds extends ModuleTestBase
             fail("Expected an error");
         } catch (JsonParseException e) {
             verifyException(e, "Too many entries");
+        }
+    }
+
+    // also ensure [databind-csv#1] also works appropriately for failing case
+    public void testOptionalTrailFailing() throws Exception
+    {
+        ObjectMapper mapper = mapperForCsv();
+        CsvSchema schema = CsvSchema.builder()
+            .addColumn("first")
+            .addColumn("second")
+            .build();
+
+        @SuppressWarnings("resource")
+        MappingIterator<Map<?,?>> it = mapper.reader(schema).forType(Map.class).readValues(
+                "a,b,\nc,d,,,\n");
+        assertTrue(it.hasNext());
+
+        // first should have no problems with extra entry
+        Map<?,?> result = it.nextValue();
+        assertEquals(2, result.size());
+        assertEquals("a", result.get("first"));
+        assertEquals("b", result.get("second"));
+
+        // but second is problematic
+        try {
+            result = it.nextValue();
+            fail("Should have failed");
+        } catch (JsonProcessingException e) {
+            verifyException(e, "Too many entries: expected at most 2");
         }
     }
 }

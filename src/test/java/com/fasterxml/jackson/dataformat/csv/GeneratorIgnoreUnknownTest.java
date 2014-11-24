@@ -26,8 +26,8 @@ public class GeneratorIgnoreUnknownTest extends ModuleTestBase
                 .addColumn("x")
                 .addColumn("z")
                 .build();
-        ObjectWriter writer = mapper.writerWithType(Point.class)
-                .withSchema(schema)
+        ObjectWriter writer = mapper.writerFor(Point.class)
+                .with(schema)
                 .with(JsonGenerator.Feature.IGNORE_UNKNOWN);
         String csv = writer.writeValueAsString(new Point());
         assertNotNull(csv);

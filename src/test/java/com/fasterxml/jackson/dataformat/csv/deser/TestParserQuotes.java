@@ -1,8 +1,8 @@
-package com.fasterxml.jackson.dataformat.csv;
+package com.fasterxml.jackson.dataformat.csv.deser;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-
 import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.dataformat.csv.*;
 
 public class TestParserQuotes extends ModuleTestBase
 {
@@ -33,7 +33,7 @@ public class TestParserQuotes extends ModuleTestBase
     {
         CsvMapper mapper = mapperForCsv();
         CsvSchema schema = mapper.schemaFor(AgeName.class);
-        AgeName user = mapper.reader(schema).withType(AgeName.class).readValue(" 13  ,\"Joe \"\"Sixpack\"\" Paxson\"");
+        AgeName user = mapper.reader(schema).forType(AgeName.class).readValue(" 13  ,\"Joe \"\"Sixpack\"\" Paxson\"");
         assertEquals(13, user.age);
         assertEquals("Joe \"Sixpack\" Paxson", user.name);
     }
@@ -43,7 +43,7 @@ public class TestParserQuotes extends ModuleTestBase
         CsvMapper mapper = mapperForCsv();
         mapper.disable(CsvParser.Feature.WRAP_AS_ARRAY);
         CsvSchema schema = mapper.schemaFor(AgeName.class);
-        MappingIterator<AgeName> it = mapper.reader(schema).withType(AgeName.class).readValues(
+        MappingIterator<AgeName> it = mapper.reader(schema).forType(AgeName.class).readValues(
                 "-3,\"\"\"Unknown\"\"\"\n\"13\"  ,\"Joe \"\"Sixpack\"\" Paxson\"");
         assertTrue(it.hasNext());
         AgeName user = it.nextValue();
@@ -71,7 +71,7 @@ public class TestParserQuotes extends ModuleTestBase
         final String RAW_NAME = "\"UNKNOWN\"";
         final String RAW_NAME2 = "a\"b";
         
-        MappingIterator<AgeName> it = mapper.reader(schema).withType(AgeName.class)
+        MappingIterator<AgeName> it = mapper.reader(schema).forType(AgeName.class)
                 .readValues("38,"+RAW_NAME+"\n"
                         +"27,"+RAW_NAME2+"\n");
         assertTrue(it.hasNext());

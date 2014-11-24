@@ -1,12 +1,12 @@
-package com.fasterxml.jackson.dataformat.csv;
+package com.fasterxml.jackson.dataformat.csv.deser;
 
 import java.io.*;
 import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.dataformat.csv.*;
 
 /**
  * Tests for verifying behavior of enclosing input stream as
@@ -70,7 +70,7 @@ public class TestParserSequences extends ModuleTestBase
     {
         CsvMapper mapper = mapperForCsv();
         mapper.enable(CsvParser.Feature.WRAP_AS_ARRAY);
-        Entry[] entries = mapper.readerWithSchemaFor(Entry.class).withType(Entry[].class)
+        Entry[] entries = mapper.readerWithSchemaFor(Entry.class).forType(Entry[].class)
                 .readValue("1,2\n0,0\n123,123456789\n");
         assertEquals(3, entries.length);
         assertEquals(1, entries[0].x);

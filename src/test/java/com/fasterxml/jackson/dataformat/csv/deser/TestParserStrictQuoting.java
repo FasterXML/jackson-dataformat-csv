@@ -1,6 +1,7 @@
-package com.fasterxml.jackson.dataformat.csv;
+package com.fasterxml.jackson.dataformat.csv.deser;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.dataformat.csv.*;
 
 // Tests for [Issue#26]
 public class TestParserStrictQuoting extends ModuleTestBase

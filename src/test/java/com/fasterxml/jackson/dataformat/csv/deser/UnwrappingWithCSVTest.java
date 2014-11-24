@@ -1,9 +1,11 @@
-package com.fasterxml.jackson.dataformat.csv;
+package com.fasterxml.jackson.dataformat.csv.deser;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.fasterxml.jackson.dataformat.csv.ModuleTestBase;
 
 // for #12
 public class UnwrappingWithCSVTest extends ModuleTestBase
@@ -53,7 +55,7 @@ public class UnwrappingWithCSVTest extends ModuleTestBase
             .addColumn("loc.x")
             .addColumn("loc.y")
             .build();
-        Unwrapping wrapper = mapper.reader(schema).withType(Unwrapping.class).readValue(CSV);
+        Unwrapping wrapper = mapper.reader(schema).forType(Unwrapping.class).readValue(CSV);
         assertNotNull(wrapper);
         assertNotNull(wrapper.location);
         assertEquals(15, wrapper.location.x);
@@ -79,7 +81,7 @@ public class UnwrappingWithCSVTest extends ModuleTestBase
         CsvMapper mapper = mapperForCsv();
         CsvSchema schema = mapper.schemaFor(Unwrapping.class);
         
-        Unwrapping wrapper = mapper.reader(schema).withType(Unwrapping.class).readValue(CSV);
+        Unwrapping wrapper = mapper.reader(schema).forType(Unwrapping.class).readValue(CSV);
         assertNotNull(wrapper);
         assertNotNull(wrapper.location);
         assertEquals(28, wrapper.location.x);
