@@ -50,6 +50,17 @@ public class CsvGenerator extends GeneratorBase
          * @since 2.4
          */
         OMIT_MISSING_TAIL_COLUMNS(false),
+
+        /**
+         * Feature that determines whether values written as Strings (from <code>java.lang.String</code>
+         * valued POJO properties) should be forced to be quoted, regardless of whether they
+         * actually need this.
+         * Note that this feature has precedence over {@link #STRICT_CHECK_FOR_QUOTING}, when
+         * both would be applicable.
+         *
+         * @since 2.5
+         */
+        ALWAYS_QUOTE_STRINGS(false),
         ;
 
         protected final boolean _defaultState;
@@ -153,18 +164,6 @@ public class CsvGenerator extends GeneratorBase
     /* Life-cycle
     /**********************************************************
      */
-
-    /**
-     * @deprecated Since 2.4
-     */
-    @Deprecated
-    public CsvGenerator(IOContext ctxt, int jsonFeatures, int csvFeatures,
-            ObjectCodec codec, Writer out,
-            char columnSeparator, char quoteChar, char[] linefeed)
-    {
-        this(ctxt, jsonFeatures, csvFeatures, codec,
-                new CsvEncoder(ctxt, csvFeatures, out, columnSeparator, quoteChar, linefeed));
-    }
 
     /**
      * @since 2.4
@@ -505,8 +504,7 @@ public class CsvGenerator extends GeneratorBase
     }
 
     @Override
-    public void writeRawUTF8String(byte[] text, int offset, int len) throws IOException
-    {
+    public void writeRawUTF8String(byte[] text, int offset, int len) throws IOException {
         _reportUnsupportedOperation();
     }
 

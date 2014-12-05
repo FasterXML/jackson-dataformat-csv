@@ -80,6 +80,11 @@ public class CsvEncoder
      */
     protected boolean _cfgIncludeMissingTail;
 
+    /**
+     * @since 2.5
+     */
+    protected boolean _cfgAlwaysQuoteStrings;
+    
     /*
     /**********************************************************
     /* Output state
@@ -156,6 +161,7 @@ public class CsvEncoder
         _csvFeatures = csvFeatures;
         _cfgOptimalQuoting = CsvGenerator.Feature.STRICT_CHECK_FOR_QUOTING.enabledIn(csvFeatures);
         _cfgIncludeMissingTail = !CsvGenerator.Feature.OMIT_MISSING_TAIL_COLUMNS.enabledIn(_csvFeatures);
+        _cfgAlwaysQuoteStrings = CsvGenerator.Feature.ALWAYS_QUOTE_STRINGS.enabledIn(csvFeatures);
         
         _outputBuffer = ctxt.allocConcatBuffer();
         _bufferRecyclable = true;
@@ -175,49 +181,14 @@ public class CsvEncoder
         _cfgMaxQuoteCheckChars = MAX_QUOTE_CHECK;
     }
 
-    @Deprecated // since 2.4, remove in 2.5
-    public CsvEncoder(IOContext ctxt, Writer out,
-            char columnSeparator, char quoteChar, char[] linefeed)
-    {
-        this(ctxt, CsvGenerator.Feature.collectDefaults(),
-                out, columnSeparator, quoteChar, linefeed);
-    }
-
-    @Deprecated // since 2.4, remove in 2.5
-    public CsvEncoder(IOContext ctxt, int csvFeatures, Writer out,
-            char columnSeparator, char quoteChar, char[] linefeed)
-    {
-        _ioContext = ctxt;
-        _csvFeatures = csvFeatures;
-        _cfgOptimalQuoting = CsvGenerator.Feature.STRICT_CHECK_FOR_QUOTING.enabledIn(csvFeatures);
-        _cfgIncludeMissingTail = !CsvGenerator.Feature.OMIT_MISSING_TAIL_COLUMNS.enabledIn(_csvFeatures);
-        
-        _outputBuffer = ctxt.allocConcatBuffer();
-        _bufferRecyclable = true;
-        _outputEnd = _outputBuffer.length;
-        _out = out;
-
-        _cfgColumnSeparator = columnSeparator;
-        _cfgQuoteCharacter = quoteChar;
-        _cfgLineSeparator = linefeed;
-        _cfgLineSeparatorLength = linefeed.length;
-        _cfgNullValue = CsvSchema.DEFAULT_NULL_VALUE;
-        
-        _cfgMinSafeChar = _calcSafeChar();
-
-        _cfgMaxQuoteCheckChars = MAX_QUOTE_CHECK;
-
-        // not sure how this would be figured out so...
-        _columnCount = -1;    
-    }
-
     public CsvEncoder(CsvEncoder base, CsvSchema newSchema)
     {
         _ioContext = base._ioContext;
         _csvFeatures = base._csvFeatures;
         _cfgOptimalQuoting = base._cfgOptimalQuoting;
         _cfgIncludeMissingTail = base._cfgIncludeMissingTail;
-
+        _cfgAlwaysQuoteStrings = base._cfgAlwaysQuoteStrings;
+        
         _outputBuffer = base._outputBuffer;
         _bufferRecyclable = base._bufferRecyclable;
         _outputEnd = base._outputEnd;
@@ -251,6 +222,8 @@ public class CsvEncoder
         if (feat != _csvFeatures) {
             _csvFeatures = feat;
             _cfgOptimalQuoting = CsvGenerator.Feature.STRICT_CHECK_FOR_QUOTING.enabledIn(feat);
+            _cfgIncludeMissingTail = !CsvGenerator.Feature.OMIT_MISSING_TAIL_COLUMNS.enabledIn(feat);
+            _cfgAlwaysQuoteStrings = CsvGenerator.Feature.ALWAYS_QUOTE_STRINGS.enabledIn(feat);
         }
         return this;
     }
@@ -418,7 +391,7 @@ public class CsvEncoder
          * only check for short Strings, stop if something found
          */
         final int len = value.length();
-        if (_mayNeedQuotes(value, len)) {
+        if (_cfgAlwaysQuoteStrings || _mayNeedQuotes(value, len)) {
             _writeQuoted(value);
         } else {
             writeRaw(value);

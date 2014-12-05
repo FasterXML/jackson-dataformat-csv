@@ -10,6 +10,7 @@ Project: jackson-dataformat-csv
 #53: Add a way to specify "null value" (String) for `CsvGenerator` to use when writing `null`s
  (part of `CsvSchema`; method `withNullValue()`)
 #57: Support simple array types
+#61: Add a feature to always quote non-numeric values: `CsvGenerator.Feature.ALWAYS_QUOTE_STRINGS`
 
 2.4.4 (24-Nov-2014)
 

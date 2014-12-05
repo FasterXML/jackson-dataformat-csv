@@ -70,15 +70,25 @@ public class CsvSchema
         Iterable<CsvSchema.Column>,
         java.io.Serializable // since 2.4.3
 {
-    private static final long serialVersionUID = 1516385178088175324L;
+    private static final long serialVersionUID = 1L; // 2.5
 
     /*
     /**********************************************************************
-    /* Constants
+    /* Constants, feature flags
     /**********************************************************************
      */
 
-    protected final static Column[] NO_COLUMNS = new Column[0];
+    protected final static int FEATURE_USE_HEADER = 0x0001;
+    protected final static int FEATURE_SKIP_FIRST_DATA_ROW = 0x0002;
+    protected final static int FEATURE_ALLOW_COMMENTS = 0x0002;
+
+    protected final static int DEFAULT_FEATURES = 0;
+
+    /*
+    /**********************************************************************
+    /* Constants, default settings
+    /**********************************************************************
+     */
 
     /**
      * Default separator for column values is comma (hence "Comma-Separated Values")
@@ -113,6 +123,14 @@ public class CsvSchema
 
     public final static boolean DEFAULT_SKIP_FIRST_DATA_ROW = false;
 
+    /*
+    /**********************************************************************
+    /* Constants, other
+    /**********************************************************************
+     */
+    
+    protected final static Column[] NO_COLUMNS = new Column[0];
+    
     /*
     /**********************************************************************
     /* Helper classes
@@ -211,8 +229,7 @@ public class CsvSchema
             this(index, name, ColumnType.STRING, -1);
         }
 
-        public Column(int index, String name, ColumnType type)
-        {
+        public Column(int index, String name, ColumnType type) {
             this(index, name, type, -1);
         }
 
@@ -255,9 +272,12 @@ public class CsvSchema
     {
         protected final ArrayList<Column> _columns = new ArrayList<Column>();
 
-        protected boolean _useHeader = DEFAULT_USE_HEADER;
-
-        protected boolean _skipFirstDataRow = DEFAULT_SKIP_FIRST_DATA_ROW;
+        /**
+         * Bitflag for general-purpose on/off features.
+         * 
+         * @since 2.5
+         */
+        protected int _features = DEFAULT_FEATURES;
         
         protected char _columnSeparator = DEFAULT_COLUMN_SEPARATOR;
 
@@ -288,14 +308,13 @@ public class CsvSchema
             for (Column col : src._columns) {
                 _columns.add(col);
             }
-            _useHeader = src._useHeader;
+            _features = src._features;
             _columnSeparator = src._columnSeparator;
             _arrayElementSeparator = src._arrayElementSeparator;
             _quoteChar = src._quoteChar;
             _escapeChar = src._escapeChar;
             _lineSeparator = src._lineSeparator;
             _nullValue = src._nullValue;
-            _skipFirstDataRow = src._skipFirstDataRow;
         }
         
         public Builder addColumn(String name) {
@@ -369,13 +388,34 @@ public class CsvSchema
          * used for reading and writing or not.
          */
         public Builder setUseHeader(boolean b) {
-            _useHeader = b;
+            _feature(FEATURE_USE_HEADER, b);
             return this;
         }
 
+        /**
+         * Method for specifying whether Schema should indicate that
+         * the first line that is not a header (if header handling enabled)
+         * should be skipped in its entirety.
+         */
         public Builder setSkipFirstDataRow(boolean b) {
-            _skipFirstDataRow = b;
+            _feature(FEATURE_SKIP_FIRST_DATA_ROW, b);
             return this;
+        }
+
+        /**
+         * Method for specifying whether Schema should indicate that
+         * "hash comments" (lines where the first non-whitespace character
+         * is '#') are allowed; if so, they will be skipped without processing.
+         * 
+         * @since 2.5
+         */
+        public Builder setAllowComments(boolean b) {
+            _feature(FEATURE_ALLOW_COMMENTS, b);
+            return this;
+        }
+        
+        protected final void _feature(int feature, boolean state) {
+            _features = state ? (_features | feature) : (_features & ~feature);
         }
 
         /**
@@ -463,8 +503,7 @@ public class CsvSchema
         public CsvSchema build()
         {
             Column[] cols = _columns.toArray(new Column[_columns.size()]);
-            return new CsvSchema(cols,
-                    _useHeader, _skipFirstDataRow,
+            return new CsvSchema(cols, _features,
                     _columnSeparator, _quoteChar, _escapeChar,
                     _lineSeparator, _arrayElementSeparator,
                     _nullValue);
@@ -491,9 +530,12 @@ public class CsvSchema
     
     protected final Map<String,Column> _columnsByName;
 
-    protected final boolean _useHeader;
-
-    protected final boolean _skipFirstDataRow;
+    /**
+     * Bitflag for general-purpose on/off features.
+     * 
+     * @since 2.5
+     */
+    protected int _features = DEFAULT_FEATURES;
 
     protected final char _columnSeparator;
 
@@ -516,7 +558,8 @@ public class CsvSchema
             char columnSeparator, int quoteChar, int escapeChar,
             char[] lineSeparator)
     {
-        this(columns, useHeader, skipFirstDataRow,
+        this(columns,
+                (useHeader ? FEATURE_USE_HEADER : 0) + (skipFirstDataRow ? FEATURE_SKIP_FIRST_DATA_ROW : 0),
                 columnSeparator, quoteChar, escapeChar, lineSeparator,
                 DEFAULT_ARRAY_ELEMENT_SEPARATOR, DEFAULT_NULL_VALUE);
     }
@@ -524,8 +567,7 @@ public class CsvSchema
     /**
      * @since 2.5
      */
-    public CsvSchema(Column[] columns,
-            boolean useHeader, boolean skipFirstDataRow,
+    public CsvSchema(Column[] columns, int features,
             char columnSeparator, int quoteChar, int escapeChar,
             char[] lineSeparator, int arrayElementSeparator,
             char[] nullValue)
@@ -534,8 +576,7 @@ public class CsvSchema
             columns = NO_COLUMNS;
         }
         _columns = columns;
-        _useHeader = useHeader;
-        _skipFirstDataRow = skipFirstDataRow;
+        _features = features;
         _columnSeparator = columnSeparator;
         _arrayElementSeparator = arrayElementSeparator;
         _quoteChar = quoteChar;
@@ -558,16 +599,14 @@ public class CsvSchema
      * Copy constructor used for creating variants using
      * <code>withXxx()</code> methods.
      */
-    protected CsvSchema(Column[] columns,
-            boolean useHeader, boolean skipFirstDataRow,
+    protected CsvSchema(Column[] columns, int features,
             char columnSeparator, int quoteChar, int escapeChar,
             char[] lineSeparator, int arrayElementSeparator,
             char[] nullValue,
             Map<String,Column> columnsByName)
     {
         _columns = columns;
-        _useHeader = useHeader;
-        _skipFirstDataRow = skipFirstDataRow;
+        _features = features;
         _columnSeparator = columnSeparator;
         _quoteChar = quoteChar;
         _escapeChar = escapeChar;
@@ -583,8 +622,7 @@ public class CsvSchema
      */
     protected CsvSchema(CsvSchema base, Column[] columns) {
         _columns = columns;
-        _useHeader = base._useHeader;
-        _skipFirstDataRow = base._skipFirstDataRow;
+        _features = base._features;
         _columnSeparator = base._columnSeparator;
         _quoteChar = base._quoteChar;
         _escapeChar = base._escapeChar;
@@ -593,7 +631,24 @@ public class CsvSchema
         _nullValue = base._nullValue;
         _columnsByName = base._columnsByName;
     }
-            
+
+    /**
+     * Copy constructor used for creating variants for on/off features
+     * 
+     * @since 2.5
+     */
+    protected CsvSchema(CsvSchema base, int features) {
+        _columns = base._columns;
+        _features = features;
+        _columnSeparator = base._columnSeparator;
+        _quoteChar = base._quoteChar;
+        _escapeChar = base._escapeChar;
+        _lineSeparator = base._lineSeparator;
+        _arrayElementSeparator = base._arrayElementSeparator;
+        _nullValue = base._nullValue;
+        _columnsByName = base._columnsByName;
+    }
+    
     public static Builder builder() {
         return new Builder();
     }
@@ -635,19 +690,15 @@ public class CsvSchema
      */
     
     public CsvSchema withUseHeader(boolean state) {
-        return (_useHeader == state) ? this
-                : new CsvSchema(_columns, state, _skipFirstDataRow,
-                    _columnSeparator, _quoteChar,
-                    _escapeChar, _lineSeparator, _arrayElementSeparator,
-                    _nullValue, _columnsByName);
+        return _withFeature(FEATURE_USE_HEADER, state);
     }
 
     /**
-     * Helper method for construcing and returning schema instance that
+     * Helper method for constructing and returning schema instance that
      * is similar to this one, except that it will be using header line.
      */
     public CsvSchema withHeader() {
-        return withUseHeader(true);
+        return _withFeature(FEATURE_USE_HEADER, true);
     }
 
     /**
@@ -655,47 +706,79 @@ public class CsvSchema
      * is similar to this one, except that it will not be using header line.
      */
     public CsvSchema withoutHeader() {
-        return withUseHeader(false);
+        return _withFeature(FEATURE_USE_HEADER, false);
     }
 
     public CsvSchema withSkipFirstDataRow(boolean state) {
-        return (_skipFirstDataRow == state) ? this
-                : new CsvSchema(_columns, _useHeader, state,
-                    _columnSeparator, _quoteChar, _escapeChar,
-                    _lineSeparator, _arrayElementSeparator, _nullValue, _columnsByName);
+        return _withFeature(FEATURE_SKIP_FIRST_DATA_ROW, state);
     }
-    
+
+    /**
+     * Method to indicate whether "hash comments" are allowed
+     * for document described by this schema.
+     * 
+     * @since 2.5
+     */
+    public CsvSchema withAllowComments(boolean state) {
+        return _withFeature(FEATURE_ALLOW_COMMENTS, state);
+    }
+
+    /**
+     * Method to indicate that "hash comments" ARE allowed
+     * for document described by this schema.
+     * 
+     * @since 2.5
+     */
+    public CsvSchema withComments(boolean state) {
+        return _withFeature(FEATURE_ALLOW_COMMENTS, true);
+    }
+
+    /**
+     * Method to indicate that "hash comments" are NOT allowed for document
+     * described by this schema.
+     * 
+     * @since 2.5
+     */
+    public CsvSchema withoutComments(boolean state) {
+        return _withFeature(FEATURE_ALLOW_COMMENTS, false);
+    }
+
+    protected CsvSchema _withFeature(int feature, boolean state) {
+        int newFeatures = state ? (_features | feature) : (_features & ~feature);
+        return (newFeatures == _features) ? this : new CsvSchema(this, newFeatures);
+    }
+
     public CsvSchema withColumnSeparator(char sep) {
         return (_columnSeparator == sep) ? this :
-            new CsvSchema(_columns, _useHeader, _skipFirstDataRow,
+            new CsvSchema(_columns, _features,
                     sep, _quoteChar, _escapeChar, _lineSeparator, _arrayElementSeparator,
                     _nullValue, _columnsByName);
     }
 
     public CsvSchema withQuoteChar(char c) {
         return (_quoteChar == c) ? this :
-            new CsvSchema(_columns, _useHeader, _skipFirstDataRow,
+            new CsvSchema(_columns, _features,
                     _columnSeparator, c, _escapeChar, _lineSeparator,_arrayElementSeparator,
                     _nullValue, _columnsByName);
     }
 
     public CsvSchema withoutQuoteChar() {
         return (_quoteChar == -1) ? this :
-            new CsvSchema(_columns, _useHeader, _skipFirstDataRow,
+            new CsvSchema(_columns, _features,
                     _columnSeparator, -1, _escapeChar, _lineSeparator, _arrayElementSeparator,
                     _nullValue, _columnsByName);
     }
 
     public CsvSchema withEscapeChar(char c) {
         return (_escapeChar == c) ? this
-                : new CsvSchema(_columns, _useHeader, _skipFirstDataRow,
+                : new CsvSchema(_columns, _features,
                         _columnSeparator, _quoteChar, c, _lineSeparator, _arrayElementSeparator,
                         _nullValue, _columnsByName);
     }
 
     public CsvSchema withoutEscapeChar() {
         return (_escapeChar == -1) ? this
-                : new CsvSchema(_columns, _useHeader, _skipFirstDataRow,
+                : new CsvSchema(_columns, _features,
                         _columnSeparator, _quoteChar, -1, _lineSeparator, _arrayElementSeparator,
                         _nullValue, _columnsByName);
     }
@@ -705,7 +788,7 @@ public class CsvSchema
      */
     public CsvSchema withArrayElementSeparator(char c) {
         return (_arrayElementSeparator == c) ? this
-                : new CsvSchema(_columns, _useHeader, _skipFirstDataRow,
+                : new CsvSchema(_columns, _features,
                         _columnSeparator, _quoteChar, _escapeChar, _lineSeparator, c,
                         _nullValue, _columnsByName);
     }
@@ -715,13 +798,13 @@ public class CsvSchema
      */
     public CsvSchema withoutArrayElementSeparator() {
         return (_arrayElementSeparator == -1) ? this
-                : new CsvSchema(_columns, _useHeader, _skipFirstDataRow,
+                : new CsvSchema(_columns, _features,
                         _columnSeparator, _quoteChar, _escapeChar, _lineSeparator, -1,
                         _nullValue, _columnsByName);
     }
     
     public CsvSchema withLineSeparator(String sep) {
-        return new CsvSchema(_columns, _useHeader, _skipFirstDataRow,
+        return new CsvSchema(_columns, _features,
                 _columnSeparator, _quoteChar, _escapeChar, sep.toCharArray(),
                 _arrayElementSeparator, _nullValue, _columnsByName);
     }
@@ -730,7 +813,7 @@ public class CsvSchema
      * @since 2.5
      */
     public CsvSchema withNullValue(String nvl) {
-        return new CsvSchema(_columns, _useHeader, _skipFirstDataRow,
+        return new CsvSchema(_columns, _features,
                 _columnSeparator, _quoteChar, _escapeChar, _lineSeparator,
                 _arrayElementSeparator,
                 (nvl == null) ? DEFAULT_NULL_VALUE : nvl.toCharArray(),
@@ -738,7 +821,7 @@ public class CsvSchema
     }
     
     public CsvSchema withoutColumns() {
-        return new CsvSchema(NO_COLUMNS, _useHeader, _skipFirstDataRow,
+        return new CsvSchema(NO_COLUMNS, _features,
                 _columnSeparator, _quoteChar, _escapeChar, _lineSeparator, _arrayElementSeparator,
                 _nullValue, _columnsByName);
     }
@@ -803,8 +886,9 @@ public class CsvSchema
     /**********************************************************************
      */
 
-    public boolean useHeader() { return _useHeader; }
-    public boolean skipFirstDataRow() { return _skipFirstDataRow; }
+    public boolean useHeader() { return (_features & FEATURE_USE_HEADER) != 0; }
+    public boolean skipFirstDataRow() { return (_features & FEATURE_SKIP_FIRST_DATA_ROW) != 0; }
+    public boolean allowComments() { return (_features & FEATURE_ALLOW_COMMENTS) != 0; }
     public char getColumnSeparator() { return _columnSeparator; }
     public int getArrayElementSeparator() { return _arrayElementSeparator; }
     public int getQuoteChar() { return _quoteChar; }

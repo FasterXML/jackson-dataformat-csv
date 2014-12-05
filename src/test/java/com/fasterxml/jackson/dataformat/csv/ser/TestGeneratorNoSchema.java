@@ -19,7 +19,7 @@ public class TestGeneratorNoSchema extends ModuleTestBase
             ;
 
     private final CsvMapper MAPPER = mapperForCsv();
-    
+
     public void testUntypedAsSequenceStreaming() throws Exception
     {
         StringWriter sw = new StringWriter();

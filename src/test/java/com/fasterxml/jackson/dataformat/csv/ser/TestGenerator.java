@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.csv.CsvGenerator;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.dataformat.csv.ModuleTestBase;
@@ -207,6 +208,19 @@ public class TestGenerator extends ModuleTestBase
         assertEquals("id,n/a\n", result);
     }
 
+    public void testForcedQuoting60() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        mapper.enable(CsvGenerator.Feature.ALWAYS_QUOTE_STRINGS);
+        CsvSchema schema = CsvSchema.builder()
+            .addColumn("id")
+            .addColumn("amount")
+            .build();
+        String result = mapper.writer(schema)
+                .writeValueAsString(new Entry("abc", 1.25));
+        assertEquals("\"abc\",1.25\n", result);
+    }
+    
     /*
     /**********************************************************************
     /* Secondary test methods
