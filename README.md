@@ -133,6 +133,40 @@ while (it.hasNext()) {
 }
 ```
 
+### With column names from first row
+
+But if you want a "data as Map" approach, with data that has expected column names as the first row,
+followed by data rows, you can iterate over entries quite conveniently as well.
+Assuming we had CSV content like:
+
+```csv
+name,age
+Billy,28
+Barbara,36
+```
+
+we could use following code:
+
+```java
+CsvSchema schema = CsvSchema.emptySchema().withHeader(); // use first row as header; otherwise defaults are fine
+MappingIterator<Map<String,String>> it = mapper.reader(Map.class)
+   .with(schema)
+   .readValues(csvFile);
+while (it.hasNext()) {
+  Map<String,String> rowAsMap = it.next();
+  // access by column name, as defined in the header row...
+}
+```
+
+and get two rows as `java.util.Map`s, similar to what JSON like this
+
+```json
+{"name":"Billy","age":"28"}
+{"name":"Barbara","age":"36"}
+```
+
+would produce.
+
 ## Adding virtual Array wrapping
 
 In addition to reading things as root-level Objects or arrays, you can also force use of virtual "array wrapping".

@@ -274,6 +274,21 @@ public class CsvMapper extends ObjectMapper
      */
 
     /**
+     * Convenience method that is same as
+     *<pre>
+     *   CsvSchema.emptySchema().withHeader();
+     *</pre>
+     * and returns a {@link CsvSchema} instance that uses default configuration
+     * with additional setting that the first content line contains intended
+     * column names.
+     *
+     * @since 2.5
+     */
+    public CsvSchema schemaWithHeader() {
+        return CsvSchema.emptySchema().withHeader();
+    }
+
+    /**
      * Method that can be used to determine a CSV schema to use for given
      * POJO type, using default serialization settings including ordering.
      * Definition will not be strictly typed (that is, all columns are

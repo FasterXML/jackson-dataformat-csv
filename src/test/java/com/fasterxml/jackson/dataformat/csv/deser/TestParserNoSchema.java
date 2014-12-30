@@ -1,6 +1,7 @@
 package com.fasterxml.jackson.dataformat.csv.deser;
 
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.dataformat.csv.*;
@@ -105,6 +106,27 @@ public class TestParserNoSchema extends ModuleTestBase
         assertEquals(2, row.length);
         assertEquals("true", row[0]);
         assertEquals("", row[1]);
+    }
+
+    public void testUntypedWithHeaderAsMap() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        MappingIterator<Map<String,String>> it = mapper
+                .reader(Map.class)
+                .with(mapper.schemaWithHeader())
+                .readValues("a,b\n1,2\n3,4\n");
+
+        Map<String,String> first = it.nextValue();
+        assertNotNull(first);
+        assertEquals("1", first.get("a"));
+        assertEquals("2", first.get("b"));
+
+        Map<String,String> second = it.nextValue();
+        assertNotNull(first);
+        assertEquals("3", second.get("a"));
+        assertEquals("4", second.get("b"));
+
+        assertFalse(it.hasNextValue());
     }
     
     /* Let's also allow varying number of columns, if no
