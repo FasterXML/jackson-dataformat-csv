@@ -435,9 +435,17 @@ public class CsvParser
             return true;
         }
         // Otherwise: may coerce into array, iff we have essentially "untyped" column
-        CsvSchema.Column column = _schema.column(_columnIndex);
-        if (column.getType() == CsvSchema.ColumnType.STRING) {
-            _startArray(column);
+        if (_columnIndex < _columnCount) {
+            CsvSchema.Column column = _schema.column(_columnIndex);
+            if (column.getType() == CsvSchema.ColumnType.STRING) {
+                _startArray(column);
+                return true;
+            }
+        }
+        // 30-Dec-2014, tatu: Seems like it should be possible to allow this
+        //   in non-array-wrapped case too (for 2.5), so let's try that:
+        else if (_currToken == JsonToken.VALUE_STRING) {
+            _startArray(CsvSchema.Column.PLACEHOLDER);
             return true;
         }
         return false;
@@ -497,11 +505,11 @@ public class CsvParser
     protected JsonToken _handleStartDoc() throws IOException
     {
         // First things first: are we expecting header line? If so, read, process
-        if (_schema.useHeader()) {
+        if (_schema.usesHeader()) {
             _readHeaderLine();
         }
         // and if we are to skip the first data line, skip it
-        if (_schema.skipFirstDataRow()) {
+        if (_schema.skipsFirstDataRow()) {
             _reader.skipLine();
         }
         

@@ -805,7 +805,7 @@ public class CsvGenerator extends GeneratorBase
     protected void _handleFirstLine() throws IOException
     {
         _handleFirstLine = false;
-        if (_schema.useHeader()) {
+        if (_schema.usesHeader()) {
             int count = _schema.size();
             if (count == 0) { 
                 _reportError("Schema specified that header line is to be written; but contains no column names");

@@ -61,6 +61,12 @@ public abstract class ModuleTestBase extends junit.framework.TestCase
             }
             return true;
         }
+
+        @Override
+        public int hashCode() {
+            // not really good but whatever:
+            return firstName.hashCode();
+        }
     }
     
     protected ModuleTestBase() { }

@@ -80,7 +80,7 @@ public class CsvSchema
 
     protected final static int FEATURE_USE_HEADER = 0x0001;
     protected final static int FEATURE_SKIP_FIRST_DATA_ROW = 0x0002;
-    protected final static int FEATURE_ALLOW_COMMENTS = 0x0002;
+    protected final static int FEATURE_ALLOW_COMMENTS = 0x0004;
 
     protected final static int DEFAULT_FEATURES = 0;
 
@@ -216,6 +216,8 @@ public class CsvSchema
     {
         private static final long serialVersionUID = 1L;
 
+        public final static Column PLACEHOLDER = new Column(0, "");
+        
         private final String _name;
         private final int _index;
         private final ColumnType _type;
@@ -729,7 +731,7 @@ public class CsvSchema
      * 
      * @since 2.5
      */
-    public CsvSchema withComments(boolean state) {
+    public CsvSchema withComments() {
         return _withFeature(FEATURE_ALLOW_COMMENTS, true);
     }
 
@@ -886,9 +888,22 @@ public class CsvSchema
     /**********************************************************************
      */
 
+    public boolean usesHeader() { return (_features & FEATURE_USE_HEADER) != 0; }
+    public boolean skipsFirstDataRow() { return (_features & FEATURE_SKIP_FIRST_DATA_ROW) != 0; }
+    public boolean allowsComments() { return (_features & FEATURE_ALLOW_COMMENTS) != 0; }
+
+    /**
+     * @deprecated Use {@link #usesHeader()} instead
+     */
+    @Deprecated // since 2.5
     public boolean useHeader() { return (_features & FEATURE_USE_HEADER) != 0; }
+
+    /**
+     * @deprecated Use {@link #skipsFirstDataRow()} instead
+     */
+    @Deprecated // since 2.5
     public boolean skipFirstDataRow() { return (_features & FEATURE_SKIP_FIRST_DATA_ROW) != 0; }
-    public boolean allowComments() { return (_features & FEATURE_ALLOW_COMMENTS) != 0; }
+    
     public char getColumnSeparator() { return _columnSeparator; }
     public int getArrayElementSeparator() { return _arrayElementSeparator; }
     public int getQuoteChar() { return _quoteChar; }
@@ -962,12 +977,11 @@ public class CsvSchema
     {
         StringBuilder sb = new StringBuilder(150);
         sb.append("[CsvSchema: ")
-            .append("columns=");
+            .append("columns=[");
         boolean first = true;
         for (Column col : _columns) {
             if (first) {
                 first = false;
-                sb.append('[');
             } else {
                 sb.append(',');
             }
@@ -977,6 +991,9 @@ public class CsvSchema
             sb.append(col.getType());
         }
         sb.append(']');
+        sb.append(", header? ").append(usesHeader());
+        sb.append(", skipFirst? ").append(skipsFirstDataRow());
+        sb.append(", comments?? ").append(allowsComments());
         
         sb.append(']');
         return sb.toString();

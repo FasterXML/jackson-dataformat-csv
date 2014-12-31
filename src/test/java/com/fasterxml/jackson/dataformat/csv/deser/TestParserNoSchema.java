@@ -127,6 +127,7 @@ public class TestParserNoSchema extends ModuleTestBase
         assertEquals("4", second.get("b"));
 
         assertFalse(it.hasNextValue());
+        it.close();
     }
     
     /* Let's also allow varying number of columns, if no

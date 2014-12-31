@@ -289,6 +289,20 @@ public class CsvMapper extends ObjectMapper
     }
 
     /**
+     * Convenience method that is same as
+     *<pre>
+     *   CsvSchema.emptySchema()
+     *</pre>
+     * that is, returns an "empty" Schema; one with default values and no
+     * column definitions.
+     *
+     * @since 2.5
+     */
+    public CsvSchema schema() {
+        return CsvSchema.emptySchema();
+    }
+
+    /**
      * Method that can be used to determine a CSV schema to use for given
      * POJO type, using default serialization settings including ordering.
      * Definition will not be strictly typed (that is, all columns are
