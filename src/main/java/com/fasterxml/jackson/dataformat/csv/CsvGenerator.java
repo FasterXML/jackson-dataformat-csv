@@ -521,37 +521,49 @@ public class CsvGenerator extends GeneratorBase
 
     @Override
     public void writeRaw(String text) throws IOException {
-        _reportUnsupportedOperation();
+        _writer.writeRaw(text);
     }
 
     @Override
     public void writeRaw(String text, int offset, int len) throws IOException {
-        _reportUnsupportedOperation();
+        _writer.writeRaw(text, offset, len);
     }
 
     @Override
     public void writeRaw(char[] text, int offset, int len) throws IOException {
-        _reportUnsupportedOperation();
+        _writer.writeRaw(text, offset, len);
     }
 
     @Override
     public void writeRaw(char c) throws IOException {
-        _reportUnsupportedOperation();
+        _writer.writeRaw(c);
     }
 
     @Override
     public void writeRawValue(String text) throws IOException {
-        _reportUnsupportedOperation();
+        _verifyValueWrite("write Raw value");
+        if (!_skipValue) {
+            // NOTE: ignore array stuff
+            _writer.writeNonEscaped(_columnIndex(), text);
+        }
     }
 
     @Override
     public void writeRawValue(String text, int offset, int len) throws IOException {
-        _reportUnsupportedOperation();
+        _verifyValueWrite("write Raw value");
+        if (!_skipValue) {
+            // NOTE: ignore array stuff
+            _writer.writeNonEscaped(_columnIndex(), text.substring(offset, offset+len));
+        }
     }
 
     @Override
     public void writeRawValue(char[] text, int offset, int len) throws IOException {
-        _reportUnsupportedOperation();
+        _verifyValueWrite("write Raw value");
+        if (!_skipValue) {
+            // NOTE: ignore array stuff
+            _writer.writeNonEscaped(_columnIndex(), new String(text, offset, len));
+        }
     }
 
     /*

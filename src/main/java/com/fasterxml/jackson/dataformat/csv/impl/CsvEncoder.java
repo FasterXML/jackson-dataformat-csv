@@ -1,13 +1,12 @@
 package com.fasterxml.jackson.dataformat.csv.impl;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.core.io.IOContext;
-import com.fasterxml.jackson.dataformat.csv.CsvGenerator;
-import com.fasterxml.jackson.dataformat.csv.CsvSchema;
-
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Arrays;
+
+import com.fasterxml.jackson.core.io.IOContext;
+import com.fasterxml.jackson.dataformat.csv.CsvGenerator;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 
 /**
  * Helper class that handles actual low-level construction of
@@ -319,7 +318,20 @@ public class CsvEncoder
         }
         _buffer(columnIndex, BufferedValue.buffered(value));
     }
-    
+
+    /**
+     * @since 2.5
+     */
+    public final void writeNonEscaped(int columnIndex, String rawValue) throws IOException
+    {
+        if (columnIndex == _nextColumnToWrite) {
+            appendRawValue(rawValue);
+            ++_nextColumnToWrite;
+            return;
+        }
+        _buffer(columnIndex, BufferedValue.bufferedRaw(rawValue));
+    }
+        
     public final void writeNull(int columnIndex) throws IOException
     {
         if (columnIndex == _nextColumnToWrite) {
@@ -396,7 +408,17 @@ public class CsvEncoder
         } else {
             writeRaw(value);
         }
-        
+    }
+
+    protected void appendRawValue(String value) throws IOException
+    {
+        if (_outputTail >= _outputEnd) {
+            _flushBuffer();
+        }
+        if (_nextColumnToWrite > 0) {
+            appendColumnSeparator();
+        }
+        writeRaw(value);
     }
     
     protected void appendValue(int value) throws IOException
@@ -572,8 +594,7 @@ public class CsvEncoder
         }
     }
 
-    public void writeRaw(char[] text, int offset, int len)
-        throws IOException, JsonGenerationException
+    public void writeRaw(char[] text, int offset, int len) throws IOException
     {
         // Only worth buffering if it's a short write?
         if (len < SHORT_WRITE) {

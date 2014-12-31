@@ -13,16 +13,18 @@ public abstract class BufferedValue
     public abstract void write(CsvEncoder w) throws IOException;
 
     public static BufferedValue buffered(String v) { return new TextValue(v); }
+    public static BufferedValue bufferedRaw(String v) { return new RawValue(v); }
     public static BufferedValue buffered(int v) { return new IntValue(v); }
     public static BufferedValue buffered(long v) { return new LongValue(v); }
     public static BufferedValue buffered(double v) { return new DoubleValue(v); }
     public static BufferedValue buffered(boolean v) {
         return v ? BooleanValue.TRUE : BooleanValue.FALSE;
     }
+
     public static BufferedValue bufferedNull() {
         return NullValue.std;
     }
-    
+
     protected final static class TextValue extends BufferedValue
     {
         private final String _value;
@@ -35,6 +37,21 @@ public abstract class BufferedValue
         }
     }
 
+    /**
+     * @since 2.5
+     */
+    protected final static class RawValue extends BufferedValue
+    {
+        private final String _value;
+        
+        public RawValue(String v) { _value = v; }
+
+        @Override
+        public void write(CsvEncoder w) throws IOException {
+            w.appendRawValue(_value);
+        }
+    }
+    
     protected final static class IntValue extends BufferedValue
     {
         private final int _value;

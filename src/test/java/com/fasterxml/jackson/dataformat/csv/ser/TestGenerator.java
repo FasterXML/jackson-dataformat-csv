@@ -2,14 +2,17 @@ package com.fasterxml.jackson.dataformat.csv.ser;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.csv.CsvFactory;
 import com.fasterxml.jackson.dataformat.csv.CsvGenerator;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.dataformat.csv.ModuleTestBase;
 
 import java.io.File;
+import java.io.StringWriter;
 
 public class TestGenerator extends ModuleTestBase
 {
@@ -220,7 +223,32 @@ public class TestGenerator extends ModuleTestBase
                 .writeValueAsString(new Entry("abc", 1.25));
         assertEquals("\"abc\",1.25\n", result);
     }
-    
+
+    public void testRawWrites() throws Exception
+    {
+        StringWriter w = new StringWriter();
+        JsonGenerator gen = new CsvFactory().createGenerator(w);
+        gen.writeStartObject();
+        gen.writeString("a");
+        // just to ensure no quoting goes on:
+        gen.writeRawValue("b,c");
+        gen.writeString("d,e");
+        gen.writeEndObject();
+        gen.close();
+        assertEquals("a,b,c,\"d,e\"\n", w.toString());
+
+        // also, verify use of other methods
+
+        w = new StringWriter();
+        gen = new CsvFactory().createGenerator(w);
+        gen.writeStartObject();
+        gen.writeRawValue("a,b");
+        gen.writeRaw(",foobar");
+        gen.writeEndObject();
+        gen.close();
+        assertEquals("a,b,foobar\n", w.toString());
+    }
+
     /*
     /**********************************************************************
     /* Secondary test methods
