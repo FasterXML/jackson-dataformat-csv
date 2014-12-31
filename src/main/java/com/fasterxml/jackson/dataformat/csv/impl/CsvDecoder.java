@@ -22,7 +22,8 @@ public class CsvDecoder
 
     private final static int INT_CR = '\r';
     private final static int INT_LF = '\n';
-    
+    private final static int INT_HASH = '#';
+
     /*
     /**********************************************************************
     /* Input handling, configuration
@@ -63,6 +64,8 @@ public class CsvDecoder
      * separator characters are to be automatically trimmed or not.
      */
     protected boolean _trimSpaces;
+
+    protected boolean _allowComments;
     
     /**
      * Maximum of quote character, linefeeds (\r and \n), escape character.
@@ -74,7 +77,7 @@ public class CsvDecoder
     protected int _quoteChar;
 
     protected int _escapeChar;
-    
+
     /*
     /**********************************************************************
     /* Input handling, state
@@ -286,7 +289,7 @@ public class CsvDecoder
      */
     // !!!! Only to allow compilation to succeed; remove once done!
     protected JsonToken _currToken = null;
-    
+
     public CsvDecoder(CsvParser owner, IOContext ctxt, Reader r, CsvSchema schema, TextBuffer textBuffer,
             boolean autoCloseInput, boolean trimSpaces)
     {
@@ -309,6 +312,7 @@ public class CsvDecoder
         _separatorChar = schema.getColumnSeparator();
         _quoteChar = schema.getQuoteChar();
         _escapeChar = schema.getEscapeChar();
+        _allowComments = schema.allowsComments();
         int max = Math.max(_separatorChar, _quoteChar);
         max = Math.max(max, _escapeChar);
         max = Math.max(max, '\r');
@@ -551,20 +555,24 @@ public class CsvDecoder
             return null; // end of line without new value
         }
         int i;
-        
-        // First, need to ensure we know the starting location of token
-        _tokenInputTotal = _currInputProcessed + _inputPtr - 1;
-        _tokenInputRow = _currInputRow;
-        _tokenInputCol = _inputPtr - _currInputRowStart - 1;
 
         if (_trimSpaces) {
             i = _skipLeadingSpace();
         } else {
             i = _nextChar();
         }
+        if (i == INT_HASH && _allowComments) {
+            i = _skipCommentLine();
+        }
+        // First, need to ensure we know the starting location of token
+        _tokenInputTotal = _currInputProcessed + _inputPtr - 1;
+        _tokenInputRow = _currInputRow;
+        _tokenInputCol = _inputPtr - _currInputRowStart - 1;
+
         if (i < 0) { // EOF at this point signifies empty value
             return "";
         }
+
         if (i == INT_CR || i == INT_LF) { // end-of-line means end of record; but also need to handle LF later on
             _pendingLF = i;
             return "";
@@ -577,6 +585,7 @@ public class CsvDecoder
             _textBuffer.resetWithString("");
             return "";
         }
+        
         char[] outBuf = _textBuffer.emptyAndGetCurrentSegment();
         outBuf[0] = (char) i;
         int outPtr = 1;
@@ -653,6 +662,30 @@ public class CsvDecoder
             return null;
         }
         return JsonToken.VALUE_STRING;
+    }
+
+    protected int _skipCommentLine() throws IOException
+    {
+        while ((_inputPtr < _inputEnd) || loadMore()) {
+            char ch = _inputBuffer[_inputPtr++];
+            if (ch >= ' ' || (ch != '\r' && ch != '\n')) {
+                continue;
+            }
+            _pendingLF = ch;
+            _handleLF();
+
+            // Ok, skipped the end of the line. And parse next one...
+            int i;
+            if (_trimSpaces) {
+                i = _skipLeadingSpace();
+            } else {
+                i = _nextChar();
+            }
+            if (i != INT_HASH) {
+                return i;
+            }
+        }
+        return -1; // end of input
     }
     
     /*
@@ -845,7 +878,7 @@ public class CsvDecoder
         return c;
     }
     
-    protected int _nextChar() throws IOException
+    protected final int _nextChar() throws IOException
     {
         if (_inputPtr >= _inputEnd) {
             if (!loadMore()) {
@@ -855,7 +888,7 @@ public class CsvDecoder
         return _inputBuffer[_inputPtr++];
     }
     
-    protected int _skipLeadingSpace() throws IOException
+    protected final int _skipLeadingSpace() throws IOException
     {
         while (true) {
             if (_inputPtr >= _inputEnd) {

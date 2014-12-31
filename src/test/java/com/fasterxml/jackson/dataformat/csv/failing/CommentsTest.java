@@ -18,7 +18,7 @@ public class CommentsTest extends ModuleTestBase
         // First, with comments disabled:
         
         MappingIterator<String[]> it = mapper.reader(String[].class)
-                .with(mapper.schema().withComments()).readValues(CSV);
+                .with(mapper.schema().withoutComments()).readValues(CSV);
 
         row = it.nextValue();
         assertEquals(2, row.length);

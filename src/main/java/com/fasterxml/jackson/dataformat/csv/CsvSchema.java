@@ -741,7 +741,7 @@ public class CsvSchema
      * 
      * @since 2.5
      */
-    public CsvSchema withoutComments(boolean state) {
+    public CsvSchema withoutComments() {
         return _withFeature(FEATURE_ALLOW_COMMENTS, false);
     }
 
