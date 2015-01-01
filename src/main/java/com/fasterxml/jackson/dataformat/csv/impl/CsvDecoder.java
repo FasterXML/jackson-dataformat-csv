@@ -514,7 +514,30 @@ public class CsvDecoder
          * In future we may want to use better heuristics to possibly
          * skip trailing empty line?
          */
-        return (_inputPtr < _inputEnd || loadMore());
+        if ((_inputPtr >= _inputEnd) && !loadMore()) {
+            return false;
+        }
+
+        if (_allowComments) {
+            // First eliminate common case of finding non-comment, non-ws char
+            int i = _inputBuffer[_inputPtr];
+            if (i > INT_HASH) {
+                return true;
+            }
+            if ((i <= INT_SPACE) && _trimSpaces) {
+                ++_inputPtr;
+                i = _skipLeadingSpace();
+            }
+            if (i == INT_HASH) {
+                i = _skipCommentLine();
+                // special if skipping as we didn't get any rows
+                if (i < 0) {
+                    return false;
+                }
+            }
+            --_inputPtr;
+        }
+        return true;
     }
 
     public boolean skipLine() throws IOException
@@ -561,13 +584,6 @@ public class CsvDecoder
             i = _skipLeadingSpace();
         } else {
             i = _nextChar();
-        }
-        if (i == INT_HASH && _allowComments) {
-            i = _skipCommentLine();
-            // special if skipping as we didn't get any rows
-            if (i < 0) {
-                return null;
-            }
         }
         // First, need to ensure we know the starting location of token
         _tokenInputTotal = _currInputProcessed + _inputPtr - 1;
