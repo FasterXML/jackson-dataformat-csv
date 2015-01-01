@@ -721,7 +721,9 @@ public class CsvEncoder
             char c = value.charAt(i);
             if (c < _cfgMinSafeChar) {
                 if (c == _cfgColumnSeparator || c == _cfgQuoteCharacter
-                        || c == '\r' || c == '\n') {
+                        || c == '\r' || c == '\n'
+                        // 31-Dec-2014, tatu: Comment lines start with # so quote if starts with #
+                        || (c == '#' && i == 0)) {
                     return true;
                 }
             }

@@ -518,23 +518,13 @@ public class CsvDecoder
             return false;
         }
 
-        if (_allowComments) {
-            // First eliminate common case of finding non-comment, non-ws char
-            int i = _inputBuffer[_inputPtr];
-            if (i > INT_HASH) {
-                return true;
+        if (_allowComments && _inputBuffer[_inputPtr] == '#') {
+            int i = _skipCommentLine();
+            // end-of-input?
+            if (i < 0) {
+                return false;
             }
-            if ((i <= INT_SPACE) && _trimSpaces) {
-                ++_inputPtr;
-                i = _skipLeadingSpace();
-            }
-            if (i == INT_HASH) {
-                i = _skipCommentLine();
-                // special if skipping as we didn't get any rows
-                if (i < 0) {
-                    return false;
-                }
-            }
+            // otherwise push last read char back
             --_inputPtr;
         }
         return true;

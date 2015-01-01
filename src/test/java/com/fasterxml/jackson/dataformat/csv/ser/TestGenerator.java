@@ -224,6 +224,25 @@ public class TestGenerator extends ModuleTestBase
         assertEquals("\"abc\",1.25\n", result);
     }
 
+    // Must comment '#', at least if it starts the line
+    public void testQuotingOfCommentChar() throws Exception
+    {
+
+        // First, with default quoting
+        CsvMapper mapper = mapperForCsv();
+        final CsvSchema schema = mapper.schemaFor(IdDesc.class);
+        String csv = mapper.writer(schema)
+                .writeValueAsString(new IdDesc("#123", "Foo"));
+        assertEquals("\"#123\",Foo\n", csv);
+
+        // then with strict/optimal
+        mapper = mapperForCsv();
+        mapper.enable(CsvGenerator.Feature.STRICT_CHECK_FOR_QUOTING);
+        csv = mapper.writer(schema)
+                .writeValueAsString(new IdDesc("#123", "Foo"));
+        assertEquals("\"#123\",Foo\n", csv);
+    }
+    
     public void testRawWrites() throws Exception
     {
         StringWriter w = new StringWriter();
