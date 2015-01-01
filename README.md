@@ -11,20 +11,6 @@ All Jackson layers (streaming, databind, tree model) are supported.
 
 [![Build Status](https://fasterxml.ci.cloudbees.com/job/jackson-dataformat-csv-master/badge/icon)](https://fasterxml.ci.cloudbees.com/job/jackson-dataformat-csv-master/)
 
-## Limitations
-
-* Due to tabular nature of `CSV` format, deeply nested data structures are not well supported.
-* Use of Tree Model (`JsonNode`) is supported, but only within limitations of `CSV`.
-
-## Future improvements
-
-Areas that are planned to be improved include things like:
-
- * Optimizations to make number handling as efficient as from JSON (but note: even with existing code, performance is typically limited by I/O and NOT parsing or generation)
-    * Although, as per [Java CSV parser comparison](https://github.com/uniVocity/csv-parsers-comparison), this module is actually performing quite well already (at 2.4)
- * Extensive performance measurements
- * Tests for various "exotic" CSV -- while basic escaping and quoting are tested, CSV is notoriously vaguely specified.
-
 ## Maven dependency
 
 To use this extension on Maven-based projects, use following dependency:
@@ -190,3 +176,31 @@ This is useful if functionality expects a single ("JSON") Array; this was the ca
     * [CSV with Jackson 2.0](http://www.cowtowncoder.com/blog/archives/2012/03/entry_468.html)
 * Performance
     * [Java CSV parser comparison](https://github.com/uniVocity/csv-parsers-comparison)
+
+# CSV Compatibility
+
+Since CSV is a very loose "standard", there are many extensions to basic functionality.
+Jackson supports following extension or variations:
+
+* Customizable delimiters (through `CsvSchema`)
+    * Default separator is comma (`,`), but any other character can be specified as well
+    * Default text quoting is done using double-quote (`"`), may be changed
+    * It is possible to enable use of an "escape character" (by default, not enabled): some variations use `\` for escaping. If enabled, character immediately followed will be used as-is, except for a small set of "well-known" escapes (`\n`, `\r`, `\t`, `\0`)
+    * Linefeed character: when generating content, the default linefeed String used is "`\n`" but this may be changed
+* Null value: by default, null values are serialized as empty Strings (""), but any other String value be configured to be used instead (like, say, "null", "N/A" etc)
+* Use of first row as set of column names: as explained earlier, it is possible to configure `CsvSchema` to indicate that the contents of the first (non-comment) document row is taken to mean set of column names to use
+* Comments
+    * When enabled (via `CsvSchema`, or enabling `JsonParser.Feature.ALLOW_YAML_COMMENTS`), if a row starts with a `#` character, it will be considered a comment and skipped
+
+# Limitations
+
+* Due to tabular nature of `CSV` format, deeply nested data structures are not well supported.
+* Use of Tree Model (`JsonNode`) is supported, but only within limitations of `CSv` format.
+
+# Future improvements
+
+Areas that are planned to be improved include things like:
+
+* Optimizations to make number handling as efficient as from JSON (but note: even with existing code, performance is typically limited by I/O and NOT parsing or generation)
+    * Although, as per [Java CSV parser comparison](https://github.com/uniVocity/csv-parsers-comparison), this module is actually performing quite well already (at 2.4)
+* Mapping of nested POJOs using dotted notation (similar to `@JsonUnwrapped`, but without requiring its use -- note that `@JsonUnwrapped` is already supported)
