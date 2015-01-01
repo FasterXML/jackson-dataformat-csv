@@ -304,6 +304,7 @@ public class CsvDecoder
         _inputSource = r;
         _tokenInputRow = -1;
         _tokenInputCol = -1;
+        _allowComments = owner.isEnabled(JsonParser.Feature.ALLOW_YAML_COMMENTS);
         setSchema(schema);
     }
 
@@ -312,7 +313,7 @@ public class CsvDecoder
         _separatorChar = schema.getColumnSeparator();
         _quoteChar = schema.getQuoteChar();
         _escapeChar = schema.getEscapeChar();
-        _allowComments = schema.allowsComments();
+        _allowComments = _allowComments | schema.allowsComments();
         int max = Math.max(_separatorChar, _quoteChar);
         max = Math.max(max, _escapeChar);
         max = Math.max(max, '\r');
@@ -563,6 +564,10 @@ public class CsvDecoder
         }
         if (i == INT_HASH && _allowComments) {
             i = _skipCommentLine();
+            // special if skipping as we didn't get any rows
+            if (i < 0) {
+                return null;
+            }
         }
         // First, need to ensure we know the starting location of token
         _tokenInputTotal = _currInputProcessed + _inputPtr - 1;
