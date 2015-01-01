@@ -504,16 +504,18 @@ public class CsvParser
      */
     protected JsonToken _handleStartDoc() throws IOException
     {
+        // also, if comments enabled, may need to skip leading ones
+        _reader.skipLeadingComments();
         // First things first: are we expecting header line? If so, read, process
         if (_schema.usesHeader()) {
             _readHeaderLine();
+            _reader.skipLeadingComments();
         }
         // and if we are to skip the first data line, skip it
         if (_schema.skipsFirstDataRow()) {
             _reader.skipLine();
+            _reader.skipLeadingComments();
         }
-        // also, if comments enabled, may need to skip leading ones
-        _reader.skipLeadingComments();
         
         /* Only one real complication, actually; empy documents (zero bytes).
          * Those have no entries. Should be easy enough to detect like so:

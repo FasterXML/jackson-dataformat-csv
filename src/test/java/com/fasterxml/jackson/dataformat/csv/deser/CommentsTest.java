@@ -1,4 +1,6 @@
-package com.fasterxml.jackson.dataformat.csv.failing;
+package com.fasterxml.jackson.dataformat.csv.deser;
+
+import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.MappingIterator;
@@ -83,8 +85,6 @@ public class CommentsTest extends ModuleTestBase
     public void testLeadingComments() throws Exception
     {
         CsvMapper mapper = mapperForCsv();
-        // to handle comments that follow leading spaces
-        mapper.enable(CsvParser.Feature.TRIM_SPACES);
         // should not be needed but seems to be...
         mapper.enable(CsvParser.Feature.WRAP_AS_ARRAY);
 
@@ -96,6 +96,24 @@ public class CommentsTest extends ModuleTestBase
         assertEquals("1", row[0]);
         assertEquals(2, row.length);
         assertEquals("2", row[1]);
+
+        assertFalse(it.hasNextValue());
+        
+        it.close();
+    }
+
+    public void testCommentsWithHeaderRow() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        MappingIterator<Map<String,String>> it = mapper.reader(Map.class)
+                .with(mapper.schema().withComments().withHeader())
+                .readValues("# headers:\nid,value\n# values:\nab#c,#13\n");
+
+        // first row the same
+        Map<String,String> row = it.nextValue();
+        assertEquals("ab#c", row.get("id"));
+        assertEquals("#13", row.get("value"));
+        assertEquals(2, row.size());
 
         assertFalse(it.hasNextValue());
         
