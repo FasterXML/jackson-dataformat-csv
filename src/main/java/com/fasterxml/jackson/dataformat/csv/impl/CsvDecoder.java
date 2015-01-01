@@ -519,7 +519,7 @@ public class CsvDecoder
         }
 
         if (_allowComments && _inputBuffer[_inputPtr] == '#') {
-            int i = _skipCommentLine();
+            int i = _skipCommentLines();
             // end-of-input?
             if (i < 0) {
                 return false;
@@ -530,6 +530,37 @@ public class CsvDecoder
         return true;
     }
 
+    public void skipLeadingComments() throws IOException
+    {
+        if (_allowComments) {
+            if ((_inputPtr < _inputEnd) || loadMore()) {
+                if (_inputBuffer[_inputPtr] == '#') {
+                    _skipCommentLines();
+                    --_inputPtr;
+                }
+            }
+        }
+    }
+    
+    protected int _skipCommentLines() throws IOException
+    {
+        while ((_inputPtr < _inputEnd) || loadMore()) {
+            char ch = _inputBuffer[_inputPtr++];
+            if (ch >= ' ' || (ch != '\r' && ch != '\n')) {
+                continue;
+            }
+            _pendingLF = ch;
+            _handleLF();
+
+            // Ok, skipped the end of the line. Check next one...
+            int i = _nextChar();
+            if (i != INT_HASH) {
+                return i;
+            }
+        }
+        return -1; // end of input
+    }
+    
     public boolean skipLine() throws IOException
     {
         if (_pendingLF != 0) {
@@ -673,30 +704,6 @@ public class CsvDecoder
             return null;
         }
         return JsonToken.VALUE_STRING;
-    }
-
-    protected int _skipCommentLine() throws IOException
-    {
-        while ((_inputPtr < _inputEnd) || loadMore()) {
-            char ch = _inputBuffer[_inputPtr++];
-            if (ch >= ' ' || (ch != '\r' && ch != '\n')) {
-                continue;
-            }
-            _pendingLF = ch;
-            _handleLF();
-
-            // Ok, skipped the end of the line. And parse next one...
-            int i;
-            if (_trimSpaces) {
-                i = _skipLeadingSpace();
-            } else {
-                i = _nextChar();
-            }
-            if (i != INT_HASH) {
-                return i;
-            }
-        }
-        return -1; // end of input
     }
     
     /*

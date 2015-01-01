@@ -28,3 +28,10 @@ Wei Li (wli600@github)
 * Contributed fix for 54: Encounter ArrayIndexOutOfBoundsException in the corner case delimiter
   or end-of-line happened to be the leading character of a segment buffer
  (2.4.4)
+
+Luke Nezda (nezda@github)
+
+* Suggested #56: Support comments (either via `CsvSchema`, or using std
+  `JsonParser.Feature.ALLOW_YAML_COMMENTS.
+ (requested by nezda@github)
+ (2.5.0)

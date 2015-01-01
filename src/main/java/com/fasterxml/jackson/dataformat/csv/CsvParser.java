@@ -512,6 +512,8 @@ public class CsvParser
         if (_schema.skipsFirstDataRow()) {
             _reader.skipLine();
         }
+        // also, if comments enabled, may need to skip leading ones
+        _reader.skipLeadingComments();
         
         /* Only one real complication, actually; empy documents (zero bytes).
          * Those have no entries. Should be easy enough to detect like so:

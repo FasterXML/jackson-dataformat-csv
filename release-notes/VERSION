@@ -9,6 +9,8 @@ Project: jackson-dataformat-csv
 #50: Support `JsonGenerator.Feature.IGNORE_KNOWN` for CSV, to ignoring extra columns
 #53: Add a way to specify "null value" (String) for `CsvGenerator` to use when writing `null`s
  (part of `CsvSchema`; method `withNullValue()`)
+#56: Support comments (either via `CsvSchema`, or using std `JsonParser.Feature.ALLOW_YAML_COMMENTS.
+ (requested by nezda@github)
 #57: Support simple array types
 #61: Add a feature to always quote non-numeric values: `CsvGenerator.Feature.ALWAYS_QUOTE_STRINGS`
 
