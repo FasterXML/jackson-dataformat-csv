@@ -4,7 +4,7 @@ Project: jackson-dataformat-csv
 === Releases ===
 ------------------------------------------------------------------------
 
-2.5.0 (not yet released)
+2.5.0 (01-Jan-2015)
 
 #50: Support `JsonGenerator.Feature.IGNORE_KNOWN` for CSV, to ignoring extra columns
 #53: Add a way to specify "null value" (String) for `CsvGenerator` to use when writing `null`s
