@@ -61,7 +61,7 @@ public final class UTF8Reader
     public UTF8Reader(IOContext ctxt, InputStream in, boolean autoClose,
             byte[] buf, int ptr, int len)
     {
-        super(in);
+        super((in == null) ? new Object() : in);
         _ioContext = ctxt;
         _inputSource = in;
         _inputBuffer = buf;
@@ -72,7 +72,7 @@ public final class UTF8Reader
 
     public UTF8Reader(IOContext ctxt, byte[] buf, int ptr, int len)
     {
-        super(bogusStream());
+        super(new Object());
         _ioContext = ctxt;
         _inputSource = null;
         _inputBuffer = buf;
@@ -92,15 +92,6 @@ public final class UTF8Reader
         _autoClose = autoClose; 
     }
 
-    private static InputStream bogusStream() {
-        return new InputStream() {
-            @Override
-            public int read() throws IOException {
-                return -1;
-            }
-        };
-    }
-    
     /**
      * Method that can be used to see if we can actually modify the
      * underlying buffer. This is the case if we are managing the buffer,
@@ -512,4 +503,3 @@ public final class UTF8Reader
         throw new IOException("Strange I/O stream, returned 0 bytes on read");
     }
 }
-

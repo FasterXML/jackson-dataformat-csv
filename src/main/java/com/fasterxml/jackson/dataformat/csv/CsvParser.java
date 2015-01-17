@@ -12,6 +12,7 @@ import com.fasterxml.jackson.core.json.JsonReadContext;
 import com.fasterxml.jackson.core.util.BufferRecycler;
 import com.fasterxml.jackson.core.util.ByteArrayBuilder;
 import com.fasterxml.jackson.dataformat.csv.impl.CsvDecoder;
+import com.fasterxml.jackson.dataformat.csv.impl.CsvIOContext;
 import com.fasterxml.jackson.dataformat.csv.impl.TextBuffer;
 
 /**
@@ -252,13 +253,12 @@ public class CsvParser
     /**********************************************************************
      */
     
-    public CsvParser(IOContext ctxt, BufferRecycler br,
-            int parserFeatures, int csvFeatures,
+    public CsvParser(CsvIOContext ctxt, int parserFeatures, int csvFeatures,
             ObjectCodec codec, Reader reader)
     {
         super(parserFeatures);    
         _objectCodec = codec;
-        _textBuffer = new TextBuffer(br);
+        _textBuffer =  ctxt.csvTextBuffer();
         DupDetector dups = JsonParser.Feature.STRICT_DUPLICATE_DETECTION.enabledIn(parserFeatures)
                 ? DupDetector.rootDetector(this) : null;
         _formatFeatures = csvFeatures;

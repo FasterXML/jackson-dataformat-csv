@@ -4,6 +4,10 @@ Project: jackson-dataformat-csv
 === Releases ===
 ------------------------------------------------------------------------
 
+2.5.1 (not yet released)
+
+#65: Buffer recycling not always working
+
 2.5.0 (01-Jan-2015)
 
 #50: Support `JsonGenerator.Feature.IGNORE_KNOWN` for CSV, to ignoring extra columns

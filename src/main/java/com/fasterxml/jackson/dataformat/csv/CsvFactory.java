@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.format.InputAccessor;
 import com.fasterxml.jackson.core.format.MatchStrength;
 import com.fasterxml.jackson.core.io.IOContext;
 import com.fasterxml.jackson.core.util.BufferRecycler;
+import com.fasterxml.jackson.dataformat.csv.impl.CsvIOContext;
 import com.fasterxml.jackson.dataformat.csv.impl.CsvParserBootstrapper;
 import com.fasterxml.jackson.dataformat.csv.impl.UTF8Reader;
 import com.fasterxml.jackson.dataformat.csv.impl.UTF8Writer;
@@ -375,32 +376,29 @@ public class CsvFactory extends JsonFactory
      */
     @Override
     protected CsvParser _createParser(InputStream in, IOContext ctxt) throws IOException {
-        BufferRecycler rec = _getBufferRecycler();
-        return new CsvParserBootstrapper(ctxt, rec, _objectCodec, in)
+        return new CsvParserBootstrapper(ctxt, _objectCodec, in)
             .constructParser(_parserFeatures, _csvParserFeatures);
     }
 
     @Override
     protected CsvParser _createParser(byte[] data, int offset, int len, IOContext ctxt) throws IOException {
-        BufferRecycler rec = _getBufferRecycler();
-        return new CsvParserBootstrapper(ctxt, rec, _objectCodec, data, offset, len)
-            .constructParser(_parserFeatures, _csvParserFeatures);
+        return new CsvParserBootstrapper(ctxt, _objectCodec, data, offset, len)
+               .constructParser(_parserFeatures, _csvParserFeatures);
     }
 
     /**
-     * Overridable factory method that actually instantiates desired
-     * parser.
+     * Overridable factory method that actually instantiates desired parser.
      */
     @Override
     protected CsvParser _createParser(Reader r, IOContext ctxt) throws IOException {
-        return new CsvParser(ctxt, _getBufferRecycler(), _parserFeatures, _csvParserFeatures,
+        return new CsvParser((CsvIOContext) ctxt, _parserFeatures, _csvParserFeatures,
                 _objectCodec, r);
     }
     
     @Override
     protected CsvParser _createParser(char[] data, int offset, int len, IOContext ctxt,
             boolean recyclable) throws IOException {
-        return new CsvParser(ctxt, _getBufferRecycler(), _parserFeatures, _csvParserFeatures,
+        return new CsvParser((CsvIOContext) ctxt, _parserFeatures, _csvParserFeatures,
                 _objectCodec, new CharArrayReader(data, offset, len));
     }
 
@@ -416,6 +414,11 @@ public class CsvFactory extends JsonFactory
             return new UTF8Writer(ctxt, out);
         }
         return new OutputStreamWriter(out, enc.getJavaName());
+    }
+
+    @Override
+    protected IOContext _createContext(Object srcRef, boolean resourceManaged) {
+        return new CsvIOContext(_getBufferRecycler(), srcRef, resourceManaged);
     }
     
     /*
