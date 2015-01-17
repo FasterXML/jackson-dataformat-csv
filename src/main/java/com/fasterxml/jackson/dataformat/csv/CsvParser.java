@@ -6,10 +6,8 @@ import java.math.BigInteger;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.base.ParserMinimalBase;
-import com.fasterxml.jackson.core.io.IOContext;
 import com.fasterxml.jackson.core.json.DupDetector;
 import com.fasterxml.jackson.core.json.JsonReadContext;
-import com.fasterxml.jackson.core.util.BufferRecycler;
 import com.fasterxml.jackson.core.util.ByteArrayBuilder;
 import com.fasterxml.jackson.dataformat.csv.impl.CsvDecoder;
 import com.fasterxml.jackson.dataformat.csv.impl.CsvIOContext;
@@ -411,7 +409,7 @@ public class CsvParser
     
     /*
     /**********************************************************
-    /* Parsing
+    /* Parsing, basic
     /**********************************************************
      */
 
@@ -492,6 +490,28 @@ public class CsvParser
         }
     }
 
+    /*
+    /**********************************************************
+    /* Parsing, optimized methods
+    /**********************************************************
+     */
+
+    @Override
+    public String nextFieldName() throws IOException
+    {
+        // Optimize for expected case of getting FIELD_NAME:
+        if (_state == STATE_NEXT_ENTRY) {
+            JsonToken t = _handleNextEntry();
+            _currToken = t;
+            if (t == JsonToken.FIELD_NAME) {
+                return _currentName;
+            }
+            return null;
+        }
+        // unlikely, but verify just in case
+        return (nextToken() == JsonToken.FIELD_NAME) ? getCurrentName() : null;
+    }
+    
     /*
     /**********************************************************
     /* Parsing, helper methods

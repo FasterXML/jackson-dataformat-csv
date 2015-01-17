@@ -7,7 +7,6 @@ import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.format.InputAccessor;
 import com.fasterxml.jackson.core.format.MatchStrength;
 import com.fasterxml.jackson.core.io.IOContext;
-import com.fasterxml.jackson.core.util.BufferRecycler;
 import com.fasterxml.jackson.dataformat.csv.impl.CsvIOContext;
 import com.fasterxml.jackson.dataformat.csv.impl.CsvParserBootstrapper;
 import com.fasterxml.jackson.dataformat.csv.impl.UTF8Reader;
