@@ -501,6 +501,7 @@ public class CsvParser
     {
         // Optimize for expected case of getting FIELD_NAME:
         if (_state == STATE_NEXT_ENTRY) {
+            _binaryValue = null;
             JsonToken t = _handleNextEntry();
             _currToken = t;
             if (t == JsonToken.FIELD_NAME) {
@@ -511,7 +512,28 @@ public class CsvParser
         // unlikely, but verify just in case
         return (nextToken() == JsonToken.FIELD_NAME) ? getCurrentName() : null;
     }
-    
+
+    @Override
+    public String nextTextValue() throws IOException
+    {
+        _binaryValue = null;
+        JsonToken t;
+        if (_state == STATE_NAMED_VALUE) {
+            _currToken = t = _handleNamedValue();
+            if (t == JsonToken.VALUE_STRING) {
+                return _currentValue;
+            }
+        } else if (_state == STATE_UNNAMED_VALUE) {
+            _currToken = t = _handleUnnamedValue();
+            if (t == JsonToken.VALUE_STRING) {
+                return _currentValue;
+            }
+        } else {
+            t = nextToken();
+        }
+        return (t == JsonToken.VALUE_STRING) ? getText() : null;
+    }
+
     /*
     /**********************************************************
     /* Parsing, helper methods
