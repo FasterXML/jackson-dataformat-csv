@@ -389,6 +389,7 @@ public class CsvMapper extends ObjectMapper
             }
             // Then name wrapping/unwrapping
             String name = prop.getName();
+            
             if (unwrapper != null) {
                 name = unwrapper.transform(name);
             }

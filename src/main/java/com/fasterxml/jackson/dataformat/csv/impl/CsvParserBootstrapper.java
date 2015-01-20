@@ -26,7 +26,7 @@ public final class CsvParserBootstrapper
     final static byte UTF8_BOM_1 = (byte) 0xEF;
     final static byte UTF8_BOM_2 = (byte) 0xBB;
     final static byte UTF8_BOM_3 = (byte) 0xBF;
-    
+
     /*
     /**********************************************************
     /* Configuration
@@ -34,8 +34,6 @@ public final class CsvParserBootstrapper
      */
 
     protected final IOContext _context;
-    
-    protected final BufferRecycler _recycler;
 
     protected final ObjectCodec _codec;
 
@@ -52,12 +50,6 @@ public final class CsvParserBootstrapper
     private int _inputPtr;
 
     private int _inputEnd;
-
-    /**
-     * Flag that indicates whether buffer above is to be recycled
-     * after being used or not.
-     */
-//    private final boolean _bufferRecyclable;
 
     /*
     /**********************************************************
@@ -90,24 +82,20 @@ public final class CsvParserBootstrapper
     /**********************************************************
      */
 
-    public CsvParserBootstrapper(IOContext ctxt, BufferRecycler rec, ObjectCodec codec,
-            InputStream in)
+    public CsvParserBootstrapper(IOContext ctxt, ObjectCodec codec, InputStream in)
     {
         _context = ctxt;
-        _recycler = rec;
         _codec = codec;
         _in = in;
         _inputBuffer = ctxt.allocReadIOBuffer();
         _inputEnd = _inputPtr = 0;
         _inputProcessed = 0;
-//        _bufferRecyclable = true;
     }
 
-    public CsvParserBootstrapper(IOContext ctxt, BufferRecycler rec, ObjectCodec codec,
+    public CsvParserBootstrapper(IOContext ctxt, ObjectCodec codec,
             byte[] inputBuffer, int inputStart, int inputLen)
     {
         _context = ctxt;
-        _recycler = rec;
         _codec = codec;
         _in = null;
         _inputBuffer = inputBuffer;
@@ -115,7 +103,6 @@ public final class CsvParserBootstrapper
         _inputEnd = (inputStart + inputLen);
         // Need to offset this for correct location info
         _inputProcessed = -inputStart;
-//        _bufferRecyclable = false;
     }
 
     /*
@@ -170,7 +157,7 @@ public final class CsvParserBootstrapper
             throw new RuntimeException("Internal error"); // should never get here
         }
         _context.setEncoding(enc);
-        return new CsvParser(_context, _recycler,  baseFeatures, csvFeatures, _codec,
+        return new CsvParser((CsvIOContext) _context, baseFeatures, csvFeatures, _codec,
                 _createReader(enc));
     }
     
@@ -182,9 +169,9 @@ public final class CsvParserBootstrapper
         case UTF32_LE:
             return new UTF32Reader(_context, _in, _inputBuffer, _inputPtr, _inputEnd,
                                    enc.isBigEndian());
+
         case UTF16_BE:
         case UTF16_LE:
-        case UTF8: // only in non-common case where we don't want to do direct mapping
             {
                 // First: do we have a Stream? If not, need to create one:
                 InputStream in = _in;
@@ -201,6 +188,10 @@ public final class CsvParserBootstrapper
                 }
                 return new InputStreamReader(in, enc.getJavaName());
             }
+        case UTF8:
+            // Important: do not pass context, if we got byte[], nothing to release
+            return new UTF8Reader((_in == null) ? null : _context, _in, _context.isResourceManaged(),
+                    _inputBuffer, _inputPtr, _inputEnd - _inputPtr);
         default:
             throw new RuntimeException();
         }

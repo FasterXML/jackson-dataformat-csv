@@ -247,12 +247,12 @@ public class TestGenerator extends ModuleTestBase
     {
         StringWriter w = new StringWriter();
         JsonGenerator gen = new CsvFactory().createGenerator(w);
-        gen.writeStartObject();
+        gen.writeStartArray();
         gen.writeString("a");
         // just to ensure no quoting goes on:
         gen.writeRawValue("b,c");
         gen.writeString("d,e");
-        gen.writeEndObject();
+        gen.writeEndArray();
         gen.close();
         assertEquals("a,b,c,\"d,e\"\n", w.toString());
 
@@ -260,10 +260,10 @@ public class TestGenerator extends ModuleTestBase
 
         w = new StringWriter();
         gen = new CsvFactory().createGenerator(w);
-        gen.writeStartObject();
+        gen.writeStartArray();
         gen.writeRawValue("a,b");
         gen.writeRaw(",foobar");
-        gen.writeEndObject();
+        gen.writeEndArray();
         gen.close();
         assertEquals("a,b,foobar\n", w.toString());
     }

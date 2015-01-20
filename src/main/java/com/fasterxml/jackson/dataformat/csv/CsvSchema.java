@@ -256,6 +256,9 @@ public class CsvSchema
         public int getIndex() { return _index; }
         public String getName() { return _name; }
         public ColumnType getType() { return _type; }
+        public boolean hasName(String n) {
+            return (_name == n) || _name.equals(n);
+        }
         
         /**
          * @since 2.5
@@ -942,6 +945,22 @@ public class CsvSchema
     }
 
     public Column column(String name) {
+        return _columnsByName.get(name);
+    }
+
+    /**
+     * Optimized variant where a hint is given as to likely index of the column
+     * name.
+     *
+     * @since 2.6
+     */
+    public Column column(String name, int probableIndex) {
+        if (probableIndex < _columns.length) {
+            Column col = _columns[probableIndex];
+            if (col.hasName(name)) {
+                return col;
+            }
+        }
         return _columnsByName.get(name);
     }
     

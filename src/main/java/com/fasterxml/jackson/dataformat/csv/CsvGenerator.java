@@ -302,7 +302,8 @@ public class CsvGenerator extends GeneratorBase
         if (_schema == null) {
             _reportError("Unrecognized column '"+name+"', can not resolve without CsvSchema");
         }
-        CsvSchema.Column col = _schema.column(name);
+        // note: we are likely to get next column name, so pass it as hint
+        CsvSchema.Column col = _schema.column(name, _nextColumnByName+1);
         if (col == null) {
             if (isEnabled(JsonGenerator.Feature.IGNORE_UNKNOWN)) {
                 _skipValue = true;

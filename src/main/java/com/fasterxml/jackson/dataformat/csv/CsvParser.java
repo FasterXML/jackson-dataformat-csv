@@ -6,12 +6,11 @@ import java.math.BigInteger;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.base.ParserMinimalBase;
-import com.fasterxml.jackson.core.io.IOContext;
 import com.fasterxml.jackson.core.json.DupDetector;
 import com.fasterxml.jackson.core.json.JsonReadContext;
-import com.fasterxml.jackson.core.util.BufferRecycler;
 import com.fasterxml.jackson.core.util.ByteArrayBuilder;
 import com.fasterxml.jackson.dataformat.csv.impl.CsvDecoder;
+import com.fasterxml.jackson.dataformat.csv.impl.CsvIOContext;
 import com.fasterxml.jackson.dataformat.csv.impl.TextBuffer;
 
 /**
@@ -252,13 +251,12 @@ public class CsvParser
     /**********************************************************************
      */
     
-    public CsvParser(IOContext ctxt, BufferRecycler br,
-            int parserFeatures, int csvFeatures,
+    public CsvParser(CsvIOContext ctxt, int parserFeatures, int csvFeatures,
             ObjectCodec codec, Reader reader)
     {
         super(parserFeatures);    
         _objectCodec = codec;
-        _textBuffer = new TextBuffer(br);
+        _textBuffer =  ctxt.csvTextBuffer();
         DupDetector dups = JsonParser.Feature.STRICT_DUPLICATE_DETECTION.enabledIn(parserFeatures)
                 ? DupDetector.rootDetector(this) : null;
         _formatFeatures = csvFeatures;
@@ -411,7 +409,7 @@ public class CsvParser
     
     /*
     /**********************************************************
-    /* Parsing
+    /* Parsing, basic
     /**********************************************************
      */
 
@@ -490,6 +488,50 @@ public class CsvParser
         default:
             throw new IllegalStateException();
         }
+    }
+
+    /*
+    /**********************************************************
+    /* Parsing, optimized methods
+    /**********************************************************
+     */
+
+    @Override
+    public String nextFieldName() throws IOException
+    {
+        // Optimize for expected case of getting FIELD_NAME:
+        if (_state == STATE_NEXT_ENTRY) {
+            _binaryValue = null;
+            JsonToken t = _handleNextEntry();
+            _currToken = t;
+            if (t == JsonToken.FIELD_NAME) {
+                return _currentName;
+            }
+            return null;
+        }
+        // unlikely, but verify just in case
+        return (nextToken() == JsonToken.FIELD_NAME) ? getCurrentName() : null;
+    }
+
+    @Override
+    public String nextTextValue() throws IOException
+    {
+        _binaryValue = null;
+        JsonToken t;
+        if (_state == STATE_NAMED_VALUE) {
+            _currToken = t = _handleNamedValue();
+            if (t == JsonToken.VALUE_STRING) {
+                return _currentValue;
+            }
+        } else if (_state == STATE_UNNAMED_VALUE) {
+            _currToken = t = _handleUnnamedValue();
+            if (t == JsonToken.VALUE_STRING) {
+                return _currentValue;
+            }
+        } else {
+            t = nextToken();
+        }
+        return (t == JsonToken.VALUE_STRING) ? getText() : null;
     }
 
     /*
