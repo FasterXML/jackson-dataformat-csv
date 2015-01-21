@@ -631,7 +631,7 @@ public class CsvParser
             }
             _reportError("Too many entries: expected at most "+_columnCount+" (value #"+_columnCount+" ("+next.length()+" chars) \""+next+"\")");
         }
-        _currentName = _schema.column(_columnIndex).getName();
+        _currentName = _schema.columnName(_columnIndex);
         return JsonToken.FIELD_NAME;
     }
 
@@ -738,7 +738,7 @@ public class CsvParser
         CsvSchema newSchema = builder.build();
         int size = newSchema.size();
         if (size < 2) { // 1 just because we may get 'empty' header name
-            String first = (size == 0) ? "" : newSchema.column(0).getName().trim();
+            String first = (size == 0) ? "" : newSchema.columnName(0).trim();
             if (first.length() == 0) {
                 _reportError("Empty header line: can not bind data");
             }

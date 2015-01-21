@@ -944,6 +944,13 @@ public class CsvSchema
         return _columns[index];
     }
 
+    /**
+     * @since 2.6
+     */
+    public String columnName(int index) {
+        return _columns[index].getName();
+    }
+    
     public Column column(String name) {
         return _columnsByName.get(name);
     }

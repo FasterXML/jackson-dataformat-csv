@@ -39,9 +39,9 @@ public class TestParserWithHeader extends ModuleTestBase
         assertEquals(3, schema.size());
 
         // verify that names from first line are trimmed:
-        assertEquals("name", schema.column(0).getName());
-        assertEquals("age", schema.column(1).getName());
-        assertEquals("other", schema.column(2).getName());
+        assertEquals("name", schema.columnName(0));
+        assertEquals("age", schema.columnName(1));
+        assertEquals("other", schema.columnName(2));
         parser.close();
     }
 
@@ -135,7 +135,7 @@ public class TestParserWithHeader extends ModuleTestBase
         CsvSchema actual = p.getSchema();
         
         assertEquals(1, actual.size());
-        assertEquals(COLUMN, actual.column(0).getName());
+        assertEquals(COLUMN, actual.columnName(0));
         p.close();
     }
     
