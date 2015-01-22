@@ -520,19 +520,48 @@ public class CsvEncoder
             _writeLongQuoted(text);
             return;
         }
-        for (int i = 0; i < len; ++i) {
+        // 22-Jan-2015, tatu: Common case is that of no quoting needed, so let's
+        //     make a speculative copy, then scan
+        final char[] buf = _outputBuffer;
+        int ptr = _outputTail;
+
+        text.getChars(0, len, buf, ptr);
+
+        final int end = ptr+len;
+        for (; ptr < end && buf[ptr] != q; ++ptr) { }
+
+        if (ptr == end) { // all good, no quoting!
+            _outputBuffer[ptr] = q;
+            _outputTail = ptr+1;
+        } else { // doh. do need quoting
+            _writeQuoted(text, q, ptr - _outputTail);
+        }
+    }
+
+    protected void _writeQuoted(String text, char q, int i) throws IOException
+    {
+        final char[] buf = _outputBuffer;
+        _outputTail += i;
+        final int len = text.length();
+        for (; i < len; ++i) {
             char c = text.charAt(i);
             if (c == q) { // double up
-                _outputBuffer[_outputTail++] = q;
                 if (_outputTail >= _outputEnd) {
                     _flushBuffer();
                 }
+                buf[_outputTail++] = q;
             }
-            _outputBuffer[_outputTail++] = c;
+            if (_outputTail >= _outputEnd) {
+                _flushBuffer();
+            }
+            buf[_outputTail++] = c;
         }
-        _outputBuffer[_outputTail++] = q;
+        if (_outputTail >= _outputEnd) {
+            _flushBuffer();
+        }
+        buf[_outputTail++] = q;
     }
-    
+
     private final void _writeLongQuoted(String text) throws IOException
     {
         final int len = text.length();
