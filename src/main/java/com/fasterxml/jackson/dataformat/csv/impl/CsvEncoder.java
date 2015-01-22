@@ -268,7 +268,15 @@ public class CsvEncoder
     {
         // easy case: all in order
         if (columnIndex == _nextColumnToWrite) {
-            appendValue(value);
+            // inlined 'appendValue(int)'
+            // up to 10 digits and possible minus sign, leading comma
+            if ((_outputTail + 12) > _outputTail) {
+                _flushBuffer();
+            }
+            if (_nextColumnToWrite > 0) {
+                _outputBuffer[_outputTail++] = _cfgColumnSeparator;
+            }
+            _outputTail = NumberOutput.outputInt(value, _outputBuffer, _outputTail);
             ++_nextColumnToWrite;
             return;
         }
@@ -279,7 +287,15 @@ public class CsvEncoder
     {
         // easy case: all in order
         if (columnIndex == _nextColumnToWrite) {
-            appendValue(value);
+            // inlined 'appendValue(int)'
+            // up to 20 digits, minus sign, leading comma
+            if ((_outputTail + 22) > _outputTail) {
+                _flushBuffer();
+            }
+            if (_nextColumnToWrite > 0) {
+                _outputBuffer[_outputTail++] = _cfgColumnSeparator;
+            }
+            _outputTail = NumberOutput.outputLong(value, _outputBuffer, _outputTail);
             ++_nextColumnToWrite;
             return;
         }
@@ -420,7 +436,7 @@ public class CsvEncoder
         }
         writeRaw(value);
     }
-    
+
     protected void appendValue(int value) throws IOException
     {
         // up to 10 digits and possible minus sign, leading comma
