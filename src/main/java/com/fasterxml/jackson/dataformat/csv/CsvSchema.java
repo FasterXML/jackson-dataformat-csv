@@ -290,7 +290,20 @@ public class CsvSchema
         public int getIndex() { return _index; }
         public String getName() { return _name; }
         public ColumnType getType() { return _type; }
+
         public Column getNext() { return _next; }
+
+        /**
+         * Access that returns same as {@link #getNext} iff name of that
+         * column is same as given name
+         */
+        public Column getNextWithName(String name) {
+            if (_next != null && name.equals(_next._name)) {
+                return _next;
+            }
+            return null;
+        }
+
         public boolean hasName(String n) {
             return (_name == n) || _name.equals(n);
         }
