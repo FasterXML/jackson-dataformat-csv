@@ -251,7 +251,19 @@ public class CsvEncoder
     {
         // easy case: all in order
         if (columnIndex == _nextColumnToWrite) {
-            appendValue(value);
+            // inlined 'appendValue(String)`
+            if (_outputTail >= _outputEnd) {
+                _flushBuffer();
+            }
+            if (_nextColumnToWrite > 0) {
+                appendColumnSeparator();
+            }
+            final int len = value.length();
+            if (_cfgAlwaysQuoteStrings || _mayNeedQuotes(value, len)) {
+                _writeQuoted(value);
+            } else {
+                writeRaw(value);
+            }
             ++_nextColumnToWrite;
             return;
         }
