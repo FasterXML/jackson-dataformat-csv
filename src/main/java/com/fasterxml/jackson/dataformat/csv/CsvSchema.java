@@ -227,6 +227,14 @@ public class CsvSchema
          */
         private final int _arrayElementSeparator;
 
+        /**
+         * Link to the next column within schema, if one exists;
+         * null for the last column.
+         * 
+         * @since 2.6
+         */
+        private final Column _next;
+        
         public Column(int index, String name) {
             this(index, name, ColumnType.STRING, -1);
         }
@@ -241,21 +249,48 @@ public class CsvSchema
             _name = name;
             _type = type;
             _arrayElementSeparator = arrayElementSep;
+            _next = null;
         }
 
+        public Column(Column src, Column next)
+        {
+            _index = src._index;
+            _name = src._name;
+            _type = src._type;
+            _arrayElementSeparator = src._arrayElementSeparator;
+            _next = next;
+        }
+        
         public Column withName(String newName) {
+            if (_name == newName) {
+                return this;
+            }
             return new Column(_index, newName, _type, _arrayElementSeparator);
         }
         public Column withType(ColumnType newType) {
+            if (newType == _type) {
+                return this;
+            }
             return new Column(_index, _name, newType, _arrayElementSeparator);
         }
         public Column withElementSeparator(int sep) {
+            if (_arrayElementSeparator == sep) {
+                return this;
+            }
             return new Column(_index, _name, _type, sep);
+        }
+
+        public Column withNext(Column next) {
+            if (_next == next) {
+                return this;
+            }
+            return new Column(this, next);
         }
         
         public int getIndex() { return _index; }
         public String getName() { return _name; }
         public ColumnType getType() { return _type; }
+        public Column getNext() { return _next; }
         public boolean hasName(String n) {
             return (_name == n) || _name.equals(n);
         }
@@ -579,6 +614,8 @@ public class CsvSchema
     {
         if (columns == null) {
             columns = NO_COLUMNS;
+        } else {
+            columns = _link(columns);
         }
         _columns = columns;
         _features = features;
@@ -626,7 +663,7 @@ public class CsvSchema
      * <code>sortedBy()</code> methods.
      */
     protected CsvSchema(CsvSchema base, Column[] columns) {
-        _columns = columns;
+        _columns = _link(columns);
         _features = base._features;
         _columnSeparator = base._columnSeparator;
         _quoteChar = base._quoteChar;
@@ -636,7 +673,7 @@ public class CsvSchema
         _nullValue = base._nullValue;
         _columnsByName = base._columnsByName;
     }
-
+    
     /**
      * Copy constructor used for creating variants for on/off features
      * 
@@ -653,7 +690,22 @@ public class CsvSchema
         _nullValue = base._nullValue;
         _columnsByName = base._columnsByName;
     }
-    
+
+    /**
+     * Helper method used for chaining columns together using next-linkage
+     */
+    private static Column[] _link(Column[] orig) {
+        int i = orig.length;
+        Column[] result = new Column[i];
+        Column prev = null;
+        for (; --i >= 0; ) {
+            Column curr = orig[i].withNext(prev);
+            result[i] = curr;
+            prev = curr;
+        }
+        return result;
+    }
+
     public static Builder builder() {
         return new Builder();
     }

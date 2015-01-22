@@ -1,8 +1,6 @@
 package com.fasterxml.jackson.dataformat.csv.schema;
 
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
@@ -43,19 +41,26 @@ public class SchemaTest extends ModuleTestBase
         col = it.next();
         assertEquals("firstName", col.getName());
         assertEquals(CsvSchema.ColumnType.STRING, col.getType());
+        
         col = it.next();
         assertEquals("lastName", col.getName());
         assertEquals(CsvSchema.ColumnType.STRING, col.getType());
+
         col = it.next();
         assertEquals("gender", col.getName());
         assertEquals(CsvSchema.ColumnType.NUMBER_OR_STRING, col.getType());
+
         col = it.next();
         assertEquals("verified", col.getName());
         assertEquals(CsvSchema.ColumnType.BOOLEAN, col.getType());
+
         col = it.next();
         assertEquals("userImage", col.getName());
         assertEquals(CsvSchema.ColumnType.STRING, col.getType());
         assertFalse(it.hasNext());
+
+        // Then verify linkage
+        _verifyLinks(schema);
     }
 
     public void testArrayWithTypedAutoSchema() throws Exception
@@ -79,6 +84,8 @@ public class SchemaTest extends ModuleTestBase
         // List:
         assertEquals(CsvSchema.ColumnType.ARRAY, col.getType());
         assertFalse(it.hasNext());
+
+        _verifyLinks(schema);
     }
     
     // for [Issue#42]
@@ -89,6 +96,8 @@ public class SchemaTest extends ModuleTestBase
         assertEquals(aposToQuotes("['a','b','c','d']"), schema.getColumnDesc());
         schema = schema.sortedBy("b", "c");
         assertEquals(aposToQuotes("['b','c','a','d']"), schema.getColumnDesc());
+
+        _verifyLinks(schema);
     }
 
     // for [Issue#42]
@@ -98,5 +107,22 @@ public class SchemaTest extends ModuleTestBase
         CsvSchema schema = mapper.schemaFor(Mixed.class);
         schema = schema.sortedBy(Collections.<String>reverseOrder());
         assertEquals(aposToQuotes("['d','c','b','a']"), schema.getColumnDesc());
+
+        _verifyLinks(schema);
+    }
+
+    private void _verifyLinks(CsvSchema schema)
+    {
+        List<Column> all = new ArrayList<Column>();
+        for (Column col : schema) {
+            all.add(col);
+        }
+
+        Column prev = null;
+        for (int i = all.size(); --i >= 0; ) {
+            Column curr = all.get(i);
+            assertSame(prev, curr.getNext());
+            prev = curr;
+        }
     }
 }
