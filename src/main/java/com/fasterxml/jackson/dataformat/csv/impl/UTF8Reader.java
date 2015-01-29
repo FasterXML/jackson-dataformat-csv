@@ -61,7 +61,7 @@ public final class UTF8Reader
     public UTF8Reader(IOContext ctxt, InputStream in, boolean autoClose,
             byte[] buf, int ptr, int len)
     {
-        super((in == null) ? new Object() : in);
+        super((in == null) ? buf : in);
         _ioContext = ctxt;
         _inputSource = in;
         _inputBuffer = buf;

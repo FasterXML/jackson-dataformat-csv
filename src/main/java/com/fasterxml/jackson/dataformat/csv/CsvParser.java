@@ -497,6 +497,22 @@ public class CsvParser
      */
 
     @Override
+    public boolean nextFieldName(SerializableString str) throws IOException {
+        // Optimize for expected case of getting FIELD_NAME:
+        if (_state == STATE_NEXT_ENTRY) {
+            _binaryValue = null;
+            JsonToken t = _handleNextEntry();
+            _currToken = t;
+            if (t == JsonToken.FIELD_NAME) {
+                return str.getValue().equals(_currentName);
+            }
+            return false;
+        }
+        // unlikely, but verify just in case
+        return (nextToken() == JsonToken.FIELD_NAME) && str.getValue().equals(getCurrentName());
+    }
+
+    @Override
     public String nextFieldName() throws IOException
     {
         // Optimize for expected case of getting FIELD_NAME:
