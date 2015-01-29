@@ -16,7 +16,7 @@ public class TestParser extends ModuleTestBase
         public int x;
         public Integer y;
         public Integer z = 8;
-    }    
+    }
 
     final static CsvSchema SIMPLE_SCHEMA = CsvSchema.builder()
             .addColumn("firstName")
@@ -183,7 +183,7 @@ public class TestParser extends ModuleTestBase
     public void testEmptyHandlingForInteger() throws Exception
     {
         CsvMapper mapper = mapperForCsv();
-        CsvSchema schema = mapper.schemaFor(Point.class).withoutHeader();
+        CsvSchema schema = mapper.typedSchemaFor(Point.class).withoutHeader();
 
         // First: empty value, to be considered as null
         Point result = mapper.reader(Point.class).with(schema).readValue(",,\n");
@@ -195,7 +195,7 @@ public class TestParser extends ModuleTestBase
     public void testStringNullHandlingForInteger() throws Exception
     {
         CsvMapper mapper = mapperForCsv();
-        CsvSchema schema = mapper.schemaFor(Point.class).withoutHeader();
+        CsvSchema schema = mapper.typedSchemaFor(Point.class).withoutHeader();
 
         // First: empty value, to be considered as null
         Point result = mapper.reader(Point.class).with(schema).readValue("null,null,null\n");
