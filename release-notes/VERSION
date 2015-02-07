@@ -4,7 +4,7 @@ Project: jackson-dataformat-csv
 === Releases ===
 ------------------------------------------------------------------------
 
-2.5.1 (not yet released)
+2.5.1 (06-Feb-2015)
 
 #65: Buffer recycling not always working
 
