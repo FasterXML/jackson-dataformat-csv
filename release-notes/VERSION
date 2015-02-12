@@ -6,7 +6,12 @@ Project: jackson-dataformat-csv
 
 2.6.0 (not yet released)
 
-2.5.1 (not yet released)
+2.5.2 (not yet released)
+
+#66: Deserializing an empty string as an array field return a non-empty list of one empty String
+ (reported by aksh3ll@github)
+
+2.5.1 (06-Feb-2015)
 
 #65: Buffer recycling not always working
 

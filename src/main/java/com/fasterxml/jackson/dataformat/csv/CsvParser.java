@@ -176,7 +176,7 @@ public class CsvParser
     /* State
     /**********************************************************************
      */
-    
+
     /**
      * Information about parser context, context in which
      * the next token is to be parsed (root, array, object).
@@ -194,18 +194,18 @@ public class CsvParser
      * String value for the current column, if accessed.
      */
     protected String _currentValue;
-    
+
     /**
      * Index of the column we are exposing
      */
     protected int _columnIndex;
-    
+
     /**
      * Current logical state of the parser; one of <code>STATE_</code>
      * constants.
      */
     protected int _state = STATE_DOC_START;
-    
+
     /**
      * We will hold on to decoded binary data, for duration of
      * current event, so that multiple calls to
@@ -225,7 +225,7 @@ public class CsvParser
     protected String _arrayValue;
 
     protected char _arraySeparator;
-    
+
     /*
     /**********************************************************************
     /* Helper objects
@@ -242,15 +242,15 @@ public class CsvParser
      * of doubled-quotes, escaped characters.
      */
     protected final TextBuffer _textBuffer;
-    
+
     protected ByteArrayBuilder _byteArrayBuilder;
-    
+
     /*
     /**********************************************************************
     /* Life-cycle
     /**********************************************************************
      */
-    
+
     public CsvParser(CsvIOContext ctxt, int parserFeatures, int csvFeatures,
             ObjectCodec codec, Reader reader)
     {
@@ -282,7 +282,7 @@ public class CsvParser
     /* Overridden methods
     /**********************************************************                              
      */
-    
+
     @Override
     public ObjectCodec getCodec() {
         return _objectCodec;
@@ -292,7 +292,7 @@ public class CsvParser
     public void setCodec(ObjectCodec c) {
         _objectCodec = c;
     }
-    
+
     @Override
     public boolean canUseSchema(FormatSchema schema) {
         return (schema instanceof CsvSchema);
@@ -708,12 +708,29 @@ public class CsvParser
              return JsonToken.END_ARRAY;
         }
         int end = _arrayValue.indexOf(_arraySeparator, offset);
+
         if (end < 0) { // last value
-            _currentValue = (offset == 0) ? _arrayValue : _arrayValue.substring(offset);
-            _arrayValueStart = end;
+            _arrayValueStart = end; // end marker, regardless
+
+            // 11-Feb-2015, tatu: Tricky, As per [dataformat-csv#66]; empty Strings really
+            //     should not emit any values. Not sure if trim
+            if (offset == 0) { // no separator
+                // for now, let's use trimming for checking
+                if (_arrayValue.isEmpty() || _arrayValue.trim().isEmpty()) {
+                    _parsingContext = _parsingContext.getParent();
+                    _state = STATE_NEXT_ENTRY;
+                    return JsonToken.END_ARRAY;
+                }
+                _currentValue = _arrayValue;
+            } else {
+                _currentValue = _arrayValue.substring(offset);
+            }
         } else {
             _currentValue = _arrayValue.substring(offset, end);
             _arrayValueStart = end+1;
+        }
+        if (isEnabled(Feature.TRIM_SPACES)) {
+            _currentValue = _currentValue.trim();
         }
         return JsonToken.VALUE_STRING;
     }

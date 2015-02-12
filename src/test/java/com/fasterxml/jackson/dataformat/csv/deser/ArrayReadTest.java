@@ -1,7 +1,8 @@
 package com.fasterxml.jackson.dataformat.csv.deser;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import java.util.Arrays;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.csv.*;
 
 // for [dataformat-csv#57]
@@ -49,6 +50,16 @@ public class ArrayReadTest extends ModuleTestBase
         assertEquals(1, v[0]);
         assertEquals(2, v[1]);
         assertEquals(3, v[2]);
+
+        // one more thing: for [dataformat-csv#66]:
+        value = MAPPER.readerWithTypedSchemaFor(ValueEntry.class)
+                .readValue("foo,,stuff");
+        assertNotNull(value);
+        assertEquals("foo", value.id);
+        assertEquals("stuff", value.extra);
+        v = value.values;
+        assertNotNull(v);
+        assertEquals(0, v.length);
     }
 
     /*
