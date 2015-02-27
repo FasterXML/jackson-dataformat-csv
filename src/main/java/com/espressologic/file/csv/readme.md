@@ -1,3 +1,4 @@
+   ```
    //This is sample code to use in Espresso Logic EVENT logic 
    
    //READ the mapping table
@@ -24,3 +25,4 @@
     var post = SysUtility.restPost(url,parms,settings,json);
  
     log.debug(post);
+```
