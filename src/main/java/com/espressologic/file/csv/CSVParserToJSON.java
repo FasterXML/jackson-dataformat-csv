@@ -14,8 +14,8 @@ import com.fasterxml.jackson.dataformat.csv.CsvParser;
 
 public class CSVParserToJSON {
 	
-	private String keyAttrName = "idvendor_pricelist";
-	private String altKeyAttrName = "vendorID";
+	private String keyAttrName = "idMasterMapper";
+	private String altKeyAttrName = "altForeignKey";
 	//col1 = origColName col2 = replacement column
 	private Map<String,String> mappedColumns = new HashMap<String,String>();
 
@@ -49,7 +49,7 @@ public class CSVParserToJSON {
 	}
 
 	public static void main(String[] args) {
-		File file = new File("ScanPower Vega.csv");//JarrowFormulas.csv");
+		File file = new File("sample.csv");
 		
 		byte[] bFile = new byte[(int) file.length()];
 		try {
@@ -60,9 +60,9 @@ public class CSVParserToJSON {
 			for (int i = 0; i < bFile.length; i++) {
 				// System.out.print((char) bFile[i]);
 			}
-			CSVParserToJSON csv = new CSVParserToJSON("idvendor_pricelist","vendorid");
-			csv.addColumnMap("upc", "UPC");
-			String str = csv.convertFileToJSON(4,2, bFile);
+			CSVParserToJSON csv = new CSVParserToJSON("idMasterMapper","AttrDataType");
+			//csv.addColumnMap("ASIN", "asin");
+			String str = csv.convertFileToJSON(1,1, bFile);
 			System.out.println(str);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -70,9 +70,9 @@ public class CSVParserToJSON {
 		}
 
 	}
-	public String convertFileToJSON(String keyName, int idvendor_pricelist, int vendorID, byte[] bytes){
+	public String convertFileToJSON(String keyName, int idvendor_pricelist, int altForeignKey, byte[] bytes){
 		keyAttrName = keyName;
-		return convertFileToJSON( idvendor_pricelist,  vendorID,bytes);
+		return convertFileToJSON( idvendor_pricelist,  altForeignKey,bytes);
 	}
 
 	public String convertFileToJSON(int idKey1, int idKey2 , byte[] bytes) {
@@ -86,7 +86,8 @@ public class CSVParserToJSON {
 		sb.append("[");
 		try {
 			ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-			it = mapper.reader(String[].class).readValues(bis);
+			it = mapper.reader(String[].class)
+					.readValues(bis);
 			String[] row = null;
 			String[] columnHeader = null;
 
@@ -138,6 +139,50 @@ public class CSVParserToJSON {
 		return sb.toString();
 	}
 
+	public String convertFileHeaderToJSON(int idKey1, int idKey2 , byte[] bytes) {
+		CsvMapper mapper = new CsvMapper();
+		mapper.enable(CsvParser.Feature.WRAP_AS_ARRAY);
+		MappingIterator<String[]> it;
+		StringBuffer sb = new StringBuffer();
+		sb.append("[");
+		try {
+			ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+			it = mapper.reader(String[].class).readValues(bis);
+			String[] row = null;
+			String[] columnHeader = null;
+			int rownum = 0;
+			String sep = "";
+			while (it.hasNext()) {
+				row = it.next();
+				if (rownum == 0) {
+					columnHeader = row.clone();
+					String cs = ",";
+					for (int i = 0; i < columnHeader.length; i++) {
+						if(row[i] != null && !"".equals(row[i])){
+							sb.append(sep);
+							sb.append("{");
+							format(sb, "\""+keyAttrName+"\":",
+									String.valueOf(idKey1));
+							sb.append(cs);
+							format(sb, "\"CSVAttrName\":", quote((columnHeader[i])));
+							sb.append(cs);
+							format(sb, "\"TableAttrName\":", quote(modifyColumn(columnHeader[i])));
+							sb.append("}");
+							sep = ",";
+						}
+					}
+				}
+				rownum++;
+				break;
+			}
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		sb.append("]");
+		return sb.toString();
+	}
 	private String replaceColumnName(String currColName) {
 		String response = currColName;
 		//use the map to find and swap the name
@@ -152,6 +197,10 @@ public class CSVParserToJSON {
 	private String quote(String value) {
 		String val = (value == null)?"":value.replaceAll("\"", "'");
 		return "\"" + val + "\"";
+	}
+	private String modifyColumn(String csvAttrName) {
+		String colName = new String(csvAttrName).replaceAll("-", "_");
+		return colName.replaceAll(" ","_").toLowerCase();
 	}
 
 	private void format(StringBuffer sb, String key, String value) {
