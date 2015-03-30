@@ -4,7 +4,7 @@ Project: jackson-dataformat-csv
 === Releases ===
 ------------------------------------------------------------------------
 
-2.5.2 (not yet released)
+2.5.2 (29-Mar-2015)
 
 #66: Deserializing an empty string as an array field return a non-empty list of one empty String
  (reported by aksh3ll@github)
