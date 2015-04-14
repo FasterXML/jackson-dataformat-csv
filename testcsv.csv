@@ -1,0 +1,5 @@
+KeyCol,NumberCol,MoneyCol,DateCol,BoolCol,ColText
+A12344,123,$123 ,4/14/2015,TRUE,test
+A12345,123,$123 ,4/14/2015,TRUE,test
+A12346,123,$123 ,4/14/2015,TRUE,test
+A12347,123,$123 ,4/14/2015,TRUE,test
