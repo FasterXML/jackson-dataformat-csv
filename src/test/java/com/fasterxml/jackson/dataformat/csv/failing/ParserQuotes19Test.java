@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.fasterxml.jackson.dataformat.csv.*;
 
-public class TestParserQuotes extends ModuleTestBase
+// for [dataformat-csv#19]
+public class ParserQuotes19Test extends ModuleTestBase
 {
     @JsonPropertyOrder({"s1", "s2", "s3"})
     protected static class ThreeString {
