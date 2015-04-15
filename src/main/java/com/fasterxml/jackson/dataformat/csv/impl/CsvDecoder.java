@@ -632,6 +632,12 @@ public class CsvDecoder
         outBuf[0] = (char) i;
         int outPtr = 1;
 
+        if (i == _escapeChar) {
+            // Reset the escaped character
+            outBuf[0] = _unescape();
+            return _nextUnquotedString(outBuf, outPtr);
+        }
+
         int ptr = _inputPtr;
         if (ptr >= _inputEnd) {
             if (!loadMore()) { // ok to have end-of-input but...

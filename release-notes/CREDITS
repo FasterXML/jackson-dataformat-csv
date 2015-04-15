@@ -35,3 +35,10 @@ Luke Nezda (nezda@github)
   `JsonParser.Feature.ALLOW_YAML_COMMENTS.
  (requested by nezda@github)
  (2.5.0)
+
+David Navas (davidnavas@github)
+
+* Contributed #75: Support escapes at beginning of the file
+ (2.5.3)
+
+

@@ -4,6 +4,11 @@ Project: jackson-dataformat-csv
 === Releases ===
 ------------------------------------------------------------------------
 
+2.5.3 (not yet released)
+
+#75: Support escapes at beginning of the file
+ (contributed by David N)
+
 2.5.2 (29-Mar-2015)
 
 #66: Deserializing an empty string as an array field return a non-empty list of one empty String
