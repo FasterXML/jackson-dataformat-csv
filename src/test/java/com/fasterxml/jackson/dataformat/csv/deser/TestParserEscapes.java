@@ -51,4 +51,15 @@ public class TestParserEscapes extends ModuleTestBase
         assertEquals("Desc with\nlinefeed", result.desc);
     }
     
+    public void testEscapesAtStartInUnquoted() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        CsvSchema schema = mapper.schemaFor(Desc.class).withColumnSeparator('|').withEscapeChar('\\');
+        final String id = "\\|abcdef"; // doubled for javac
+        final String desc = "Desc with\\\nlinefeed";
+        String input = id+"|"+desc+"\n";
+        Desc result = mapper.reader(schema).withType(Desc.class).readValue(input);
+        assertEquals("|abcdef", result.id);
+        assertEquals("Desc with\nlinefeed", result.desc);
+    }
 }
