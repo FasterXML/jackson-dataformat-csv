@@ -9,6 +9,7 @@ Project: jackson-dataformat-csv
 #53: Add a way to specify "null value" (String) for `CsvGenerator` to use when writing `null`s
  (part of `CsvSchema`; method `withNullValue()`)
 
+2.4.6 (23-Apr-2015)
 2.4.5 (13-Jan-2015)
 2.4.4 (24-Nov-2014)
 
