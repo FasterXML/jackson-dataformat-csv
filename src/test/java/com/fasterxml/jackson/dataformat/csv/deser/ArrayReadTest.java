@@ -1,7 +1,5 @@
 package com.fasterxml.jackson.dataformat.csv.deser;
 
-import java.util.Arrays;
-
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.csv.*;
 

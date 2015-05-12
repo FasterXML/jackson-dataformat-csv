@@ -6,6 +6,9 @@ Project: jackson-dataformat-csv
 
 2.6.0 (not yet released)
 
+- Removed type `CsvObjectReader`, sub-classing not needed at this point,
+  just complicates handling (for now)
+
 2.5.3 (24-Apr-2015)
 
 #75: Support escapes at beginning of the file
