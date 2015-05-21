@@ -560,7 +560,12 @@ public class CsvDecoder
         }
         return -1; // end of input
     }
-    
+
+    /**
+     * Method called to blindly skip a single line of content, without considering
+     * aspects like quoting or escaping. Used currently simply to skip the first
+     * line of input document, if instructed to do so.
+     */
     public boolean skipLine() throws IOException
     {
         if (_pendingLF != 0) {

@@ -69,7 +69,7 @@ public class TestFiltering extends ModuleTestBase
 
         // plus read back?
         final String INPUT = "a,aa,b\n5,6,7\n";
-        Bean result = mapper.reader(Bean.class).with(schema).withView(ViewB.class).readValue(INPUT);
+        Bean result = mapper.readerFor(Bean.class).with(schema).withView(ViewB.class).readValue(INPUT);
         assertEquals("5", result.a);
         // due to filtering, ought to use default
         assertEquals("2", result.aa);

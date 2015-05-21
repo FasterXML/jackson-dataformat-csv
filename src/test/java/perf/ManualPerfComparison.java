@@ -30,7 +30,7 @@ public final class ManualPerfComparison
             .withSkipFirstDataRow(true)
             ;
         
-        csvReader = mapper.reader(RequestEntry.class).with(schema);
+        csvReader = mapper.readerFor(RequestEntry.class).with(schema);
         csvWriter = mapper.writer(schema);
     }
     
@@ -113,7 +113,7 @@ public final class ManualPerfComparison
     {
         long start = System.currentTimeMillis();
         while (--REPS >= 0) {
-            Iterator<RequestEntry> it = jsonMapper.reader(RequestEntry.class).readValues(
+            Iterator<RequestEntry> it = jsonMapper.readerFor(RequestEntry.class).readValues(
                     input, 0, input.length);
             while (it.hasNext()) {
                 it.next();

@@ -62,7 +62,7 @@ public class JDKSerializationTest extends ModuleTestBase
 
         assertEquals(EXP_CSV, mapper2.writerFor(MyPojo.class)
                 .with(SCHEMA_POJO).writeValueAsString(p).trim());
-        MyPojo p2 = mapper2.reader(MyPojo.class).with(SCHEMA_POJO).readValue(EXP_CSV);
+        MyPojo p2 = mapper2.readerFor(MyPojo.class).with(SCHEMA_POJO).readValue(EXP_CSV);
         assertEquals(p.x, p2.x);
         assertEquals(p.y, p2.y);
 

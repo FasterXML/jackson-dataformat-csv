@@ -4,6 +4,8 @@ import java.io.*;
 import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.dataformat.csv.*;
@@ -12,7 +14,7 @@ import com.fasterxml.jackson.dataformat.csv.*;
  * Tests for verifying behavior of enclosing input stream as
  * a logical array.
  */
-public class TestParserSequences extends ModuleTestBase
+public class ReadSequencesTest extends ModuleTestBase
 {
     @JsonPropertyOrder({"x", "y"})
     protected static class Entry {
@@ -65,6 +67,62 @@ public class TestParserSequences extends ModuleTestBase
         it.close();
     }
 
+    public void testSequenceRecovery() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        mapper.disable(CsvParser.Feature.WRAP_AS_ARRAY);
+        MappingIterator<Entry> it = mapper.readerWithSchemaFor(Entry.class).readValues(
+                "1,2\n3,invalid\n5,6\n1,2,3,5\n13,-4\ngarbage\n");
+        Entry entry;
+        
+        assertTrue(it.hasNext());
+        assertNotNull(entry = it.nextValue());
+        assertEquals(1, entry.x);
+        assertEquals(2, entry.y);
+        assertTrue(it.hasNext());
+
+        // second row, invalid:
+        try {
+            it.nextValue();
+            fail("Shouldn't have passed");
+        } catch (JsonMappingException e) {
+            verifyException(e, "'invalid': not a valid");
+        }
+
+        // but third is fine again
+        assertNotNull(entry = it.nextValue());
+        assertEquals(5, entry.x);
+        assertEquals(6, entry.y);
+
+        // fourth not
+        assertTrue(it.hasNext());
+        try {
+            it.nextValue();
+            fail("Shouldn't have passed");
+        } catch (JsonProcessingException e) {
+            // !!! TODO, maybe: Would be nicer to get a JsonMappingException?
+            verifyException(e, "Too many entries");
+        }
+
+        // fifth ok
+        assertTrue(it.hasNext());
+        assertNotNull(entry = it.nextValue());
+        assertEquals(13, entry.x);
+        assertEquals(-4, entry.y);
+
+        // and sixth busted again
+        assertTrue(it.hasNext());
+        try {
+            it.nextValue();
+            fail("Shouldn't have passed");
+        } catch (JsonMappingException e) {
+            verifyException(e, "String value 'garbage'");
+        }
+        assertFalse(it.hasNext());
+        it.close();
+    }
+
+    
     // Test using sequence of entries wrapped in a logical array.
     public void testAsWrappedArray() throws Exception
     {
@@ -97,7 +155,7 @@ public class TestParserSequences extends ModuleTestBase
         final int EXPECTED_BYTES = 97640;
         assertEquals(EXPECTED_BYTES, bytes.length);
 
-        MappingIterator<Entry> it = mapper.reader(Entry.class).with(schema).readValues(bytes, 0, bytes.length);
+        MappingIterator<Entry> it = mapper.readerFor(Entry.class).with(schema).readValues(bytes, 0, bytes.length);
         verifySame(it, entries);
         bytes = null;
         
@@ -106,7 +164,7 @@ public class TestParserSequences extends ModuleTestBase
         assertEquals(EXPECTED_BYTES, text.length());
         it.close();
 
-        it = mapper.reader(Entry.class).with(schema).readValues(text);
+        it = mapper.readerFor(Entry.class).with(schema).readValues(text);
         verifySame(it, entries);
         it.close();
     
@@ -118,7 +176,7 @@ public class TestParserSequences extends ModuleTestBase
         CsvMapper mapper = new CsvMapper();
         mapper.enable(CsvParser.Feature.WRAP_AS_ARRAY);
         final String CSV = "a,b\nc,d\ne,f\n";
-        MappingIterator<Object[]> it = mapper.reader(Object[].class).readValues(CSV);
+        MappingIterator<Object[]> it = mapper.readerFor(Object[].class).readValues(CSV);
 
         assertTrue(it.hasNext());
         Object[] row = it.next();

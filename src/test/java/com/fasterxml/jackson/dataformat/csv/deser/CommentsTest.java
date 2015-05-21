@@ -24,7 +24,7 @@ public class CommentsTest extends ModuleTestBase
         
         // First, with comments disabled:
         
-        MappingIterator<String[]> it = mapper.reader(String[].class)
+        MappingIterator<String[]> it = mapper.readerFor(String[].class)
                 .with(mapper.schema().withoutComments()).readValues(CSV_WITH_COMMENTS);
 
         row = it.nextValue();
@@ -61,7 +61,7 @@ public class CommentsTest extends ModuleTestBase
         // should not be needed but seems to be...
         mapper.enable(CsvParser.Feature.WRAP_AS_ARRAY);
 
-        MappingIterator<String[]> it = mapper.reader(String[].class)
+        MappingIterator<String[]> it = mapper.readerFor(String[].class)
                 .with(mapper.schema().withComments()).readValues(CSV_WITH_COMMENTS);
 
         // first row the same
@@ -88,7 +88,7 @@ public class CommentsTest extends ModuleTestBase
         // should not be needed but seems to be...
         mapper.enable(CsvParser.Feature.WRAP_AS_ARRAY);
 
-        MappingIterator<String[]> it = mapper.reader(String[].class)
+        MappingIterator<String[]> it = mapper.readerFor(String[].class)
                 .with(mapper.schema().withComments()).readValues("# first\n#second\n1,2\n");
 
         // first row the same
@@ -105,7 +105,7 @@ public class CommentsTest extends ModuleTestBase
     public void testCommentsWithHeaderRow() throws Exception
     {
         CsvMapper mapper = mapperForCsv();
-        MappingIterator<Map<String,String>> it = mapper.reader(Map.class)
+        MappingIterator<Map<String,String>> it = mapper.readerFor(Map.class)
                 .with(mapper.schema().withComments().withHeader())
                 .readValues("# headers:\nid,value\n# values:\nab#c,#13\n");
 
@@ -128,7 +128,7 @@ public class CommentsTest extends ModuleTestBase
         mapper.enable(CsvParser.Feature.WRAP_AS_ARRAY);
         final String CSV = "# comment!\na,b\n";
         
-        MappingIterator<String[]> it = mapper.reader(String[].class)
+        MappingIterator<String[]> it = mapper.readerFor(String[].class)
                 .readValues(CSV);
         String[] row = it.nextValue();
 //        assertEquals(2, row.length);

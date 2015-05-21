@@ -32,7 +32,7 @@ public class TestParserNoSchema extends ModuleTestBase
         final String CSV = "1,null\nfoobar\n7,true\n";
         CsvParser cp = mapper.getFactory().createParser(CSV);
 
-        MappingIterator<Object[]> it = mapper.reader(Object[].class).readValues(cp);
+        MappingIterator<Object[]> it = mapper.readerFor(Object[].class).readValues(cp);
 
         Object[] row;
         assertTrue(it.hasNext());
@@ -63,7 +63,7 @@ public class TestParserNoSchema extends ModuleTestBase
         CsvMapper mapper = mapperForCsv();
         mapper.enable(CsvParser.Feature.WRAP_AS_ARRAY);
         // when wrapped as an array, we'll get array of Lists:
-        Object[] rows = mapper.reader(Object[].class).readValue(
+        Object[] rows = mapper.readerFor(Object[].class).readValue(
             "1,\"xyz\"\n\ntrue,\n"
                 );
         assertEquals(3, rows.length);
@@ -112,7 +112,7 @@ public class TestParserNoSchema extends ModuleTestBase
     {
         CsvMapper mapper = mapperForCsv();
         MappingIterator<Map<String,String>> it = mapper
-                .reader(Map.class)
+                .readerFor(Map.class)
                 .with(mapper.schemaWithHeader())
                 .readValues("a,b\n1,2\n3,4\n");
 
@@ -145,7 +145,7 @@ public class TestParserNoSchema extends ModuleTestBase
         final String CSV = "1,2\n1,2,3,4\n";
         CsvParser cp = mapper.getFactory().createParser(CSV);
 
-        MappingIterator<String[]> it = mapper.reader(String[].class).readValues(cp);
+        MappingIterator<String[]> it = mapper.readerFor(String[].class).readValues(cp);
 
         Object[] row;
         assertTrue(it.hasNext());
@@ -181,7 +181,7 @@ public class TestParserNoSchema extends ModuleTestBase
         final String col2 = "H";
 
         CsvParser cp = mapper.getFactory().createParser(col1 + "     ," + col2 +"\n" + col2 + "," + col1 + "\n");
-        MappingIterator<Object[]> it = mapper.reader(Object[].class).readValues(cp);
+        MappingIterator<Object[]> it = mapper.readerFor(Object[].class).readValues(cp);
 
         Object[] row;
 

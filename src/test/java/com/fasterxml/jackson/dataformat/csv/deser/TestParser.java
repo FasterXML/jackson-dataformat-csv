@@ -136,7 +136,7 @@ public class TestParser extends ModuleTestBase
                 +"data41,\"data42 data42\r\ndata42\",data43\n";
        
         CsvSchema cs = CsvSchema.emptySchema().withHeader();
-        ObjectReader or = mapper.reader(HashMap.class).with(cs);
+        ObjectReader or = mapper.readerFor(HashMap.class).with(cs);
         
         MappingIterator<Map<String,String>> mi;
 
@@ -186,7 +186,7 @@ public class TestParser extends ModuleTestBase
         CsvSchema schema = mapper.typedSchemaFor(Point.class).withoutHeader();
 
         // First: empty value, to be considered as null
-        Point result = mapper.reader(Point.class).with(schema).readValue(",,\n");
+        Point result = mapper.readerFor(Point.class).with(schema).readValue(",,\n");
         assertEquals(0, result.x);
         assertNull(result.y);
         assertNull(result.z);
@@ -198,7 +198,7 @@ public class TestParser extends ModuleTestBase
         CsvSchema schema = mapper.typedSchemaFor(Point.class).withoutHeader();
 
         // First: empty value, to be considered as null
-        Point result = mapper.reader(Point.class).with(schema).readValue("null,null,null\n");
+        Point result = mapper.readerFor(Point.class).with(schema).readValue("null,null,null\n");
         assertEquals(0, result.x);
         assertNull(result.y);
         assertNull(result.z);
@@ -211,7 +211,7 @@ public class TestParser extends ModuleTestBase
         CsvSchema schema = CsvSchema.builder().addColumn("Col1").addColumn("Col2")
                 .addColumn("Col3").build();
 
-        MappingIterator<Object> iter = new CsvMapper().reader(Object.class)
+        MappingIterator<Object> iter = new CsvMapper().readerFor(Object.class)
                 .with(schema).readValues(INPUT);
 
         Map<?,?> m  = (Map<?,?>) iter.next();

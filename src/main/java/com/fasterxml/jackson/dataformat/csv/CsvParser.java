@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.base.ParserMinimalBase;
 import com.fasterxml.jackson.core.json.DupDetector;
 import com.fasterxml.jackson.core.json.JsonReadContext;
 import com.fasterxml.jackson.core.util.ByteArrayBuilder;
+
 import com.fasterxml.jackson.dataformat.csv.impl.CsvDecoder;
 import com.fasterxml.jackson.dataformat.csv.impl.CsvIOContext;
 import com.fasterxml.jackson.dataformat.csv.impl.TextBuffer;
@@ -139,13 +140,22 @@ public class CsvParser
     protected final static int STATE_IN_ARRAY = 5;
 
     /**
+     * State in which we have encountered more column values than there should be,
+     * and need to basically skip extra values if callers tries to advance parser
+     * state.
+     *
+     * @since 2.6
+     */
+    protected final static int STATE_SKIP_EXTRA_COLUMNS = 6;
+    
+    /**
      * State in which end marker is returned; either
      * null (if no array wrapping), or
      * {@link JsonToken#END_ARRAY} for wrapping.
      * This step will loop, returning series of nulls
      * if {@link #nextToken} is called multiple times.
      */
-    protected final static int STATE_DOC_END = 6;
+    protected final static int STATE_DOC_END = 7;
 
     /*
     /**********************************************************************
@@ -476,6 +486,19 @@ public class CsvParser
             return (_currToken = _handleUnnamedValue());
         case STATE_IN_ARRAY:
             return (_currToken = _handleArrayValue());
+        case STATE_SKIP_EXTRA_COLUMNS:
+            // Need to just skip whatever remains
+            _state = STATE_RECORD_START;
+            while (_reader.nextString() != null) { }
+
+            // But once we hit the end of the logical line, get out
+            // NOTE: seems like we should always be within Object, but let's be conservative
+            // and check just in case
+            _parsingContext = _parsingContext.getParent();
+            _state = _reader.startNewLine() ? STATE_RECORD_START : STATE_DOC_END;
+            return (_currToken = _parsingContext.inArray()
+                    ? JsonToken.END_ARRAY : JsonToken.END_OBJECT);
+
         case STATE_DOC_END:
             _reader.close();
             if (_parsingContext.inRoot()) {
@@ -645,7 +668,9 @@ public class CsvParser
                     return _handleNextEntryExpectEOL();
                 }
             }
-            _reportError("Too many entries: expected at most "+_columnCount+" (value #"+_columnCount+" ("+next.length()+" chars) \""+next+"\")");
+            // 21-May-2015, tatu: Need to enter recovery mode, to skip remainder of the line
+            _state = STATE_SKIP_EXTRA_COLUMNS;
+            _reportCsvError("Too many entries: expected at most "+_columnCount+" (value #"+_columnCount+" ("+next.length()+" chars) \""+next+"\")");
         }
         _currentName = _schema.columnName(_columnIndex);
         return JsonToken.FIELD_NAME;
@@ -656,7 +681,7 @@ public class CsvParser
         String next = _reader.nextString();
 
         if (next != null) { // should end of record or input
-            _reportError("Too many entries: expected at most "+_columnCount+" (value #"+_columnCount+" ("+next.length()+" chars) \""+next+"\")");
+            _reportCsvError("Too many entries: expected at most "+_columnCount+" (value #"+_columnCount+" ("+next.length()+" chars) \""+next+"\")");
         }
         _parsingContext = _parsingContext.getParent();
         if (!_reader.startNewLine()) {
@@ -923,7 +948,7 @@ public class CsvParser
     public void _reportUnexpectedCsvChar(int ch, String msg)  throws JsonParseException {
         super._reportUnexpectedChar(ch, msg);
     }
-    
+
     /*
     /**********************************************************************
     /* Internal methods

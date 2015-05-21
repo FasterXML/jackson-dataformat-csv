@@ -48,7 +48,7 @@ public final class F5500Reader
             .setUseHeader(true)
             .build();
 
-        MappingIterator<T> it = mapper.reader(cls)
+        MappingIterator<T> it = mapper.readerFor(cls)
             .with(schema).readValues(inputFile);
         while (it.hasNext()) {
             @SuppressWarnings("unused")
