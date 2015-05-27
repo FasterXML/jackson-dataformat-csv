@@ -151,7 +151,9 @@ public class CsvMapper extends ObjectMapper
         if (type.isArrayType() || type.isCollectionLikeType()) {
             throw new IllegalArgumentException("Type can NOT be a Collection or array type");
         }
-        return readerFor(type).with(schemaFor(type));
+        // 27-May-2015, tatu: Deprecated in 2.6, but keep here to work with databind-2.5; upgrade in 2.7
+//        return readerFor(type).with(schemaFor(type));
+        return reader(type).with(schemaFor(type));
     }
 
     /**
@@ -172,7 +174,9 @@ public class CsvMapper extends ObjectMapper
         if (type.isArrayType() || type.isCollectionLikeType()) {
             throw new IllegalArgumentException("Type can NOT be a Collection or array type");
         }
-        return readerFor(type).with(typedSchemaFor(type));
+        // 27-May-2015, tatu: Deprecated in 2.6, but keep here to work with databind-2.5; upgrade in 2.7
+//        return readerFor(type).with(typedSchemaFor(type));
+        return reader(type).with(typedSchemaFor(type));
     }
 
     /*
