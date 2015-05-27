@@ -4,6 +4,10 @@ Project: jackson-dataformat-csv
 === Releases ===
 ------------------------------------------------------------------------
 
+2.5.4 (not yet released)
+
+- Fixes to potential ArrayIndexOutOfBoundsException on `CsvEncoder`, bounds check
+
 2.5.3 (24-Apr-2015)
 
 #75: Support escapes at beginning of the file

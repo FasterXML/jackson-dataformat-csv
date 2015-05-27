@@ -226,13 +226,13 @@ public class CsvEncoder
         }
         return this;
     }
-    
+
     /*
     /**********************************************************
     /* Read-access to output state
     /**********************************************************
      */
-    
+
     public Object getOutputTarget() {
         return _out;
     }
@@ -240,7 +240,7 @@ public class CsvEncoder
     public int nextColumnIndex() {
         return _nextColumnToWrite;
     }
-    
+
     /*
     /**********************************************************
     /* Writer API, writes from generator
@@ -424,7 +424,7 @@ public class CsvEncoder
     protected void appendValue(int value) throws IOException
     {
         // up to 10 digits and possible minus sign, leading comma
-        if ((_outputTail + 12) > _outputTail) {
+        if ((_outputTail + 12) > _outputEnd) {
             _flushBuffer();
         }
         if (_nextColumnToWrite > 0) {
@@ -436,7 +436,7 @@ public class CsvEncoder
     protected void appendValue(long value) throws IOException
     {
         // up to 20 digits, minus sign, leading comma
-        if ((_outputTail + 22) > _outputTail) {
+        if ((_outputTail + 22) > _outputEnd) {
             _flushBuffer();
         }
         if (_nextColumnToWrite > 0) {
@@ -449,7 +449,7 @@ public class CsvEncoder
     {
         String str = NumberOutput.toString(value);
         final int len = str.length();
-        if ((_outputTail + len) >= _outputTail) { // >= to include possible comma too
+        if ((_outputTail + len) >= _outputEnd) { // >= to include possible comma too
             _flushBuffer();
         }
         if (_nextColumnToWrite > 0) {
@@ -462,7 +462,7 @@ public class CsvEncoder
     {
         String str = NumberOutput.toString(value);
         final int len = str.length();
-        if ((_outputTail + len) >= _outputTail) { // >= to include possible comma too
+        if ((_outputTail + len) >= _outputEnd) { // >= to include possible comma too
             _flushBuffer();
         }
         if (_nextColumnToWrite > 0) {
@@ -481,7 +481,7 @@ public class CsvEncoder
 
     protected void _append(char[] ch) throws IOException {
         final int len = ch.length;
-        if ((_outputTail + len) >= _outputTail) { // >= to include possible comma too
+        if ((_outputTail + len) >= _outputEnd) { // >= to include possible comma too
             _flushBuffer();
         }
         if (_nextColumnToWrite > 0) {
@@ -494,7 +494,7 @@ public class CsvEncoder
     }
     
     protected void appendColumnSeparator() throws IOException {
-        if (_outputTail >= _outputTail) {
+        if (_outputTail >= _outputEnd) {
             _flushBuffer();
         }
         _outputBuffer[_outputTail++] = _cfgColumnSeparator;
