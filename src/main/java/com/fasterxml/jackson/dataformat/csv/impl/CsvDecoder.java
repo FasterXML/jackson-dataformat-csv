@@ -627,7 +627,6 @@ public class CsvDecoder
             _textBuffer.resetWithString("");
             return "";
         }
-        
         char[] outBuf = _textBuffer.emptyAndGetCurrentSegment();
         outBuf[0] = (char) i;
         int outPtr = 1;
