@@ -9,6 +9,10 @@ Project: jackson-dataformat-csv
 - Removed type `CsvObjectReader`, sub-classing not needed at this point,
   just complicates handling (for now)
 
+2.5.4 (not yet released)
+
+- Fixes to potential ArrayIndexOutOfBoundsException on `CsvEncoder`, bounds check
+
 2.5.3 (24-Apr-2015)
 
 #75: Support escapes at beginning of the file
@@ -35,6 +39,8 @@ Project: jackson-dataformat-csv
 #57: Support simple array types
 #61: Add a feature to always quote non-numeric values: `CsvGenerator.Feature.ALWAYS_QUOTE_STRINGS`
 
+2.4.6 (23-Apr-2015)
+2.4.5 (13-Jan-2015)
 2.4.4 (24-Nov-2014)
 
 #54: Encounter ArrayIndexOutOfBoundsException in the corner case delimiter or end-of-line

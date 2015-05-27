@@ -50,7 +50,7 @@ public class TestParserEscapes extends ModuleTestBase
         assertEquals("abc\\def", result.id);
         assertEquals("Desc with\nlinefeed", result.desc);
     }
-    
+
     public void testEscapesAtStartInUnquoted() throws Exception
     {
         CsvMapper mapper = mapperForCsv();
