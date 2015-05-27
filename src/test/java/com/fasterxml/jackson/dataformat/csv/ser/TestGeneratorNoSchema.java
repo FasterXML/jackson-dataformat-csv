@@ -26,8 +26,14 @@ public class TestGeneratorNoSchema extends ModuleTestBase
         CsvGenerator gen = MAPPER.getFactory().createGenerator(sw);
         gen.setSchema(SCHEMA);
 
+        assertEquals(0, gen.getOutputBuffered());
+        
         gen.writeStartArray();
         gen.writeString("foo");
+
+        // this will be buffered because we output in correct order, so:
+        assertEquals(3, gen.getOutputBuffered());
+        
         gen.writeNumber(13);
         gen.writeBoolean(true);
         gen.writeEndArray();
@@ -39,6 +45,7 @@ public class TestGeneratorNoSchema extends ModuleTestBase
         gen.writeEndArray();
 
         gen.close();
+        assertEquals(0, gen.getOutputBuffered());
         
         String csv = sw.toString();
 

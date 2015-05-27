@@ -237,6 +237,15 @@ public class CsvEncoder
         return _out;
     }
 
+    /**
+     * NOTE: while value does indeed indicate amount that has been written in the buffer,
+     * there may be more intermediate data that is buffered as values but not yet in
+     * buffer.
+     */
+    public int getOutputBuffered() {
+        return _outputTail;
+    }
+
     public int nextColumnIndex() {
         return _nextColumnToWrite;
     }

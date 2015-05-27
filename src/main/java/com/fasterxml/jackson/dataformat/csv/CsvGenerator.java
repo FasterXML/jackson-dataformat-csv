@@ -226,7 +226,17 @@ public class CsvGenerator extends GeneratorBase
     public Object getOutputTarget() {
         return _writer.getOutputTarget();
     }
-    
+
+    /**
+     * NOTE: while this method will return some information on amount of data buffered, it
+     * may be an incomplete view as some buffering happens at a higher level, as not-yet-serialized
+     * values.
+     */
+    @Override
+    public int getOutputBuffered() {
+        return _writer.getOutputBuffered();
+    }
+
     @Override
     public void setSchema(FormatSchema schema)
     {
