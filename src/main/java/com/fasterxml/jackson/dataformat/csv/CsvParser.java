@@ -9,7 +9,6 @@ import com.fasterxml.jackson.core.base.ParserMinimalBase;
 import com.fasterxml.jackson.core.json.DupDetector;
 import com.fasterxml.jackson.core.json.JsonReadContext;
 import com.fasterxml.jackson.core.util.ByteArrayBuilder;
-
 import com.fasterxml.jackson.dataformat.csv.impl.CsvDecoder;
 import com.fasterxml.jackson.dataformat.csv.impl.CsvIOContext;
 import com.fasterxml.jackson.dataformat.csv.impl.TextBuffer;
@@ -28,7 +27,8 @@ public class CsvParser
     /**
      * Enumeration that defines all togglable features for CSV parsers
      */
-    public enum Feature {
+    public enum Feature // implements FormatFeature // for 2.7
+    {
         /**
          * Feature determines whether spaces around separator characters
          * (commas) are to be automatically trimmed before being reported
@@ -79,9 +79,9 @@ public class CsvParser
             _defaultState = defaultState;
             _mask = (1 << ordinal());
         }
-        
-        public boolean enabledIn(int flags) { return (flags & _mask) != 0; }
+
         public boolean enabledByDefault() { return _defaultState; }
+        public boolean enabledIn(int flags) { return (flags & _mask) != 0; }
         public int getMask() { return _mask; }
     }
 
@@ -333,6 +333,23 @@ public class CsvParser
     @Override
     public void close() throws IOException { _reader.close(); }
 
+    /*                                                                                       
+    /**********************************************************                              
+    /* FormatFeature support                                                                             
+    /**********************************************************                              
+     */
+
+    @Override
+    public int getFormatFeatures() {
+        return _formatFeatures;
+    }
+
+    @Override
+    public JsonParser overrideFormatFeatures(int values, int mask) {
+        _formatFeatures = (_formatFeatures & ~mask) | (values & mask);
+        return this;
+    }
+    
     /*
     /***************************************************
     /* Public API, configuration

@@ -17,7 +17,8 @@ public class CsvGenerator extends GeneratorBase
      * Enumeration that defines all togglable features for CSV writers
      * (if any: currently none)
      */
-    public enum Feature {
+    public enum Feature // implements FormatFeature // in 2.7
+    {
         /**
          * Feature that determines how much work is done before determining that
          * a column value requires quoting: when set as <code>true</code>, full
@@ -112,7 +113,7 @@ public class CsvGenerator extends GeneratorBase
      * {@link CsvGenerator.Feature}s
      * are enabled.
      */
-    protected int _csvFeatures;
+    protected int _formatFeatures;
 
     /**
      * Definition of columns being written, if available.
@@ -173,7 +174,7 @@ public class CsvGenerator extends GeneratorBase
     {
         super(jsonFeatures, codec);
         _ioContext = ctxt;
-        _csvFeatures = csvFeatures;
+        _formatFeatures = csvFeatures;
         _schema = schema;
         _writer = new CsvEncoder(ctxt, csvFeatures, out, schema);
     }
@@ -183,7 +184,7 @@ public class CsvGenerator extends GeneratorBase
     {
         super(jsonFeatures, codec);
         _ioContext = ctxt;
-        _csvFeatures = csvFeatures;
+        _formatFeatures = csvFeatures;
         _writer = csvWriter;
     }
     
@@ -250,6 +251,17 @@ public class CsvGenerator extends GeneratorBase
         }
     }
 
+    @Override
+    public int getFormatFeatures() {
+        return _formatFeatures;
+    }
+
+    @Override
+    public JsonGenerator overrideFormatFeatures(int values, int mask) {
+        _formatFeatures = (_formatFeatures & ~mask) | (values & mask);
+        return this;
+    }
+    
     /*
     /**********************************************************
     /* Public API, capability introspection methods
@@ -334,7 +346,7 @@ public class CsvGenerator extends GeneratorBase
      */
 
     public final boolean isEnabled(Feature f) {
-        return (_csvFeatures & f.getMask()) != 0;
+        return (_formatFeatures & f.getMask()) != 0;
     }
 
     public CsvGenerator configure(Feature f, boolean state) {
@@ -345,13 +357,13 @@ public class CsvGenerator extends GeneratorBase
     }
 
     public CsvGenerator enable(Feature f) {
-        _csvFeatures |= f.getMask();
-        _writer.setFeatures(_csvFeatures);
+        _formatFeatures |= f.getMask();
+        _writer.setFeatures(_formatFeatures);
         return this;
     }
 
     public CsvGenerator disable(Feature f) {
-        _csvFeatures &= ~f.getMask();
+        _formatFeatures &= ~f.getMask();
         return this;
     }
 
