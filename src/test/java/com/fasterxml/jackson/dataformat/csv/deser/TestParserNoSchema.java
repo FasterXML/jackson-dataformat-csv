@@ -108,6 +108,33 @@ public class TestParserNoSchema extends ModuleTestBase
         assertEquals("", row[1]);
     }
 
+    public void testUntypedViaReadValues() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        mapper.enable(CsvParser.Feature.WRAP_AS_ARRAY);
+        MappingIterator<String[]> it = mapper.readerFor(String[].class)
+                .readValues("1,\"xyz\"\n\ntrue,\n");
+        assertTrue(it.hasNextValue());
+        String[] row = it.nextValue();
+        assertEquals(2, row.length);
+        assertEquals("1",row[0]);
+        assertEquals("xyz", row[1]);
+
+        assertTrue(it.hasNextValue());
+        row = it.nextValue();
+        assertEquals(1, row.length);
+        assertEquals("", row[0]);
+
+        assertTrue(it.hasNextValue());
+        row = it.nextValue();
+        assertEquals(2, row.length);
+        assertEquals("true", row[0]);
+        assertEquals("", row[1]);
+
+        assertFalse(it.hasNextValue());
+        it.close();
+    }
+    
     public void testUntypedWithHeaderAsMap() throws Exception
     {
         CsvMapper mapper = mapperForCsv();

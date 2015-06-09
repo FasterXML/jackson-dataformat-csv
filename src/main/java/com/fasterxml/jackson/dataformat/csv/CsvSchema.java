@@ -78,11 +78,11 @@ public class CsvSchema
     /**********************************************************************
      */
 
-    protected final static int FEATURE_USE_HEADER = 0x0001;
-    protected final static int FEATURE_SKIP_FIRST_DATA_ROW = 0x0002;
-    protected final static int FEATURE_ALLOW_COMMENTS = 0x0004;
+    protected final static int ENCODING_FEATURE_USE_HEADER = 0x0001;
+    protected final static int ENCODING_FEATURE_SKIP_FIRST_DATA_ROW = 0x0002;
+    protected final static int ENCODING_FEATURE_ALLOW_COMMENTS = 0x0004;
 
-    protected final static int DEFAULT_FEATURES = 0;
+    protected final static int DEFAULT_ENCODING_FEATURES = 0;
 
     /*
     /**********************************************************************
@@ -330,7 +330,7 @@ public class CsvSchema
          * 
          * @since 2.5
          */
-        protected int _features = DEFAULT_FEATURES;
+        protected int _encodingFeatures = DEFAULT_ENCODING_FEATURES;
         
         protected char _columnSeparator = DEFAULT_COLUMN_SEPARATOR;
 
@@ -349,7 +349,7 @@ public class CsvSchema
          * @since 2.5
          */
         protected char[] _nullValue = DEFAULT_NULL_VALUE;
-        
+
         public Builder() { }
 
         /**
@@ -361,7 +361,7 @@ public class CsvSchema
             for (Column col : src._columns) {
                 _columns.add(col);
             }
-            _features = src._features;
+            _encodingFeatures = src._features;
             _columnSeparator = src._columnSeparator;
             _arrayElementSeparator = src._arrayElementSeparator;
             _quoteChar = src._quoteChar;
@@ -441,7 +441,7 @@ public class CsvSchema
          * used for reading and writing or not.
          */
         public Builder setUseHeader(boolean b) {
-            _feature(FEATURE_USE_HEADER, b);
+            _feature(ENCODING_FEATURE_USE_HEADER, b);
             return this;
         }
 
@@ -451,7 +451,7 @@ public class CsvSchema
          * should be skipped in its entirety.
          */
         public Builder setSkipFirstDataRow(boolean b) {
-            _feature(FEATURE_SKIP_FIRST_DATA_ROW, b);
+            _feature(ENCODING_FEATURE_SKIP_FIRST_DATA_ROW, b);
             return this;
         }
 
@@ -463,12 +463,12 @@ public class CsvSchema
          * @since 2.5
          */
         public Builder setAllowComments(boolean b) {
-            _feature(FEATURE_ALLOW_COMMENTS, b);
+            _feature(ENCODING_FEATURE_ALLOW_COMMENTS, b);
             return this;
         }
         
         protected final void _feature(int feature, boolean state) {
-            _features = state ? (_features | feature) : (_features & ~feature);
+            _encodingFeatures = state ? (_encodingFeatures | feature) : (_encodingFeatures & ~feature);
         }
 
         /**
@@ -556,7 +556,7 @@ public class CsvSchema
         public CsvSchema build()
         {
             Column[] cols = _columns.toArray(new Column[_columns.size()]);
-            return new CsvSchema(cols, _features,
+            return new CsvSchema(cols, _encodingFeatures,
                     _columnSeparator, _quoteChar, _escapeChar,
                     _lineSeparator, _arrayElementSeparator,
                     _nullValue);
@@ -588,7 +588,7 @@ public class CsvSchema
      * 
      * @since 2.5
      */
-    protected int _features = DEFAULT_FEATURES;
+    protected int _features = DEFAULT_ENCODING_FEATURES;
 
     protected final char _columnSeparator;
 
@@ -612,7 +612,7 @@ public class CsvSchema
             char[] lineSeparator)
     {
         this(columns,
-                (useHeader ? FEATURE_USE_HEADER : 0) + (skipFirstDataRow ? FEATURE_SKIP_FIRST_DATA_ROW : 0),
+                (useHeader ? ENCODING_FEATURE_USE_HEADER : 0) + (skipFirstDataRow ? ENCODING_FEATURE_SKIP_FIRST_DATA_ROW : 0),
                 columnSeparator, quoteChar, escapeChar, lineSeparator,
                 DEFAULT_ARRAY_ELEMENT_SEPARATOR, DEFAULT_NULL_VALUE);
     }
@@ -760,7 +760,7 @@ public class CsvSchema
      */
     
     public CsvSchema withUseHeader(boolean state) {
-        return _withFeature(FEATURE_USE_HEADER, state);
+        return _withFeature(ENCODING_FEATURE_USE_HEADER, state);
     }
 
     /**
@@ -768,7 +768,7 @@ public class CsvSchema
      * is similar to this one, except that it will be using header line.
      */
     public CsvSchema withHeader() {
-        return _withFeature(FEATURE_USE_HEADER, true);
+        return _withFeature(ENCODING_FEATURE_USE_HEADER, true);
     }
 
     /**
@@ -776,11 +776,11 @@ public class CsvSchema
      * is similar to this one, except that it will not be using header line.
      */
     public CsvSchema withoutHeader() {
-        return _withFeature(FEATURE_USE_HEADER, false);
+        return _withFeature(ENCODING_FEATURE_USE_HEADER, false);
     }
 
     public CsvSchema withSkipFirstDataRow(boolean state) {
-        return _withFeature(FEATURE_SKIP_FIRST_DATA_ROW, state);
+        return _withFeature(ENCODING_FEATURE_SKIP_FIRST_DATA_ROW, state);
     }
 
     /**
@@ -790,7 +790,7 @@ public class CsvSchema
      * @since 2.5
      */
     public CsvSchema withAllowComments(boolean state) {
-        return _withFeature(FEATURE_ALLOW_COMMENTS, state);
+        return _withFeature(ENCODING_FEATURE_ALLOW_COMMENTS, state);
     }
 
     /**
@@ -800,7 +800,7 @@ public class CsvSchema
      * @since 2.5
      */
     public CsvSchema withComments() {
-        return _withFeature(FEATURE_ALLOW_COMMENTS, true);
+        return _withFeature(ENCODING_FEATURE_ALLOW_COMMENTS, true);
     }
 
     /**
@@ -810,7 +810,7 @@ public class CsvSchema
      * @since 2.5
      */
     public CsvSchema withoutComments() {
-        return _withFeature(FEATURE_ALLOW_COMMENTS, false);
+        return _withFeature(ENCODING_FEATURE_ALLOW_COMMENTS, false);
     }
 
     protected CsvSchema _withFeature(int feature, boolean state) {
@@ -956,21 +956,21 @@ public class CsvSchema
     /**********************************************************************
      */
 
-    public boolean usesHeader() { return (_features & FEATURE_USE_HEADER) != 0; }
-    public boolean skipsFirstDataRow() { return (_features & FEATURE_SKIP_FIRST_DATA_ROW) != 0; }
-    public boolean allowsComments() { return (_features & FEATURE_ALLOW_COMMENTS) != 0; }
+    public boolean usesHeader() { return (_features & ENCODING_FEATURE_USE_HEADER) != 0; }
+    public boolean skipsFirstDataRow() { return (_features & ENCODING_FEATURE_SKIP_FIRST_DATA_ROW) != 0; }
+    public boolean allowsComments() { return (_features & ENCODING_FEATURE_ALLOW_COMMENTS) != 0; }
 
     /**
      * @deprecated Use {@link #usesHeader()} instead
      */
     @Deprecated // since 2.5
-    public boolean useHeader() { return (_features & FEATURE_USE_HEADER) != 0; }
+    public boolean useHeader() { return (_features & ENCODING_FEATURE_USE_HEADER) != 0; }
 
     /**
      * @deprecated Use {@link #skipsFirstDataRow()} instead
      */
     @Deprecated // since 2.5
-    public boolean skipFirstDataRow() { return (_features & FEATURE_SKIP_FIRST_DATA_ROW) != 0; }
+    public boolean skipFirstDataRow() { return (_features & ENCODING_FEATURE_SKIP_FIRST_DATA_ROW) != 0; }
     
     public char getColumnSeparator() { return _columnSeparator; }
     public int getArrayElementSeparator() { return _arrayElementSeparator; }
