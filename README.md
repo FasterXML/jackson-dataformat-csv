@@ -19,7 +19,7 @@ To use this extension on Maven-based projects, use following dependency:
 <dependency>
   <groupId>com.fasterxml.jackson.dataformat</groupId>
   <artifactId>jackson-dataformat-csv</artifactId>
-  <version>2.4.0</version>
+  <version>2.5.3</version>
 </dependency>
 ```
 
@@ -119,7 +119,7 @@ while (it.hasNext()) {
 }
 ```
 
-### With column names from first row
+## With column names from first row
 
 But if you want a "data as Map" approach, with data that has expected column names as the first row,
 followed by data rows, you can iterate over entries quite conveniently as well.
@@ -168,6 +168,28 @@ This means that using earlier CSV data example, parser would instead expose it s
 ```
 
 This is useful if functionality expects a single ("JSON") Array; this was the case for example when using `ObjectReader.readValues()` functionality.
+
+## Configuring `CsvSchema`
+
+Besides defining how CSV columns are mapped to and from Java Object properties, `CsvSchema` also
+defines low-level encoding details. These are details be changed by using various `withXxx()` and
+`withoutXxx` methods (or through associated `CsvSchema.Builder` object); for example:
+
+```java
+CsvSchema schema = mapper.schemaFor(Pojo.class);
+// let's do pipe-delimited, not comma-delimited
+schema = schema.withColumnSeparator('|')
+   // and write Java nulls as "NULL" (instead of empty string)
+   .withNullValue("NULL")
+   // and let's NOT allow escaping with backslash ('\')
+   .withoutEscapaChar()
+   ;
+ObjectReader r = mapper.readerFor(Pojo.class).with(schema);
+Pojo value = r.readValue(csvInput);
+```
+
+
+For full description of all configurability, please see [../wiki/CsvSchema].
 
 # Documentation
 
