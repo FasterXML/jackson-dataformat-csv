@@ -196,6 +196,7 @@ For full description of all configurability, please see [../wiki/CsvSchema].
 * [Wiki](../../wiki) (includes javadocs)
 * How-to
     * [CSV with Jackson 2.0](http://www.cowtowncoder.com/blog/archives/2012/03/entry_468.html)
+    * [Writing CSV using Jackson CSVMapper & Mixin annotations](http://demeranville.com/writing-csv-using-jackson-csvmapper-mixin-annotations/)
 * Performance
     * [Java CSV parser comparison](https://github.com/uniVocity/csv-parsers-comparison)
 
