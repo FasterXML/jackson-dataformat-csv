@@ -6,7 +6,7 @@ import java.io.StringWriter;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.csv.*;
 
-// for [dataformat-csv#69]
+// for [dataformat-csv#69], other null value serialization
 public class NullWritingTest extends ModuleTestBase
 {
     private final CsvMapper csv = new CsvMapper();
@@ -41,6 +41,7 @@ public class NullWritingTest extends ModuleTestBase
         writeValues.flush();
         String nullMembers = stream.toString("UTF-8");
         assertEquals("a,b,c,d\n,,,\n,,,\n", nullMembers);
+        writeValues.close();
     }
 
     public void testNullToStream() throws Exception {
@@ -60,5 +61,21 @@ public class NullWritingTest extends ModuleTestBase
         
         assertEquals("a,b,c,d\n", nullObject);
 //        assertEquals("a,b,c,d\n\n\n", nullObject);
-    } 
+        writeValues.close();
+    }
+
+    // [dataformat-csv#53]
+    public void testCustomNullValue() throws Exception
+    {
+        ObjectMapper mapper = mapperForCsv();
+        CsvSchema schema = CsvSchema.builder()
+                .setNullValue("n/a")
+                .addColumn("id")
+                .addColumn("desc")
+                .build();
+        
+        String result = mapper.writer(schema).writeValueAsString(new IdDesc("id", null));
+        // MUST use doubling for quotes!
+        assertEquals("id,n/a\n", result);
+    }
 }

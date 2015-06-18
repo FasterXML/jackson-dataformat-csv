@@ -9,7 +9,7 @@ import com.fasterxml.jackson.dataformat.csv.*;
 
 import static org.junit.Assert.assertArrayEquals;
 
-public class TestParser extends ModuleTestBase
+public class BasicParserTest extends ModuleTestBase
 {
     @JsonPropertyOrder({ "x", "y", "z" })
     public static class Point {
@@ -32,10 +32,11 @@ public class TestParser extends ModuleTestBase
     /**********************************************************
      */    
 
+    final CsvMapper MAPPER = mapperForCsv();
+    
     public void testSimpleExplicit() throws Exception
     {
-        ObjectMapper mapper = mapperForCsv();
-        ObjectReader r = mapper.reader(SIMPLE_SCHEMA);
+        ObjectReader r = MAPPER.reader(SIMPLE_SCHEMA);
         _testSimpleExplicit(r, false);
         _testSimpleExplicit(r, true);
     }
@@ -59,8 +60,7 @@ public class TestParser extends ModuleTestBase
 
     public void testSimpleExplicitWithBOM() throws Exception
     {
-        ObjectMapper mapper = mapperForCsv();
-        ObjectReader r = mapper.reader(SIMPLE_SCHEMA);
+        ObjectReader r = MAPPER.reader(SIMPLE_SCHEMA);
         r = r.forType(FiveMinuteUser.class);
         FiveMinuteUser user;
 
@@ -85,10 +85,9 @@ public class TestParser extends ModuleTestBase
 
     public void testSimpleWithAutoSchema() throws Exception
     {
-        CsvMapper mapper = mapperForCsv();
-        CsvSchema schema = mapper.schemaFor(FiveMinuteUser.class);
+        CsvSchema schema = MAPPER.schemaFor(FiveMinuteUser.class);
         // NOTE: order different from above test (as per POJO def!)
-        FiveMinuteUser user = mapper.reader(schema).forType(FiveMinuteUser.class).readValue("Joe,Josephson,MALE,true,AwE=\n");
+        FiveMinuteUser user = MAPPER.reader(schema).forType(FiveMinuteUser.class).readValue("Joe,Josephson,MALE,true,AwE=\n");
         assertEquals("Joe", user.firstName);
         assertEquals("Josephson", user.lastName);
         assertEquals(Gender.MALE, user.getGender());
@@ -102,9 +101,8 @@ public class TestParser extends ModuleTestBase
      */
     public void testSimpleAsMaps() throws Exception
     {
-        CsvMapper mapper = mapperForCsv();
-        CsvSchema schema = mapper.schemaFor(FiveMinuteUser.class);
-        MappingIterator<Map<?,?>> it = mapper.reader(schema).forType(Map.class).readValues(
+        CsvSchema schema = MAPPER.schemaFor(FiveMinuteUser.class);
+        MappingIterator<Map<?,?>> it = MAPPER.reader(schema).forType(Map.class).readValues(
                 "Joe,Smith,MALE,false,"
                 );
         assertTrue(it.hasNext());
@@ -128,7 +126,6 @@ public class TestParser extends ModuleTestBase
 
     private void _testMapsWithLinefeeds(boolean useBytes) throws Exception
     {
-        CsvMapper mapper = mapperForCsv();
         String CSV = "A,B,C\n"
                 +"data11,data12\n"
                 +"data21,data22,data23\r\n"
@@ -136,7 +133,7 @@ public class TestParser extends ModuleTestBase
                 +"data41,\"data42 data42\r\ndata42\",data43\n";
        
         CsvSchema cs = CsvSchema.emptySchema().withHeader();
-        ObjectReader or = mapper.readerFor(HashMap.class).with(cs);
+        ObjectReader or = MAPPER.readerFor(HashMap.class).with(cs);
         
         MappingIterator<Map<String,String>> mi;
 
@@ -182,11 +179,10 @@ public class TestParser extends ModuleTestBase
     // [Issue#12]
     public void testEmptyHandlingForInteger() throws Exception
     {
-        CsvMapper mapper = mapperForCsv();
-        CsvSchema schema = mapper.typedSchemaFor(Point.class).withoutHeader();
+        CsvSchema schema = MAPPER.typedSchemaFor(Point.class).withoutHeader();
 
         // First: empty value, to be considered as null
-        Point result = mapper.readerFor(Point.class).with(schema).readValue(",,\n");
+        Point result = MAPPER.readerFor(Point.class).with(schema).readValue(",,\n");
         assertEquals(0, result.x);
         assertNull(result.y);
         assertNull(result.z);
@@ -194,11 +190,10 @@ public class TestParser extends ModuleTestBase
 
     public void testStringNullHandlingForInteger() throws Exception
     {
-        CsvMapper mapper = mapperForCsv();
-        CsvSchema schema = mapper.typedSchemaFor(Point.class).withoutHeader();
+        CsvSchema schema = MAPPER.typedSchemaFor(Point.class).withoutHeader();
 
         // First: empty value, to be considered as null
-        Point result = mapper.readerFor(Point.class).with(schema).readValue("null,null,null\n");
+        Point result = MAPPER.readerFor(Point.class).with(schema).readValue("null,null,null\n");
         assertEquals(0, result.x);
         assertNull(result.y);
         assertNull(result.z);
@@ -211,7 +206,7 @@ public class TestParser extends ModuleTestBase
         CsvSchema schema = CsvSchema.builder().addColumn("Col1").addColumn("Col2")
                 .addColumn("Col3").build();
 
-        MappingIterator<Object> iter = new CsvMapper().readerFor(Object.class)
+        MappingIterator<Object> iter = MAPPER.readerFor(Object.class)
                 .with(schema).readValues(INPUT);
 
         Map<?,?> m  = (Map<?,?>) iter.next();

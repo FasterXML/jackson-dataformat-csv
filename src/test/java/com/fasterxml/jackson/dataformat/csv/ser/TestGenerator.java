@@ -38,16 +38,6 @@ public class TestGenerator extends ModuleTestBase
         }
     }
 
-    @JsonPropertyOrder({"id", "desc"})
-    static class IdDesc {
-        public String id, desc;
-
-        public IdDesc(String id, String desc) {
-            this.id = id;
-            this.desc = desc;
-        }
-    }
-
     /*
     /**********************************************************************
     /* Test methods
@@ -194,21 +184,6 @@ public class TestGenerator extends ModuleTestBase
         } finally {
             file.delete();
         }
-    }
-
-    // [dataformat-csv#53]
-    public void testCustomNullValue() throws Exception
-    {
-        ObjectMapper mapper = mapperForCsv();
-        CsvSchema schema = CsvSchema.builder()
-                .setNullValue("n/a")
-                .addColumn("id")
-                .addColumn("desc")
-                .build();
-        
-        String result = mapper.writer(schema).writeValueAsString(new IdDesc("id", null));
-        // MUST use doubling for quotes!
-        assertEquals("id,n/a\n", result);
     }
 
     public void testForcedQuoting60() throws Exception

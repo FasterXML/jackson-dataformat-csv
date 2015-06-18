@@ -68,6 +68,17 @@ public abstract class ModuleTestBase extends junit.framework.TestCase
             return firstName.hashCode();
         }
     }
+
+    @JsonPropertyOrder({"id", "desc"})
+    protected static class IdDesc {
+        public String id, desc;
+
+        protected IdDesc() { }
+        public IdDesc(String id, String desc) {
+            this.id = id;
+            this.desc = desc;
+        }
+    }
     
     protected ModuleTestBase() { }
 
