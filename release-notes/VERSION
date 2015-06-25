@@ -9,7 +9,7 @@ Project: jackson-dataformat-csv
 - Removed type `CsvObjectReader`, sub-classing not needed at this point,
   just complicates handling (for now)
 
-2.5.4 (not yet released)
+2.5.4 (09-Jun-2015)
 
 - Fixes to potential ArrayIndexOutOfBoundsException on `CsvEncoder`, bounds check
 
