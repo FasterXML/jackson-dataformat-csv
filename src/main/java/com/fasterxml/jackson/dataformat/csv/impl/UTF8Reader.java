@@ -18,11 +18,11 @@ public final class UTF8Reader
      * buffer is to be recycled when input ends.
      */
     private final IOContext _ioContext;
-    
+
     private InputStream _inputSource;
 
     private final boolean _autoClose;
-    
+
     private byte[] _inputBuffer;
 
     /**
@@ -80,7 +80,7 @@ public final class UTF8Reader
         _inputEnd = ptr+len;
         _autoClose = true;
     }
-    
+
     public UTF8Reader(IOContext ctxt, InputStream in, boolean autoClose)
     {
         super(in);
@@ -100,7 +100,7 @@ public final class UTF8Reader
     protected final boolean canModifyBuffer() {
         return (_ioContext != null);
     }
-    
+
     /*
     /**********************************************************************
     /* Reader API

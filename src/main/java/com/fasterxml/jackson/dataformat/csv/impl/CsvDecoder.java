@@ -283,13 +283,6 @@ public class CsvDecoder
     /**********************************************************************
      */
 
-    /* 21-Nov-2012, tatu: Should be resolved; is only included to retain
-     *   number-handling code (copied from other parsers), but not
-     *   working as expected.
-     */
-    // !!!! Only to allow compilation to succeed; remove once done!
-    protected JsonToken _currToken = null;
-
     public CsvDecoder(CsvParser owner, IOContext ctxt, Reader r, CsvSchema schema, TextBuffer textBuffer,
             boolean autoCloseInput, boolean trimSpaces)
     {
@@ -948,20 +941,15 @@ public class CsvDecoder
             _parseNumericValue(NR_UNKNOWN); // will also check event type
         }
         // Separate types for int types
-        if (_currToken == JsonToken.VALUE_NUMBER_INT) {
-            if ((_numTypesValid & NR_INT) != 0) {
-                return Integer.valueOf(_numberInt);
-            }
-            if ((_numTypesValid & NR_LONG) != 0) {
-                return Long.valueOf(_numberLong);
-            }
-            if ((_numTypesValid & NR_BIGINT) != 0) {
-                return _numberBigInt;
-            }
-            // Shouldn't get this far but if we do
-            return _numberBigDecimal;
+        if ((_numTypesValid & NR_INT) != 0) {
+            return Integer.valueOf(_numberInt);
         }
-    
+        if ((_numTypesValid & NR_LONG) != 0) {
+            return Long.valueOf(_numberLong);
+        }
+        if ((_numTypesValid & NR_BIGINT) != 0) {
+            return _numberBigInt;
+        }
         // And then floating point types. But here optimal type
         // needs to be big decimal, to avoid losing any data?
         if ((_numTypesValid & NR_BIGDECIMAL) != 0) {
@@ -978,13 +966,13 @@ public class CsvDecoder
         if (_numTypesValid == NR_UNKNOWN) {
             _parseNumericValue(NR_UNKNOWN); // will also check event type
         }
-        if (_currToken == JsonToken.VALUE_NUMBER_INT) {
-            if ((_numTypesValid & NR_INT) != 0) {
-                return NumberType.INT;
-            }
-            if ((_numTypesValid & NR_LONG) != 0) {
-                return NumberType.LONG;
-            }
+        if ((_numTypesValid & NR_INT) != 0) {
+            return NumberType.INT;
+        }
+        if ((_numTypesValid & NR_LONG) != 0) {
+            return NumberType.LONG;
+        }
+        if ((_numTypesValid & NR_BIGINT) != 0) {
             return NumberType.BIG_INTEGER;
         }
     
@@ -1089,7 +1077,7 @@ public class CsvDecoder
         throws IOException
     {
         // Int or float?
-        if (_currToken == JsonToken.VALUE_NUMBER_INT) {
+        if (_textBuffer.looksLikeInt()) {
             char[] buf = _textBuffer.getTextBuffer();
             int offset = _textBuffer.getTextOffset();
             int len = _intLength;
@@ -1130,11 +1118,14 @@ public class CsvDecoder
             _parseSlowIntValue(expType, buf, offset, len);
             return;
         }
-        if (_currToken == JsonToken.VALUE_NUMBER_FLOAT) {
+        /*
+        if (_hasFloatToken() == JsonToken.VALUE_NUMBER_FLOAT) {
             _parseSlowFloatValue(expType);
             return;
         }
         _reportError("Current token ("+_currToken+") not numeric, can not use numeric value accessors");
+        */
+        _parseSlowFloatValue(expType);
     }
     
     private final void _parseSlowFloatValue(int expType)
