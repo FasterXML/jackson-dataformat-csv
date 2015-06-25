@@ -7,6 +7,8 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.dataformat.csv.ModuleTestBase;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema.Column;
+import com.fasterxml.jackson.dataformat.csv.schema.PropertyOrder74Test.Point;
+import com.fasterxml.jackson.dataformat.csv.schema.PropertyOrder74Test.PointWithAnnotation;
 
 public class SchemaTest extends ModuleTestBase
 {
@@ -22,16 +24,26 @@ public class SchemaTest extends ModuleTestBase
         public List<String> c;
     }
 
+    // for [databind#74]
+    static class Point {
+        public int y;
+        public int x;
+    }
+
+    @JsonPropertyOrder()
+    public static class PointWithAnnotation extends Point {}
+    
     /*
     /**********************************************************************
     /* Test methods
     /**********************************************************************
      */
 
+    final CsvMapper MAPPER = mapperForCsv();
+    
     public void testUserWithTypedAutoSchema() throws Exception
     {
-        CsvMapper mapper = mapperForCsv();
-        CsvSchema schema = mapper.typedSchemaFor(FiveMinuteUser.class);
+        CsvSchema schema = MAPPER.typedSchemaFor(FiveMinuteUser.class);
         assertEquals("[\"firstName\",\"lastName\",\"gender\",\"verified\",\"userImage\"]",
                 schema.getColumnDesc());
         assertEquals(5, schema.size());
@@ -65,8 +77,7 @@ public class SchemaTest extends ModuleTestBase
 
     public void testArrayWithTypedAutoSchema() throws Exception
     {
-        CsvMapper mapper = mapperForCsv();
-        CsvSchema schema = mapper.typedSchemaFor(ArrayWrapper.class);
+        CsvSchema schema = MAPPER.typedSchemaFor(ArrayWrapper.class);
         assertEquals("[\"a\",\"b\",\"c\"]",
                 schema.getColumnDesc());
         assertEquals(3, schema.size());
@@ -88,7 +99,7 @@ public class SchemaTest extends ModuleTestBase
         _verifyLinks(schema);
     }
     
-    // for [Issue#42]
+    // for [dataformat-csv#42]
     public void testReorderByName() throws Exception
     {
         CsvMapper mapper = mapperForCsv();
@@ -100,11 +111,10 @@ public class SchemaTest extends ModuleTestBase
         _verifyLinks(schema);
     }
 
-    // for [Issue#42]
+    // for [dataformat-csv#42]
     public void testReorderWithComparator() throws Exception
     {
-        CsvMapper mapper = mapperForCsv();
-        CsvSchema schema = mapper.schemaFor(Mixed.class);
+        CsvSchema schema = MAPPER.schemaFor(Mixed.class);
         schema = schema.sortedBy(Collections.<String>reverseOrder());
         assertEquals(aposToQuotes("['d','c','b','a']"), schema.getColumnDesc());
 
@@ -125,4 +135,14 @@ public class SchemaTest extends ModuleTestBase
             prev = curr;
         }
     }
+    
+    // For [dataformat-csv#74]: problems applying default do-sort handling
+    public void testSchemaWithOrdering() throws Exception
+    {
+        CsvSchema schema1 = MAPPER.schemaFor(Point.class);
+        CsvSchema schema2 = MAPPER.schemaFor(PointWithAnnotation.class);
+
+        assertEquals(schema1.size(), schema2.size());
+        assertEquals(schema1.column(0).getName(), schema2.column(0).getName());
+    }    
 }

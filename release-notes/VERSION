@@ -6,6 +6,7 @@ Project: jackson-dataformat-csv
 
 2.6.0 (not yet released)
 
+#74: Problems with ordering, `@JsonPropertyOrder` losing alphabetic ordering
 - Removed type `CsvObjectReader`, sub-classing not needed at this point,
   just complicates handling (for now)
 

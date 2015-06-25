@@ -1,13 +1,7 @@
 package com.fasterxml.jackson.dataformat.csv.failing;
 
-import java.io.ByteArrayOutputStream;
-import java.util.*;
-
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.csv.*;
-
-import static org.junit.Assert.assertArrayEquals;
 
 public class NullRead72Test extends ModuleTestBase
 {
