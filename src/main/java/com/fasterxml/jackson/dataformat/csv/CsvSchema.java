@@ -605,6 +605,8 @@ public class CsvSchema
      */
     protected final char[] _nullValue;
 
+    protected transient String _nullValueAsString;
+    
     @Deprecated // in 2.5; remove from 2.6
     public CsvSchema(Column[] columns,
             boolean useHeader, boolean skipFirstDataRow,
@@ -983,6 +985,22 @@ public class CsvSchema
      * @since 2.5
      */
     public char[] getNullValue() { return _nullValue; }
+
+    /**
+     * @since 2.6
+     */
+    public String getNullValueString() {
+        String str = _nullValueAsString;
+        if (str == null) {
+            if (_nullValue == null || _nullValue.length == 0) {
+                str = "";
+            } else {
+                str = new String(_nullValue);
+            }
+            _nullValueAsString = str;
+        }
+        return str;
+    }
 
     public boolean usesQuoteChar() { return _quoteChar >= 0; }
     public boolean usesEscapeChar() { return _escapeChar >= 0; }

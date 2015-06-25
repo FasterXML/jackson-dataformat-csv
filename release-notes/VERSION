@@ -6,6 +6,8 @@ Project: jackson-dataformat-csv
 
 2.6.0 (not yet released)
 
+#72: Recognize the configured "null value" (String) also in reader-infrastructure.
+ (requested by flappingeagle@github)
 #74: Problems with ordering, `@JsonPropertyOrder` losing alphabetic ordering
 - Removed type `CsvObjectReader`, sub-classing not needed at this point,
   just complicates handling (for now)

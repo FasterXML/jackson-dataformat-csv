@@ -147,7 +147,7 @@ public class CsvParser
      * @since 2.6
      */
     protected final static int STATE_SKIP_EXTRA_COLUMNS = 6;
-    
+
     /**
      * State in which end marker is returned; either
      * null (if no array wrapping), or
@@ -236,6 +236,8 @@ public class CsvParser
 
     protected char _arraySeparator;
 
+    protected String _nullValue;
+    
     /*
     /**********************************************************************
     /* Helper objects
@@ -313,6 +315,8 @@ public class CsvParser
     {
         if (schema instanceof CsvSchema) {
             _schema = (CsvSchema) schema;
+            String str = _schema.getNullValueString();
+            _nullValue = str.isEmpty() ? null : str;
         } else if (schema == null) {
             schema = EMPTY_SCHEMA;
         } else {
@@ -485,7 +489,7 @@ public class CsvParser
     public void overrideCurrentName(String name) {
         _currentName = name;
     }
-    
+
     @Override
     public JsonToken nextToken() throws IOException
     {
@@ -586,8 +590,11 @@ public class CsvParser
             }
         } else {
             t = nextToken();
+            if (t == JsonToken.VALUE_STRING) {
+                return getText();
+            }
         }
-        return (t == JsonToken.VALUE_STRING) ? getText() : null;
+        return null;
     }
 
     /*
@@ -718,6 +725,11 @@ public class CsvParser
             return JsonToken.START_ARRAY;
         }
         _state = STATE_NEXT_ENTRY;
+        if (_nullValue != null) {
+            if (_nullValue.equals(_currentValue)) {
+                return JsonToken.VALUE_NULL;
+            }
+        }
         return JsonToken.VALUE_STRING;
     }
 
@@ -737,6 +749,11 @@ public class CsvParser
         // state remains the same
         _currentValue = next;
         ++_columnIndex;
+        if (_nullValue != null) {
+            if (_nullValue.equals(next)) {
+                return JsonToken.VALUE_NULL;
+            }
+        }
         return JsonToken.VALUE_STRING;
     }
 
@@ -773,6 +790,11 @@ public class CsvParser
         }
         if (isEnabled(Feature.TRIM_SPACES)) {
             _currentValue = _currentValue.trim();
+        }
+        if (_nullValue != null) {
+            if (_nullValue.equals(_currentValue)) {
+                return JsonToken.VALUE_NULL;
+            }
         }
         return JsonToken.VALUE_STRING;
     }

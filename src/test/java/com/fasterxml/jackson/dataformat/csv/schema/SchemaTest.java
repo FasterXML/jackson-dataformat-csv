@@ -7,8 +7,6 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.fasterxml.jackson.dataformat.csv.ModuleTestBase;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema.Column;
-import com.fasterxml.jackson.dataformat.csv.schema.PropertyOrder74Test.Point;
-import com.fasterxml.jackson.dataformat.csv.schema.PropertyOrder74Test.PointWithAnnotation;
 
 public class SchemaTest extends ModuleTestBase
 {
