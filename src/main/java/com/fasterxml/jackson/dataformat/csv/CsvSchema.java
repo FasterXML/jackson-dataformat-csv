@@ -41,7 +41,7 @@ import com.fasterxml.jackson.core.FormatSchema;
  *  </li>
  * <li>nullValue (String) [default: "" (empty String)]: When asked to write Java `null`,
  *    this String value will be used instead.<br />
- *   NOTE: NOT used for reading at this point (this may change in future)
+ *   With 2.6, value will also be recognized during value reads.
  *  </li>
  * </ul>
  *<p>
@@ -545,7 +545,7 @@ public class CsvSchema
         }
 
         public Builder setNullValue(String nvl) {
-            return setNullValue(nvl.toCharArray());
+            return setNullValue((nvl == null) ? null : nvl.toCharArray());
         }
 
         public Builder setNullValue(char[] nvl) {

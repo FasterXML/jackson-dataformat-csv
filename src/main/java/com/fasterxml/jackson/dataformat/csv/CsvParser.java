@@ -316,7 +316,7 @@ public class CsvParser
         if (schema instanceof CsvSchema) {
             _schema = (CsvSchema) schema;
             String str = _schema.getNullValueString();
-            _nullValue = str.isEmpty() ? null : str;
+            _nullValue = str;
         } else if (schema == null) {
             schema = EMPTY_SCHEMA;
         } else {
