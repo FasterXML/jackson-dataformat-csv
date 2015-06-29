@@ -171,7 +171,7 @@ public class CsvEncoder
         _cfgQuoteCharacter = schema.getQuoteChar();
         _cfgLineSeparator = schema.getLineSeparator();
         _cfgLineSeparatorLength = (_cfgLineSeparator == null) ? 0 : _cfgLineSeparator.length;
-        _cfgNullValue = schema.getNullValue();
+        _cfgNullValue = schema.getNullValueOrEmpty();
         
         _columnCount = schema.size();
 
@@ -198,7 +198,7 @@ public class CsvEncoder
         _cfgQuoteCharacter = newSchema.getQuoteChar();
         _cfgLineSeparator = newSchema.getLineSeparator();
         _cfgLineSeparatorLength = _cfgLineSeparator.length;
-        _cfgNullValue = newSchema.getNullValue();
+        _cfgNullValue = newSchema.getNullValueOrEmpty();
         _cfgMinSafeChar = _calcSafeChar();
         _columnCount = newSchema.size();
     }  

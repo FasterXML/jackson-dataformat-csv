@@ -84,6 +84,8 @@ public class CsvSchema
 
     protected final static int DEFAULT_ENCODING_FEATURES = 0;
 
+    protected final static char[] NO_CHARS = new char[0];
+
     /*
     /**********************************************************************
     /* Constants, default settings
@@ -100,13 +102,20 @@ public class CsvSchema
      * semicolon.
      */
     public final static char DEFAULT_ARRAY_ELEMENT_SEPARATOR = ';';
-    
+
     public final static char DEFAULT_QUOTE_CHAR = '"';
 
     /**
-     * By default, nulls are written as empty Strings ("")
+     * By default, nulls are written as empty Strings (""); and no coercion
+     * is performed from any String (higher level databind may, however,
+     * coerce Strings into Java nulls).
+     * To use automatic coercion on reading, null value must be set explicitly
+     * to empty String ("").
+     *<p>
+     * NOTE: before 2.6, this value default to empty <code>char[]</code>; changed
+     * to Java null in 2.6.
      */
-    public final static char[] DEFAULT_NULL_VALUE = new char[0];
+    public final static char[] DEFAULT_NULL_VALUE = null;
     
     /**
      * By default, no escape character is used -- this is denoted by
@@ -549,7 +558,7 @@ public class CsvSchema
         }
 
         public Builder setNullValue(char[] nvl) {
-            _nullValue = (nvl == null) ? DEFAULT_NULL_VALUE : nvl;
+            _nullValue = nvl;
             return this;
         }
         
@@ -888,7 +897,7 @@ public class CsvSchema
         return new CsvSchema(_columns, _features,
                 _columnSeparator, _quoteChar, _escapeChar, _lineSeparator,
                 _arrayElementSeparator,
-                (nvl == null) ? DEFAULT_NULL_VALUE : nvl.toCharArray(),
+                (nvl == null) ? null : nvl.toCharArray(),
                 _columnsByName);
     }
     
@@ -982,9 +991,25 @@ public class CsvSchema
     public char[] getLineSeparator() { return _lineSeparator; }
 
     /**
+     * @return Null value defined, as char array, if one is defined to be recognized; Java null
+     *    if not.
+     * 
      * @since 2.5
      */
     public char[] getNullValue() { return _nullValue; }
+
+    /**
+     * Same as {@link #getNullValue()} except that undefined null value (one that remains as <code>null</code>,
+     * or explicitly set as such) will be returned as empty <code>char[]</code>
+     *
+     * @since 2.6
+     */
+    public char[] getNullValueOrEmpty() {
+        if (_nullValue == null) {
+            return NO_CHARS;
+        }
+        return _nullValue;
+    }
 
     /**
      * @since 2.6
@@ -992,11 +1017,10 @@ public class CsvSchema
     public String getNullValueString() {
         String str = _nullValueAsString;
         if (str == null) {
-            if (_nullValue == null || _nullValue.length == 0) {
-                str = "";
-            } else {
-                str = new String(_nullValue);
+            if (_nullValue == null) {
+                return null;
             }
+            str = (_nullValue.length == 0) ? "" : new String(_nullValue);
             _nullValueAsString = str;
         }
         return str;

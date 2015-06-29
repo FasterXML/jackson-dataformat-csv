@@ -643,7 +643,7 @@ public class CsvGenerator extends GeneratorBase
         _verifyValueWrite("write null value");
         if (!_skipValue) {
             if (_arraySeparator >= 0) {
-                _addToArray(_schema.getNullValue());
+                _addToArray(_schema.getNullValueOrEmpty());
             } else if (_writeContext.inRoot()) { // as per [#69]
                 // or, to write 'empty Object' (for common case), would
                 // write single null, then finish row, like so:

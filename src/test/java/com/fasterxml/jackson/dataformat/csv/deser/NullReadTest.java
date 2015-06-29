@@ -50,19 +50,19 @@ public class NullReadTest extends ModuleTestBase
         String csv = MAPPER.writer(schemaWithDefault).writeValueAsString(new IdDesc("id", null));
         assertEquals("id,\n", csv);
 
-        // but read back
+        // but read back. Note: no null coercion unless explicitly defined
         
         ObjectReader r = MAPPER.readerFor(IdDesc.class).with(schemaWithDefault);
 
         IdDesc result = r.readValue(csv);
         assertNotNull(result);
         assertEquals("id", result.id);
-        assertNull(result.desc);
+        assertEquals("", result.desc);
 
         // also try the other combination
         result = r.readValue(",Whatevs\n");
         assertNotNull(result);
-        assertNull(result.id);
+        assertEquals("", result.id);
         assertEquals("Whatevs", result.desc);
 
         // And then with explicit Empty String
@@ -80,7 +80,7 @@ public class NullReadTest extends ModuleTestBase
         assertEquals("id", result.id);
         assertNull(result.desc);
 
-        // and finally with explicit `null`
+        // and finally with explicit `null`, which once again disables coercion
         CsvSchema schemaWithExplicitNull = CsvSchema.builder()
                 .setNullValue((String) null)
                 .addColumn("id")
@@ -93,6 +93,6 @@ public class NullReadTest extends ModuleTestBase
         result = r.readValue(csv);
         assertNotNull(result);
         assertEquals("id", result.id);
-        assertNull(result.desc);
+        assertEquals("", result.desc);
     }
 }
