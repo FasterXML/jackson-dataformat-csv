@@ -373,35 +373,35 @@ public final class UTF8Reader
     /**********************************************************************
      */
 
-    private void reportInvalidInitial(int mask, int offset)
-        throws IOException
+    protected void reportInvalidInitial(int mask, int offset) throws IOException
     {
         // input (byte) ptr has been advanced by one, by now:
         int bytePos = _byteCount + _inputPtr - 1;
         int charPos = _charCount + offset + 1;
 
-        throw new CharConversionException("Invalid UTF-8 start byte 0x"+Integer.toHexString(mask)
-                +" (at char #"+charPos+", byte #"+bytePos+")");
+        throw new CharConversionException(String.format(
+                "Invalid UTF-8 start byte 0x%s (at char #%d, byte #%d): check content encoding, does not look like UTF-8",
+                Integer.toHexString(mask), charPos, bytePos));
     }
 
-    private void reportInvalidOther(int mask, int offset)
-        throws IOException
+    protected void reportInvalidOther(int mask, int offset) throws IOException
     {
         int bytePos = _byteCount + _inputPtr - 1;
-        int charPos = _charCount + offset;
+        int charPos = _charCount + offset + 1;
 
-        throw new CharConversionException("Invalid UTF-8 middle byte 0x"+Integer.toHexString(mask)
-                +" (at char #"+charPos+", byte #"+bytePos+")");
+        throw new CharConversionException(String.format(
+                "Invalid UTF-8 middle byte 0x%s (at char #%d, byte #%d): check content encoding, does not look like UTF-8",
+                Integer.toHexString(mask), charPos, bytePos));
     }
 
-    private void reportUnexpectedEOF(int gotBytes, int needed)
-        throws IOException
+    protected void reportUnexpectedEOF(int gotBytes, int needed) throws IOException
     {
         int bytePos = _byteCount + gotBytes;
         int charPos = _charCount;
 
-        throw new CharConversionException("Unexpected EOF in the middle of a multi-byte char: got "
-                +gotBytes+", needed "+needed +", at char #"+charPos+", byte #"+bytePos+")");
+        throw new CharConversionException(String.format(
+                "Unexpected EOF in the middle of a multi-byte UTF-8 character: got %d, needed %d, at char #%d, byte #%d)",
+                gotBytes, needed, charPos, bytePos));
     }
 
     /*

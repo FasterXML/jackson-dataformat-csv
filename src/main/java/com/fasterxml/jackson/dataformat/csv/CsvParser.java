@@ -169,7 +169,7 @@ public class CsvParser
     protected ObjectCodec _objectCodec;
 
     protected int _formatFeatures;
-    
+
     /**
      * Definition of columns being read. Initialized to "empty" instance, which
      * has default configuration settings.
