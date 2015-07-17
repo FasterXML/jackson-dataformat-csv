@@ -641,10 +641,13 @@ public class CsvGenerator extends GeneratorBase
     public void writeNull() throws IOException
     {
         _verifyValueWrite("write null value");
+
         if (!_skipValue) {
             if (_arraySeparator >= 0) {
                 _addToArray(_schema.getNullValueOrEmpty());
-            } else if (_writeContext.inRoot()) { // as per [#69]
+            } else if (!_writeContext.inObject()) { // as per [#69]
+                // note: 'root' not enough, for case of wrap-as array, or serialize List
+                
                 // or, to write 'empty Object' (for common case), would
                 // write single null, then finish row, like so:
                 /*

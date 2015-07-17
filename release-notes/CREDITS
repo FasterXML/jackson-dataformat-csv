@@ -41,4 +41,7 @@ David Navas (davidnavas@github)
 * Contributed #75: Support escapes at beginning of the file
  (2.5.3)
 
+sothmann@github)
 
+* Reported #83: Serializing List with null values leads to corrupt CSV
+ (2.6.0)
