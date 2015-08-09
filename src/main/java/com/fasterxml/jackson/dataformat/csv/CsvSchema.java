@@ -1126,7 +1126,7 @@ public class CsvSchema
         sb.append(']');
         sb.append(", header? ").append(usesHeader());
         sb.append(", skipFirst? ").append(skipsFirstDataRow());
-        sb.append(", comments?? ").append(allowsComments());
+        sb.append(", comments? ").append(allowsComments());
         
         sb.append(']');
         return sb.toString();

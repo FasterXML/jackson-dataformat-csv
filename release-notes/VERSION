@@ -4,6 +4,11 @@ Project: jackson-dataformat-csv
 === Releases ===
 ------------------------------------------------------------------------
 
+2.6.1 (not yet released)
+
+#87: Serialization of single Float or Double value leads to incorrect CSV when schema is used
+ (reported by sothmann@github)
+
 2.6.0 (20-Jul-2015)
 
 #72: Recognize the configured "null value" (String) also in reader-infrastructure.

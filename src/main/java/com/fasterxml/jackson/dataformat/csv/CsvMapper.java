@@ -326,10 +326,44 @@ public class CsvMapper extends ObjectMapper
         return result;
     }
 
+    protected boolean _nonPojoType(JavaType t)
+    {
+        if (t.isPrimitive() || t.isEnumType()) {
+            return true;
+        }
+        Class<?> raw = t.getRawClass();
+        // Wrapper types for numbers
+        if (Number.class.isAssignableFrom(raw)) {
+            if ((raw == Byte.class)
+                || (raw == Short.class)
+                || (raw == Character.class)
+                || (raw == Integer.class)
+                || (raw == Long.class)
+                || (raw == Float.class)
+                || (raw == Double.class)
+                ) {
+                return true;
+            }
+        }
+        // Some other well-known non-POJO types
+        if ((raw == Boolean.class)
+                || (raw == String.class)
+                ) {
+            return true;
+        }
+        return false;
+    }
+
     protected void _addSchemaProperties(CsvSchema.Builder builder, AnnotationIntrospector intr,
             boolean typed,
             JavaType pojoType, NameTransformer unwrapper)
     {
+        // 09-Aug-2015, tatu: From [dataformat-csv#87], realized that one can not have
+        //    real schemas for primitive/wrapper
+        if (_nonPojoType(pojoType)) {
+            return;
+        }
+        
         BeanDescription beanDesc = getSerializationConfig().introspect(pojoType);
         for (BeanPropertyDefinition prop : beanDesc.findProperties()) {
             // ignore setter-only properties:

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.csv.CsvFactory;
 import com.fasterxml.jackson.dataformat.csv.CsvGenerator;
@@ -242,6 +243,31 @@ public class TestGenerator extends ModuleTestBase
         gen.close();
         assertEquals("a,b,foobar\n", w.toString());
     }
+
+    // for [dataformat-csv#87]
+    public void testSerializationOfPrimitivesToCsv() throws Exception
+    {
+        CsvMapper mapper = new CsvMapper();
+        /*
+        testSerializationOfPrimitiveToCsv(mapper, String.class, "hello world", "\"hello world\"\n");
+        testSerializationOfPrimitiveToCsv(mapper, Boolean.class, true, "true\n");
+        testSerializationOfPrimitiveToCsv(mapper, Integer.class, 42, "42\n");
+        testSerializationOfPrimitiveToCsv(mapper, Long.class, 42L, "42\n");
+        */
+        testSerializationOfPrimitiveToCsv(mapper, Short.class, (short)42, "42\n");
+        testSerializationOfPrimitiveToCsv(mapper, Double.class, 42.33d, "42.33\n");
+        testSerializationOfPrimitiveToCsv(mapper, Float.class, 42.33f, "42.33\n");
+    }
+
+    private <T> void testSerializationOfPrimitiveToCsv(final CsvMapper mapper,
+            final Class<T> type, final T value, final String expectedCsv) throws Exception
+    {
+        CsvSchema schema = mapper.schemaFor(type);
+System.err.println("Schema for "+type+" == "+schema);       
+        ObjectWriter writer = mapper.writer(schema);
+        String csv = writer.writeValueAsString(value);
+        assertEquals(expectedCsv, csv);
+    }    
 
     /*
     /**********************************************************************

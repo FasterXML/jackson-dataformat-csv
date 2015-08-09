@@ -24,7 +24,7 @@ abstractions.
 
   <properties>
     <jackson.version.annotations>2.6.0</jackson.version.annotations>
-    <jackson.version.core>2.6.0-rc4</jackson.version.core>
+    <jackson.version.core>2.6.1-SNAPSHOT</jackson.version.core>
     <!-- Generate PackageVersion.java into this directory. -->
     <packageVersion.dir>com/fasterxml/jackson/dataformat/csv</packageVersion.dir>
     <packageVersion.package>${project.groupId}.csv</packageVersion.package>
