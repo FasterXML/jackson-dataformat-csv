@@ -263,7 +263,6 @@ public class TestGenerator extends ModuleTestBase
             final Class<T> type, final T value, final String expectedCsv) throws Exception
     {
         CsvSchema schema = mapper.schemaFor(type);
-System.err.println("Schema for "+type+" == "+schema);       
         ObjectWriter writer = mapper.writer(schema);
         String csv = writer.writeValueAsString(value);
         assertEquals(expectedCsv, csv);
