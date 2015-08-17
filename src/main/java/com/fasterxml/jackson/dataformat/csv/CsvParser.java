@@ -3,6 +3,7 @@ package com.fasterxml.jackson.dataformat.csv;
 import java.io.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.base.ParserMinimalBase;
@@ -41,7 +42,7 @@ public class CsvParser
          * Default value is false, as per <a href="http://tools.ietf.org/html/rfc4180">RFC-4180</a>.
          */
         TRIM_SPACES(false),
-        
+
         /**
          * Feature that determines how stream of records (usually CSV lines, but sometimes
          * multiple lines when linefeeds are included in quoted values) is exposed:
@@ -802,27 +803,33 @@ public class CsvParser
     /**
      * Method called to process the expected header line
      */
-    protected void _readHeaderLine() throws IOException
-    {
-        /* Two separate cases:
-         * 
-         * (a) We already have a Schema with columns; if so, header will be skipped
-         * (b) Otherwise, need to find column definitions; empty one is not acceptable
+    protected void _readHeaderLine() throws IOException {
+        /*
+            When the header line is present and the settings ask for it
+            to be processed, two different options are possible:
+
+            a) The schema has been populated.  In this case, build a new
+               schema where the order matches the *actual* order in which
+               the given CSV file offers its columns; there cases the
+               consumer of the csv file knows about the columns but not
+               necessarily the order in which they are defined.
+
+               A further check can be done in this case, by not permitting
+               new columns that are not defined in the schema, by adding
+               a new flag to the schema (say, strict) and reporting an
+               error when a new column is found in the header.
+
+            b) The schema has not been populated.  In this case, build a
+               default schema based on the columns found in the header.
          */
 
-        if (_schema.size() > 0) { // case (a); skip all/any
-            while (_reader.nextString() != null) { }
-            return;
-        }
-        // case (b); read all
         String name;
-        // base setting on existing schema, but drop columns
         CsvSchema.Builder builder = _schema.rebuild().clearColumns();
-        
+
         while ((name = _reader.nextString()) != null) {
             // one more thing: always trim names, regardless of config settings
             name = name.trim();
-            
+
             // See if "old" schema defined type; if so, use that type...
             CsvSchema.Column prev = _schema.column(name);
             if (prev != null) {
@@ -831,6 +838,7 @@ public class CsvParser
                 builder.addColumn(name);
             }
         }
+
         // Ok: did we get any  columns?
         CsvSchema newSchema = builder.build();
         int size = newSchema.size();
