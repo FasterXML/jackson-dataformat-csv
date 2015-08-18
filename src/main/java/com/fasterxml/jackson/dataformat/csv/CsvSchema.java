@@ -81,6 +81,7 @@ public class CsvSchema
     protected final static int ENCODING_FEATURE_USE_HEADER = 0x0001;
     protected final static int ENCODING_FEATURE_SKIP_FIRST_DATA_ROW = 0x0002;
     protected final static int ENCODING_FEATURE_ALLOW_COMMENTS = 0x0004;
+    protected final static int ENCODING_FEATURE_REORDER_COLUMNS = 0x0008;
 
     protected final static int DEFAULT_ENCODING_FEATURES = 0;
 
@@ -455,6 +456,19 @@ public class CsvSchema
         }
 
         /**
+         * Use in combination with setUseHeader.  When use header flag is
+         * is set, this setting will reorder the columns defined in this
+         * schema to match the order set by the header.
+         *
+         * @param b         Enable / Disable this setting
+         * @return          This Builder instance
+         */
+        public Builder setReorderColumns(boolean b) {
+            _feature(ENCODING_FEATURE_REORDER_COLUMNS, b);
+            return this;
+        }
+
+        /**
          * Method for specifying whether Schema should indicate that
          * the first line that is not a header (if header handling enabled)
          * should be skipped in its entirety.
@@ -775,6 +789,18 @@ public class CsvSchema
     }
 
     /**
+     * Returns a clone of this instance by changing or setting the
+     * column reordering flag
+     *
+     * @param state     New value for setting
+     * @return          A copy of itself, ensuring the setting for
+     *                  the column reordering feature.
+     */
+    public CsvSchema withColumnReordering(boolean state) {
+        return _withFeature(ENCODING_FEATURE_REORDER_COLUMNS, state);
+    }
+
+    /**
      * Helper method for constructing and returning schema instance that
      * is similar to this one, except that it will be using header line.
      */
@@ -968,6 +994,7 @@ public class CsvSchema
      */
 
     public boolean usesHeader() { return (_features & ENCODING_FEATURE_USE_HEADER) != 0; }
+    public boolean reordersColumns() { return (_features & ENCODING_FEATURE_REORDER_COLUMNS) != 0; }
     public boolean skipsFirstDataRow() { return (_features & ENCODING_FEATURE_SKIP_FIRST_DATA_ROW) != 0; }
     public boolean allowsComments() { return (_features & ENCODING_FEATURE_ALLOW_COMMENTS) != 0; }
 

@@ -3,7 +3,6 @@ package com.fasterxml.jackson.dataformat.csv;
 import java.io.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.base.ParserMinimalBase;
@@ -810,19 +809,22 @@ public class CsvParser
 
             a) The schema has been populated.  In this case, build a new
                schema where the order matches the *actual* order in which
-               the given CSV file offers its columns; there cases the
-               consumer of the csv file knows about the columns but not
-               necessarily the order in which they are defined.
-
-               A further check can be done in this case, by not permitting
-               new columns that are not defined in the schema, by adding
-               a new flag to the schema (say, strict) and reporting an
-               error when a new column is found in the header.
+               the given CSV file offers its columns, iif _schema.reordersColumns()
+               is set to true; there cases the consumer of the csv file
+               knows about the columns but not necessarily the order in
+               which they are defined.
 
             b) The schema has not been populated.  In this case, build a
                default schema based on the columns found in the header.
          */
 
+        if (_schema.size() > 0 && !_schema.reordersColumns()) {
+            //noinspection StatementWithEmptyBody
+            while (_reader.nextString() != null) { /* does nothing */ }
+            return;
+        }
+
+        // either the schema is empty or reorder columns flag is set
         String name;
         CsvSchema.Builder builder = _schema.rebuild().clearColumns();
 

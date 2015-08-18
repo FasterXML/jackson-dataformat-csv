@@ -142,5 +142,20 @@ public class SchemaTest extends ModuleTestBase
 
         assertEquals(schema1.size(), schema2.size());
         assertEquals(schema1.column(0).getName(), schema2.column(0).getName());
-    }    
+    }
+
+    // For pull request 89
+    public void testSchemaWithReordering()
+    {
+        // Checks flags are handled properly through builder, getters
+        // and with* functions
+        CsvSchema schemaWithReordering = CsvSchema.builder()
+                .setUseHeader(true)
+                .setReorderColumns(true)
+                .build();
+
+        assertTrue(schemaWithReordering.reordersColumns());
+        CsvSchema schemaWithoutReordering = schemaWithReordering.withColumnReordering(false);
+        assertFalse(schemaWithoutReordering.reordersColumns());
+    }
 }

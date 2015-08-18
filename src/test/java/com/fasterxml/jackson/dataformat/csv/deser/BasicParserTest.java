@@ -1,17 +1,18 @@
 package com.fasterxml.jackson.dataformat.csv.deser;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.csv.*;
 
 import static org.junit.Assert.assertArrayEquals;
 
-public class BasicParserTest extends ModuleTestBase
-{
-    @JsonPropertyOrder({ "x", "y", "z" })
+public class BasicParserTest extends ModuleTestBase {
+    @JsonPropertyOrder({"x", "y", "z"})
     public static class Point {
         public int x;
         public Integer y;
@@ -30,19 +31,17 @@ public class BasicParserTest extends ModuleTestBase
     /**********************************************************
     /* Test methods
     /**********************************************************
-     */    
+     */
 
     final CsvMapper MAPPER = mapperForCsv();
-    
-    public void testSimpleExplicit() throws Exception
-    {
+
+    public void testSimpleExplicit() throws Exception {
         ObjectReader r = MAPPER.reader(SIMPLE_SCHEMA);
         _testSimpleExplicit(r, false);
         _testSimpleExplicit(r, true);
     }
 
-    private void _testSimpleExplicit(ObjectReader r, boolean useBytes) throws Exception
-    {
+    private void _testSimpleExplicit(ObjectReader r, boolean useBytes) throws Exception {
         r = r.forType(FiveMinuteUser.class);
         FiveMinuteUser user;
         final String INPUT = "Bob,Robertson,MALE,AQIDBAU=,false\n";
@@ -55,11 +54,10 @@ public class BasicParserTest extends ModuleTestBase
         assertEquals("Robertson", user.lastName);
         assertEquals(Gender.MALE, user.getGender());
         assertFalse(user.isVerified());
-        assertArrayEquals(new byte[] { 1, 2, 3, 4, 5}, user.getUserImage());
+        assertArrayEquals(new byte[]{1, 2, 3, 4, 5}, user.getUserImage());
     }
 
-    public void testSimpleExplicitWithBOM() throws Exception
-    {
+    public void testSimpleExplicitWithBOM() throws Exception {
         ObjectReader r = MAPPER.reader(SIMPLE_SCHEMA);
         r = r.forType(FiveMinuteUser.class);
         FiveMinuteUser user;
@@ -67,7 +65,7 @@ public class BasicParserTest extends ModuleTestBase
         ByteArrayOutputStream b = new ByteArrayOutputStream();
 
         // first, UTF-8 BOM:
-        b.write(new byte[] { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF });
+        b.write(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
         b.write("Bob,Robertson,MALE,AQIDBAU=,false\n".getBytes("UTF-8"));
         b.close();
 
@@ -75,16 +73,15 @@ public class BasicParserTest extends ModuleTestBase
         String fn = user.firstName;
 
         if (!fn.equals("Bob")) {
-            fail("Expected 'Bob' (3), got '"+fn+"' ("+fn.length()+")");
+            fail("Expected 'Bob' (3), got '" + fn + "' (" + fn.length() + ")");
         }
         assertEquals("Robertson", user.lastName);
         assertEquals(Gender.MALE, user.getGender());
         assertFalse(user.isVerified());
-        assertArrayEquals(new byte[] { 1, 2, 3, 4, 5}, user.getUserImage());
+        assertArrayEquals(new byte[]{1, 2, 3, 4, 5}, user.getUserImage());
     }
 
-    public void testSimpleWithAutoSchema() throws Exception
-    {
+    public void testSimpleWithAutoSchema() throws Exception {
         CsvSchema schema = MAPPER.schemaFor(FiveMinuteUser.class);
         // NOTE: order different from above test (as per POJO def!)
         FiveMinuteUser user = MAPPER.reader(schema).forType(FiveMinuteUser.class).readValue("Joe,Josephson,MALE,true,AwE=\n");
@@ -92,21 +89,20 @@ public class BasicParserTest extends ModuleTestBase
         assertEquals("Josephson", user.lastName);
         assertEquals(Gender.MALE, user.getGender());
         assertTrue(user.isVerified());
-        assertArrayEquals(new byte[] { 3, 1 }, user.getUserImage());
+        assertArrayEquals(new byte[]{3, 1}, user.getUserImage());
     }
 
     /**
      * Test to verify that we can mix "untyped" access as Maps
      * with schema information...
      */
-    public void testSimpleAsMaps() throws Exception
-    {
+    public void testSimpleAsMaps() throws Exception {
         CsvSchema schema = MAPPER.schemaFor(FiveMinuteUser.class);
-        MappingIterator<Map<?,?>> it = MAPPER.reader(schema).forType(Map.class).readValues(
+        MappingIterator<Map<?, ?>> it = MAPPER.reader(schema).forType(Map.class).readValues(
                 "Joe,Smith,MALE,false,"
-                );
+        );
         assertTrue(it.hasNext());
-        Map<?,?> result = it.nextValue();
+        Map<?, ?> result = it.nextValue();
         assertEquals(5, result.size());
         assertEquals("Joe", result.get("firstName"));
         assertEquals("Smith", result.get("lastName"));
@@ -124,18 +120,17 @@ public class BasicParserTest extends ModuleTestBase
         _testMapsWithLinefeeds(true);
     }
 
-    private void _testMapsWithLinefeeds(boolean useBytes) throws Exception
-    {
+    private void _testMapsWithLinefeeds(boolean useBytes) throws Exception {
         String CSV = "A,B,C\n"
-                +"data11,data12\n"
-                +"data21,data22,data23\r\n"
-               +"data31,\"data32 data32\ndata32 data32\",data33\n"
-                +"data41,\"data42 data42\r\ndata42\",data43\n";
-       
+                + "data11,data12\n"
+                + "data21,data22,data23\r\n"
+                + "data31,\"data32 data32\ndata32 data32\",data33\n"
+                + "data41,\"data42 data42\r\ndata42\",data43\n";
+
         CsvSchema cs = CsvSchema.emptySchema().withHeader();
         ObjectReader or = MAPPER.readerFor(HashMap.class).with(cs);
-        
-        MappingIterator<Map<String,String>> mi;
+
+        MappingIterator<Map<String, String>> mi;
 
         if (useBytes) {
             mi = or.readValues(CSV.getBytes("UTF-8"));
@@ -144,7 +139,7 @@ public class BasicParserTest extends ModuleTestBase
         }
 
         assertTrue(mi.hasNext());
-        Map<String,String> map = mi.nextValue();
+        Map<String, String> map = mi.nextValue();
         assertNotNull(map);
         assertEquals("data11", map.get("A"));
         assertEquals("data12", map.get("B"));
@@ -177,8 +172,7 @@ public class BasicParserTest extends ModuleTestBase
     }
 
     // [Issue#12]
-    public void testEmptyHandlingForInteger() throws Exception
-    {
+    public void testEmptyHandlingForInteger() throws Exception {
         CsvSchema schema = MAPPER.typedSchemaFor(Point.class).withoutHeader();
 
         // First: empty value, to be considered as null
@@ -188,8 +182,7 @@ public class BasicParserTest extends ModuleTestBase
         assertNull(result.z);
     }
 
-    public void testStringNullHandlingForInteger() throws Exception
-    {
+    public void testStringNullHandlingForInteger() throws Exception {
         CsvSchema schema = MAPPER.typedSchemaFor(Point.class).withoutHeader();
 
         // First: empty value, to be considered as null
@@ -200,8 +193,7 @@ public class BasicParserTest extends ModuleTestBase
     }
 
     // [Issue#41]
-    public void testIncorrectDups41() throws Exception
-    {
+    public void testIncorrectDups41() throws Exception {
         final String INPUT = "\"foo\",\"bar\",\"foo\"";
         CsvSchema schema = CsvSchema.builder().addColumn("Col1").addColumn("Col2")
                 .addColumn("Col3").build();
@@ -209,15 +201,127 @@ public class BasicParserTest extends ModuleTestBase
         MappingIterator<Object> iter = MAPPER.readerFor(Object.class)
                 .with(schema).readValues(INPUT);
 
-        Map<?,?> m  = (Map<?,?>) iter.next();
+        Map<?, ?> m = (Map<?, ?>) iter.next();
         assertFalse(iter.hasNextValue());
         iter.close();
 
         if (m.size() != 3) {
-            fail("Should have 3 entries, but got: "+m);
+            fail("Should have 3 entries, but got: " + m);
         }
         assertEquals("foo", m.get("Col1"));
         assertEquals("bar", m.get("Col2"));
         assertEquals("foo", m.get("Col3"));
+    }
+
+    // for pull request 89
+    public void testColumnReordering() throws IOException {
+        CsvFactory factory = new CsvFactory();
+        String CSV = "b,a,c\nvb,va,vc\n";
+
+        /* Test first column reordering, by setting the
+           columns in a different order to the ones
+           found in the CSV example
+         */
+        CsvSchema schemaWithReordering = CsvSchema.builder()
+                .addColumn("a")
+                .addColumn("b")
+                .addColumn("c")
+                .setLineSeparator('\n')
+                .setUseHeader(true)         // must be set for column reordering
+                .setReorderColumns(true)    // set column reordering
+                .build();
+
+        // Create a parser and ensure data is processed in the
+        // right order, as per header
+        CsvParser parser = factory.createParser(CSV);
+        parser.setSchema(schemaWithReordering);
+        assertEquals(JsonToken.START_OBJECT, parser.nextToken());
+        assertEquals(JsonToken.FIELD_NAME, parser.nextToken());
+        assertEquals("b", parser.getCurrentName());
+        assertEquals(JsonToken.VALUE_STRING, parser.nextToken());
+        assertEquals("vb", parser.getValueAsString());
+        assertEquals(JsonToken.FIELD_NAME, parser.nextToken());
+        assertEquals("a",parser.getCurrentName());
+        assertEquals(JsonToken.VALUE_STRING, parser.nextToken());
+        assertEquals("va", parser.getValueAsString());
+        assertEquals(JsonToken.FIELD_NAME, parser.nextToken());
+        assertEquals("c", parser.getCurrentName());
+        assertEquals(JsonToken.VALUE_STRING, parser.nextToken());
+        assertEquals("vc", parser.getValueAsString());
+        assertEquals(JsonToken.END_OBJECT, parser.nextToken());
+
+        /*
+            Now make a copy of the schema but set the reordering
+            flag to false.  In this case the columns values are
+            reported as per the schema order, not the header.
+         */
+        CsvSchema schemaWithoutReordering = schemaWithReordering.withColumnReordering(false);
+        parser = factory.createParser(CSV);
+        parser.setSchema(schemaWithoutReordering);
+        assertEquals(JsonToken.START_OBJECT, parser.nextToken());
+        assertEquals(JsonToken.FIELD_NAME, parser.nextToken());
+        assertEquals("a", parser.getCurrentName());
+        assertEquals(JsonToken.VALUE_STRING, parser.nextToken());
+        assertEquals("vb", parser.getValueAsString());
+        assertEquals(JsonToken.FIELD_NAME, parser.nextToken());
+        assertEquals("b", parser.getCurrentName());
+        assertEquals(JsonToken.VALUE_STRING, parser.nextToken());
+        assertEquals("va", parser.getValueAsString());
+        assertEquals(JsonToken.FIELD_NAME, parser.nextToken());
+        assertEquals("c", parser.getCurrentName());
+        assertEquals(JsonToken.VALUE_STRING, parser.nextToken());
+        assertEquals("vc", parser.getValueAsString());
+        assertEquals(JsonToken.END_OBJECT, parser.nextToken());
+
+        /*
+            From the schema with reordering, disabling use header flag
+            causes the same effect as the previous test.
+         */
+        CsvSchema schemaWithoutHeader = schemaWithReordering
+                .withUseHeader(false)
+                .withSkipFirstDataRow(true);
+
+        parser = factory.createParser(CSV);
+        parser.setSchema(schemaWithoutHeader);
+        assertEquals(JsonToken.START_OBJECT, parser.nextToken());
+        assertEquals(JsonToken.FIELD_NAME, parser.nextToken());
+        assertEquals("a", parser.getCurrentName());
+        assertEquals(JsonToken.VALUE_STRING, parser.nextToken());
+        assertEquals("vb", parser.getValueAsString());
+        assertEquals(JsonToken.FIELD_NAME, parser.nextToken());
+        assertEquals("b", parser.getCurrentName());
+        assertEquals(JsonToken.VALUE_STRING, parser.nextToken());
+        assertEquals("va", parser.getValueAsString());
+        assertEquals(JsonToken.FIELD_NAME, parser.nextToken());
+        assertEquals("c", parser.getCurrentName());
+        assertEquals(JsonToken.VALUE_STRING, parser.nextToken());
+        assertEquals("vc", parser.getValueAsString());
+        assertEquals(JsonToken.END_OBJECT, parser.nextToken());
+
+        /*
+             Finally, test an empty schema, where the header is use to set
+             the columns, independently of the reordering flag.
+         */
+        CsvSchema emptySchema = CsvSchema.builder()
+                .setLineSeparator('\n')
+                .setUseHeader(true)
+                .build();
+
+        parser = factory.createParser(CSV);
+        parser.setSchema(emptySchema);
+        assertEquals(JsonToken.START_OBJECT, parser.nextToken());
+        assertEquals(JsonToken.FIELD_NAME, parser.nextToken());
+        assertEquals("b", parser.getCurrentName());
+        assertEquals(JsonToken.VALUE_STRING, parser.nextToken());
+        assertEquals("vb", parser.getValueAsString());
+        assertEquals(JsonToken.FIELD_NAME, parser.nextToken());
+        assertEquals("a", parser.getCurrentName());
+        assertEquals(JsonToken.VALUE_STRING, parser.nextToken());
+        assertEquals("va", parser.getValueAsString());
+        assertEquals(JsonToken.FIELD_NAME, parser.nextToken());
+        assertEquals("c", parser.getCurrentName());
+        assertEquals(JsonToken.VALUE_STRING, parser.nextToken());
+        assertEquals("vc", parser.getValueAsString());
+        assertEquals(JsonToken.END_OBJECT, parser.nextToken());
     }
 }
