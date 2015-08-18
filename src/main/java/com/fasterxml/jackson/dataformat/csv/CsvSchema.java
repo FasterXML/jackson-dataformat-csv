@@ -1,3 +1,4 @@
+
 package com.fasterxml.jackson.dataformat.csv;
 
 import java.util.*;
@@ -462,6 +463,8 @@ public class CsvSchema
          *
          * @param b         Enable / Disable this setting
          * @return          This Builder instance
+         *
+         * @since 2.7
          */
         public Builder setReorderColumns(boolean b) {
             _feature(ENCODING_FEATURE_REORDER_COLUMNS, b);
@@ -795,6 +798,7 @@ public class CsvSchema
      * @param state     New value for setting
      * @return          A copy of itself, ensuring the setting for
      *                  the column reordering feature.
+     * @since 2.7
      */
     public CsvSchema withColumnReordering(boolean state) {
         return _withFeature(ENCODING_FEATURE_REORDER_COLUMNS, state);

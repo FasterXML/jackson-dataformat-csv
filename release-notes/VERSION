@@ -3,6 +3,11 @@ Project: jackson-dataformat-csv
 ------------------------------------------------------------------------
 === Releases ===
 ------------------------------------------------------------------------
+2.7.0 (not yet released)
+
+#89: Allow choice of using header-line declaration to reorder columns of explicit schema,
+  with `CsvSchema.setReorderColumns`
+ (contributed by Justo-Ruiz F)
 
 2.6.1 (09-Aug-2015)
 
