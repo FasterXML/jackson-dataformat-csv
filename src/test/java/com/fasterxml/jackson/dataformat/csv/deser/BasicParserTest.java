@@ -249,6 +249,7 @@ public class BasicParserTest extends ModuleTestBase {
         assertEquals(JsonToken.VALUE_STRING, parser.nextToken());
         assertEquals("vc", parser.getValueAsString());
         assertEquals(JsonToken.END_OBJECT, parser.nextToken());
+        parser.close();
 
         /*
             Now make a copy of the schema but set the reordering
@@ -272,6 +273,7 @@ public class BasicParserTest extends ModuleTestBase {
         assertEquals(JsonToken.VALUE_STRING, parser.nextToken());
         assertEquals("vc", parser.getValueAsString());
         assertEquals(JsonToken.END_OBJECT, parser.nextToken());
+        parser.close();
 
         /*
             From the schema with reordering, disabling use header flag
@@ -297,6 +299,7 @@ public class BasicParserTest extends ModuleTestBase {
         assertEquals(JsonToken.VALUE_STRING, parser.nextToken());
         assertEquals("vc", parser.getValueAsString());
         assertEquals(JsonToken.END_OBJECT, parser.nextToken());
+        parser.close();
 
         /*
              Finally, test an empty schema, where the header is use to set
@@ -323,5 +326,6 @@ public class BasicParserTest extends ModuleTestBase {
         assertEquals(JsonToken.VALUE_STRING, parser.nextToken());
         assertEquals("vc", parser.getValueAsString());
         assertEquals(JsonToken.END_OBJECT, parser.nextToken());
+        parser.close();
     }
 }
