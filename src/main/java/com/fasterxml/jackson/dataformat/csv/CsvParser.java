@@ -718,11 +718,15 @@ public class CsvParser
     
     protected JsonToken _handleNamedValue() throws IOException
     {
-        CsvSchema.Column column = _schema.column(_columnIndex);
-        ++_columnIndex;
-        if (column.isArray()) {
-            _startArray(column);
-            return JsonToken.START_ARRAY;
+        // 06-Oct-2015, tatu: During recovery, may get past all regular columns,
+        //    but we also need to allow access past... sort of.
+        if (_columnIndex < _columnCount) {
+            CsvSchema.Column column = _schema.column(_columnIndex);
+            ++_columnIndex;
+            if (column.isArray()) {
+                _startArray(column);
+                return JsonToken.START_ARRAY;
+            }
         }
         _state = STATE_NEXT_ENTRY;
         if (_nullValue != null) {

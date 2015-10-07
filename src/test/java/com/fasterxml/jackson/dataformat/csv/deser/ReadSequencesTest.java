@@ -193,7 +193,54 @@ public class ReadSequencesTest extends ModuleTestBase
         assertFalse(it.hasNext());
         it.close();
     }
-    
+
+    // for [dataformat-csv#91]: ensure recovery works
+    public void testRecoverFromExtraColumns91() throws Exception
+    {
+        CsvMapper mapper = new CsvMapper();
+        CsvSchema schema = mapper.schemaFor(Entry.class);
+        final String CSV = "1,2\n3,4,\n5,6\n7,8,,foo,\n9,10\n";
+        MappingIterator<Entry> it = mapper.readerFor(Entry.class)
+                .with(schema)
+                .readValues(CSV);
+        Entry entry;
+
+        assertTrue(it.hasNext());
+        entry = it.nextValue();
+        assertNotNull(entry);
+        assertEquals(1, entry.x);
+        assertEquals(2, entry.y);
+
+        // one extra empty column always allowed
+        assertTrue(it.hasNext());
+        entry = it.nextValue();
+        assertEquals(3, entry.x);
+        assertEquals(4, entry.y);
+
+        assertTrue(it.hasNext());
+        entry = it.nextValue();
+        assertEquals(5, entry.x);
+        assertEquals(6, entry.y);
+
+        assertTrue(it.hasNext());
+        try {
+            entry = it.nextValue();
+            fail("Should fail");
+        } catch (JsonProcessingException e) {
+            verifyException(e, "Too many entries");
+        }
+        // this SHOULD skip 7,8,, entry
+
+        assertTrue(it.hasNext());
+        entry = it.nextValue();
+        assertEquals(9, entry.x);
+        assertEquals(10, entry.y);
+
+        assertFalse(it.hasNext());
+
+        it.close();
+    }
+
     /*
     /**********************************************************************
     /* Helper methods
