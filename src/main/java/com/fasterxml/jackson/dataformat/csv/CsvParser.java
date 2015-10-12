@@ -662,7 +662,15 @@ public class CsvParser
     protected JsonToken _handleNextEntry() throws IOException
     {
         // NOTE: only called when we do have real Schema
-        String next = _reader.nextString();
+        String next;
+
+        try {
+            next = _reader.nextString();
+        } catch (IOException e) {
+            // 12-Oct-2015, tatu: Need to resync here as well...
+            _state = STATE_SKIP_EXTRA_COLUMNS;
+            throw e;
+        }
 
         if (next == null) { // end of record or input...
             _parsingContext = _parsingContext.getParent();
