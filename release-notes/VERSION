@@ -4,7 +4,7 @@ Project: jackson-dataformat-csv
 === Releases ===
 ------------------------------------------------------------------------
 
-2.6.3 (not yet released)
+2.6.3 (12-Oct-2015)
 
 #91: Ensure that "too many columns" is recoverable
 
