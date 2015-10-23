@@ -6,6 +6,7 @@ Project: jackson-dataformat-csv
 
 2.7.0 (not yet released)
 
+#81: Add alternative way to configure 'wrap-as-array', as `CsvParser` feature
 #89: Allow choice of using header-line declaration to reorder columns of explicit schema,
   with `CsvSchema.setReorderColumns`
  (contributed by Justo-Ruiz F)

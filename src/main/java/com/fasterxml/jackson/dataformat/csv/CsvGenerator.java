@@ -258,11 +258,18 @@ public class CsvGenerator extends GeneratorBase
     }
 
     @Override
-    public JsonGenerator overrideFormatFeatures(int values, int mask) {
-        _formatFeatures = (_formatFeatures & ~mask) | (values & mask);
+    public JsonGenerator overrideFormatFeatures(int values, int mask)
+    {
+        int oldF = _formatFeatures;
+        int newF = (_formatFeatures & ~mask) | (values & mask);
+
+        if (oldF != newF) {
+            _formatFeatures = newF;
+            _writer.overrideFormatFeatures(newF);
+        }
         return this;
     }
-    
+
     /*
     /**********************************************************
     /* Public API, capability introspection methods
@@ -359,12 +366,13 @@ public class CsvGenerator extends GeneratorBase
 
     public CsvGenerator enable(Feature f) {
         _formatFeatures |= f.getMask();
-        _writer.setFeatures(_formatFeatures);
+        _writer.overrideFormatFeatures(_formatFeatures);
         return this;
     }
 
     public CsvGenerator disable(Feature f) {
         _formatFeatures &= ~f.getMask();
+        _writer.overrideFormatFeatures(_formatFeatures);
         return this;
     }
 

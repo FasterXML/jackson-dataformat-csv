@@ -198,6 +198,12 @@ public class TestGenerator extends ModuleTestBase
         String result = mapper.writer(schema)
                 .writeValueAsString(new Entry("abc", 1.25));
         assertEquals("\"abc\",1.25\n", result);
+
+        // Also, as per [dataformat-csv#81], should be possible to change dynamically
+        result = mapper.writer(schema)
+                .without(CsvGenerator.Feature.ALWAYS_QUOTE_STRINGS)
+                .writeValueAsString(new Entry("xyz", 2.5));
+        assertEquals("xyz,2.5\n", result);
     }
 
     // Must comment '#', at least if it starts the line

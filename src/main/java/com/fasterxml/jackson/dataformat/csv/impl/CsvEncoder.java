@@ -217,7 +217,7 @@ public class CsvEncoder
         return new CsvEncoder(this, schema);
     }
 
-    public CsvEncoder setFeatures(int feat) {
+    public CsvEncoder overrideFormatFeatures(int feat) {
         if (feat != _csvFeatures) {
             _csvFeatures = feat;
             _cfgOptimalQuoting = CsvGenerator.Feature.STRICT_CHECK_FOR_QUOTING.enabledIn(feat);
