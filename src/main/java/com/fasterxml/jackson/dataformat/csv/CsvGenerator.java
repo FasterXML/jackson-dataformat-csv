@@ -158,7 +158,19 @@ public class CsvGenerator extends GeneratorBase
      */
     protected int _arraySeparator = -1;
 
+    /**
+     * Accumulated contents of an array cell, if any
+     */
     protected StringBuilder _arrayContents;
+
+    /**
+     * Additional counter that indicates number of value entries in the
+     * array. Needed because `null` entries do not add content, but need
+     * to be separated by array cell separator
+     *
+     * @since 2.7
+     */
+    protected int _arrayElements;
     
     /*
     /**********************************************************
@@ -424,6 +436,7 @@ public class CsvGenerator extends GeneratorBase
                 } else {
                     _arrayContents.setLength(0);
                 }
+                _arrayElements = 0;
             }
         } else if (_arraySeparator >= 0) {
             // also: no nested arrays, yet
@@ -863,16 +876,18 @@ public class CsvGenerator extends GeneratorBase
     }
 
     protected void _addToArray(String value) {
-        if (_arrayContents.length() > 0) {
+        if (_arrayElements > 0) {
             _arrayContents.append((char) _arraySeparator);
         }
+        ++_arrayElements;
         _arrayContents.append(value);
     }
     
     protected void _addToArray(char[] value) {
-        if (_arrayContents.length() > 0) {
+        if (_arrayElements > 0) {
             _arrayContents.append((char) _arraySeparator);
         }
+        ++_arrayElements;
         _arrayContents.append(value);
     }
 }

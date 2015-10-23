@@ -27,7 +27,6 @@ public class TestParserWorkarounds extends ModuleTestBase
             .addColumn("second")
             .build();
 
-        @SuppressWarnings("resource")
         MappingIterator<Map<?,?>> it = mapper.reader(schema).forType(Map.class).readValues(
                 "a,b\nc,d,\ne,f,  \nfoo,bar,x\n");
         assertTrue(it.hasNext());
@@ -59,6 +58,7 @@ public class TestParserWorkarounds extends ModuleTestBase
         } catch (JsonParseException e) {
             verifyException(e, "Too many entries");
         }
+        it.close();
     }
 
     // also ensure [databind-csv#1] also works appropriately for failing case
@@ -70,7 +70,6 @@ public class TestParserWorkarounds extends ModuleTestBase
             .addColumn("second")
             .build();
 
-        @SuppressWarnings("resource")
         MappingIterator<Map<?,?>> it = mapper.reader(schema).forType(Map.class).readValues(
                 "a,b,\nc,d,,,\n");
         assertTrue(it.hasNext());
@@ -88,5 +87,6 @@ public class TestParserWorkarounds extends ModuleTestBase
         } catch (JsonProcessingException e) {
             verifyException(e, "Too many entries: expected at most 2");
         }
+        it.close();
     }
 }
