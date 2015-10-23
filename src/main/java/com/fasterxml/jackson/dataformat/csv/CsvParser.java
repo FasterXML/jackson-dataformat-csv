@@ -27,7 +27,8 @@ public class CsvParser
     /**
      * Enumeration that defines all togglable features for CSV parsers
      */
-    public enum Feature // implements FormatFeature // for 2.7
+    public enum Feature
+        implements FormatFeature // since 2.7
     {
         /**
          * Feature determines whether spaces around separator characters
@@ -263,19 +264,18 @@ public class CsvParser
     /**********************************************************************
      */
 
-    public CsvParser(CsvIOContext ctxt, int parserFeatures, int csvFeatures,
+    public CsvParser(CsvIOContext ctxt, int stdFeatures, int csvFeatures,
             ObjectCodec codec, Reader reader)
     {
-        super(parserFeatures);    
+        super(stdFeatures);    
         _objectCodec = codec;
         _textBuffer =  ctxt.csvTextBuffer();
-        DupDetector dups = JsonParser.Feature.STRICT_DUPLICATE_DETECTION.enabledIn(parserFeatures)
+        DupDetector dups = JsonParser.Feature.STRICT_DUPLICATE_DETECTION.enabledIn(stdFeatures)
                 ? DupDetector.rootDetector(this) : null;
         _formatFeatures = csvFeatures;
         _parsingContext = JsonReadContext.createRootContext(dups);
         _reader = new CsvDecoder(this, ctxt, reader, _schema, _textBuffer,
-                isEnabled(JsonParser.Feature.AUTO_CLOSE_SOURCE),
-                isEnabled(Feature.TRIM_SPACES));
+                stdFeatures, csvFeatures);
     }
 
     /*
@@ -350,10 +350,16 @@ public class CsvParser
 
     @Override
     public JsonParser overrideFormatFeatures(int values, int mask) {
-        _formatFeatures = (_formatFeatures & ~mask) | (values & mask);
+        int oldF = _formatFeatures;
+        int newF = (_formatFeatures & ~mask) | (values & mask);
+
+        if (oldF != newF) {
+            _formatFeatures = newF;
+            _reader.overrideFormatFeatures(newF);
+        }
         return this;
     }
-    
+
     /*
     /***************************************************
     /* Public API, configuration

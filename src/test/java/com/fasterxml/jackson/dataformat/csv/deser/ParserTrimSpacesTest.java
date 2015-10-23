@@ -48,6 +48,18 @@ public class ParserTrimSpacesTest extends ModuleTestBase
 
         assertFalse(it.hasNext());
         it.close();
+
+        // [dataformat-csv#81]: also need to be able to re-enable
+        it = mapper.readerWithSchemaFor(Entry.class)
+                .with(CsvParser.Feature.TRIM_SPACES)
+                .readValues("a,  b,  c  \n");
+        assertTrue(it.hasNext());
+        assertNotNull(entry = it.nextValue());
+        assertEquals("a", entry.a);
+        assertEquals("b", entry.b);
+        assertEquals("c", entry.c);
+
+        it.close();
     }
 
     public void testTrimming() throws Exception

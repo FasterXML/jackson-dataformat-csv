@@ -8,9 +8,9 @@ import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.JsonParser.NumberType;
 import com.fasterxml.jackson.core.json.JsonReadContext;
 import com.fasterxml.jackson.core.io.IOContext;
-
 import com.fasterxml.jackson.dataformat.csv.CsvParser;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.fasterxml.jackson.dataformat.csv.CsvParser.Feature;
 
 /**
  * Low-level helper class that handles actual reading of CSV,
@@ -284,20 +284,21 @@ public class CsvDecoder
      */
 
     public CsvDecoder(CsvParser owner, IOContext ctxt, Reader r, CsvSchema schema, TextBuffer textBuffer,
-            boolean autoCloseInput, boolean trimSpaces)
+            int stdFeatures, int csvFeatures)
+//            boolean autoCloseInput, boolean trimSpaces)
     {
         _owner = owner;
         _ioContext = ctxt;
         _inputSource = r;
         _textBuffer = textBuffer;
-        _autoCloseInput = autoCloseInput;
-        _trimSpaces = trimSpaces;
+        _autoCloseInput =  JsonParser.Feature.AUTO_CLOSE_SOURCE.enabledIn(stdFeatures);
+        _allowComments = JsonParser.Feature.ALLOW_YAML_COMMENTS.enabledIn(stdFeatures);
+        _trimSpaces = CsvParser.Feature.TRIM_SPACES.enabledIn(csvFeatures);
         _inputBuffer = ctxt.allocTokenBuffer();
         _bufferRecyclable = true; // since we allocated it
         _inputSource = r;
         _tokenInputRow = -1;
         _tokenInputCol = -1;
-        _allowComments = owner.isEnabled(JsonParser.Feature.ALLOW_YAML_COMMENTS);
         setSchema(schema);
     }
 
@@ -313,7 +314,14 @@ public class CsvDecoder
         max = Math.max(max, '\n');
         _maxSpecialChar = max;
     }
-    
+
+    /**
+     * @since 2.7
+     */
+    public void overrideFormatFeatures(int csvFeatures) {
+        _trimSpaces = CsvParser.Feature.TRIM_SPACES.enabledIn(csvFeatures);
+    }
+
     /*
     /**********************************************************************
     /* JsonParser implementations passed-through by CsvParser

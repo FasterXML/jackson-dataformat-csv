@@ -17,7 +17,8 @@ public class CsvGenerator extends GeneratorBase
      * Enumeration that defines all togglable features for CSV writers
      * (if any: currently none)
      */
-    public enum Feature // implements FormatFeature // in 2.7
+    public enum Feature
+        implements FormatFeature // since 2.7
     {
         /**
          * Feature that determines how much work is done before determining that
