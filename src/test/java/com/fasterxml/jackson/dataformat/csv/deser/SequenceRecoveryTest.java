@@ -35,8 +35,11 @@ public class SequenceRecoveryTest extends ModuleTestBase
     /**********************************************************************
      */
 
+    private final CsvMapper MAPPER = new CsvMapper();
+    
     public void testSequenceRecovery() throws Exception
     {
+        // can not reuse shared instance because we need:
         CsvMapper mapper = mapperForCsv();
         mapper.disable(CsvParser.Feature.WRAP_AS_ARRAY);
         MappingIterator<Entry> it = mapper.readerWithSchemaFor(Entry.class).readValues(
@@ -93,10 +96,9 @@ public class SequenceRecoveryTest extends ModuleTestBase
     // for [dataformat-csv#91]: ensure recovery works for extra columns
     public void testRecoverFromExtraColumns91() throws Exception
     {
-        CsvMapper mapper = new CsvMapper();
-        CsvSchema schema = mapper.schemaFor(Entry.class);
+        CsvSchema schema = MAPPER.schemaFor(Entry.class);
         final String CSV = "1,2\n3,4,\n5,6\n7,8,,foo,\n9,10\n";
-        MappingIterator<Entry> it = mapper.readerFor(Entry.class)
+        MappingIterator<Entry> it = MAPPER.readerFor(Entry.class)
                 .with(schema)
                 .readValues(CSV);
         Entry entry;
@@ -138,12 +140,11 @@ public class SequenceRecoveryTest extends ModuleTestBase
     }
 
     // for [dataformat-csv#91]: ensure recovery works for extra columns
-    public void testRecoverFromMissingQuote91() throws Exception
+    public void testRecoveryFromMissingQuote91() throws Exception
     {
-        CsvMapper mapper = new CsvMapper();
-        CsvSchema schema = mapper.schemaFor(IdDesc.class);
+        CsvSchema schema = MAPPER.schemaFor(IdDesc.class);
         final String CSV = "a,\"desc\"\nb,\"Broken\nc,\"good\"\nd,foo";
-        MappingIterator<IdDesc> it = mapper.readerFor(IdDesc.class)
+        MappingIterator<IdDesc> it = MAPPER.readerFor(IdDesc.class)
                 .with(schema)
                 .readValues(CSV);
         IdDesc value;
@@ -170,6 +171,57 @@ public class SequenceRecoveryTest extends ModuleTestBase
         assertEquals("d", value.id);
         assertEquals("foo", value.desc);
 
+        it.close();
+    }
+
+    @JsonPropertyOrder({"s1", "s2", "s3"})
+    protected static class ThreeString {
+        public String s1, s2, s3;
+    }
+
+    // Additional test for [dataformat-csv#91]: should skip only line with error
+    // and do not fail on next line
+    public void testRecoveryFromUnclosedQuotes() throws Exception
+    {
+        String toParse = aposToQuotes(
+                "'value1','value2','value3'\n" +
+                "'value4','value5','value6\n" + // missing closing quote
+                "'value7','value8','value9'\n"+
+                "'value10','value11','value12'\n"
+                );
+        CsvSchema schema = MAPPER.schemaFor(ThreeString.class);
+        MappingIterator<ThreeString> it = MAPPER.reader(schema).forType(ThreeString.class).readValues(toParse);
+
+        ThreeString value;
+
+        assertTrue(it.hasNext());
+        value = it.nextValue();
+
+        assertEquals("value1", value.s1);
+        assertEquals("value2", value.s2);
+        assertEquals("value3", value.s3);
+        
+        // second row has the problem, missing closing quote
+        assertTrue(it.hasNext());
+        try {
+            value = it.nextValue();
+            fail("Should fail");
+        } catch (JsonProcessingException e) {
+            verifyException(e, "Expected separator");
+        }
+
+        // and this means that since error was encountered on 3rd row, that gets
+        // skipped and we'll see the 4th row next.
+        
+        assertTrue(it.hasNext());
+        value = it.nextValue();
+
+        assertEquals("value10", value.s1);
+        assertEquals("value11", value.s2);
+        assertEquals("value12", value.s3);
+
+        assertFalse(it.hasNext());
+        
         it.close();
     }
 }

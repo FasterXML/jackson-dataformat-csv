@@ -46,9 +46,13 @@ sothmann@github)
 * Reported #83: Serializing List with null values leads to corrupt CSV
  (2.6.0)
 
+Jonathan Cheseaux (cheseaux@github)
+
+* Reported #90: Unexpected output with arrays starting with a null/empty element
+ (2.6.4)
+
 Justo Ruiz Ferrer (jrferrer@github)
 
 * Contributed #89: Allow choice of using header-line declaration to reorder columns
   of explicit schema, with `CsvSchema.setReorderColumns`
  (2.7.0)
-
