@@ -56,7 +56,7 @@ public class TestParserWorkarounds extends ModuleTestBase
         try {
             result = it.nextValue();
             fail("Expected an error");
-        } catch (JsonParseException e) {
+        } catch (JsonMappingException e) {
             verifyException(e, "Too many entries");
         }
     }

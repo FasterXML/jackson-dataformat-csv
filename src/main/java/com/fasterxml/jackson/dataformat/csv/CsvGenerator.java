@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.base.GeneratorBase;
 import com.fasterxml.jackson.core.json.JsonWriteContext;
 import com.fasterxml.jackson.core.io.IOContext;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.dataformat.csv.impl.CsvEncoder;
 
 public class CsvGenerator extends GeneratorBase
@@ -330,7 +331,8 @@ public class CsvGenerator extends GeneratorBase
     {
         // just find the matching index -- must have schema for that
         if (_schema == null) {
-            _reportError("Unrecognized column '"+name+"', can not resolve without CsvSchema");
+            // not a low-level error, so:
+            _reportMappingError("Unrecognized column '"+name+"', can not resolve without CsvSchema");
         }
         // note: we are likely to get next column name, so pass it as hint
         CsvSchema.Column col = _schema.column(name, _nextColumnByName+1);
@@ -340,7 +342,8 @@ public class CsvGenerator extends GeneratorBase
                 _nextColumnByName = -1;
                 return;
             }
-            _reportError("Unrecognized column '"+name+"': known columns: "+_schema.getColumnDesc());
+            // not a low-level error, so:
+            _reportMappingError("Unrecognized column '"+name+"': known columns: "+_schema.getColumnDesc());
         }
         _skipValue = false;
         // and all we do is just note index to use for following value write
@@ -423,7 +426,7 @@ public class CsvGenerator extends GeneratorBase
                 }
                 if (sep <= 0) {
                     if (!_schema.hasArrayElementSeparator()) {
-                        _reportError("CSV generator does not support Array values for properties without setting 'arrayElementSeparator' in schema");
+                        _reportMappingError("CSV generator does not support Array values for properties without setting 'arrayElementSeparator' in schema");
                     }
                     sep = _schema.getArrayElementSeparator();
                 }
@@ -436,7 +439,7 @@ public class CsvGenerator extends GeneratorBase
             }
         } else if (_arraySeparator >= 0) {
             // also: no nested arrays, yet
-            _reportError("CSV generator does not support nested Array values");
+            _reportMappingError("CSV generator does not support nested Array values");
         }
             
         _writeContext = _writeContext.createChildArrayContext();
@@ -470,7 +473,7 @@ public class CsvGenerator extends GeneratorBase
          * root-level arrays.
          */
         if (_writeContext.inObject()) {
-            _reportError("CSV generator does not support Object values for properties");
+            _reportMappingError("CSV generator does not support Object values for properties");
         }
         _writeContext = _writeContext.createChildObjectContext();
     }
@@ -832,7 +835,25 @@ public class CsvGenerator extends GeneratorBase
 
     /*
     /**********************************************************
-    /* Internal methods
+    /* Internal methods, error reporting
+    /**********************************************************
+     */
+
+    /**
+     * Method called when there is a problem related to mapping data
+     * (compared to a low-level generation); if so, should be surfaced
+     * as 
+     *
+     * @since 2.7
+     */
+    protected void _reportMappingError(String msg) throws JsonProcessingException {
+        throw JsonMappingException.from(this, msg);
+//        throw new JsonGenerationException(msg, this);
+    }
+
+    /*
+    /**********************************************************
+    /* Internal methods, other
     /**********************************************************
      */
 
@@ -862,7 +883,7 @@ public class CsvGenerator extends GeneratorBase
         if (_schema.usesHeader()) {
             int count = _schema.size();
             if (count == 0) { 
-                _reportError("Schema specified that header line is to be written; but contains no column names");
+                _reportMappingError("Schema specified that header line is to be written; but contains no column names");
             }
             for (CsvSchema.Column column : _schema) {
                 _writer.writeColumnName(column.getName());

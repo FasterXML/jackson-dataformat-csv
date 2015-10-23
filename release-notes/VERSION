@@ -10,6 +10,7 @@ Project: jackson-dataformat-csv
 #89: Allow choice of using header-line declaration to reorder columns of explicit schema,
   with `CsvSchema.setReorderColumns`
  (contributed by Justo-Ruiz F)
+#94: Change schema/mapping related `JsonParseException`s to proper `JsonMappingException`s
 
 2.6.3 (not yet released)
 

@@ -365,7 +365,7 @@ public class CsvMapper extends ObjectMapper
             if (!prop.couldSerialize()) {
                 continue;
             }
-            // [Issue#15]: handle unwrapped props
+            // [dataformat-csv#15]: handle unwrapped props
             AnnotatedMember m = prop.getPrimaryMember();
             if (m != null) {
                 NameTransformer nextUnwrapper = intr.findUnwrappingNameTransformer(prop.getPrimaryMember());
@@ -373,7 +373,7 @@ public class CsvMapper extends ObjectMapper
                     if (unwrapper != null) {
                         nextUnwrapper = NameTransformer.chainedTransformer(unwrapper, nextUnwrapper);
                     }
-                    JavaType nextType = m.getType(beanDesc.bindingsForBeanType());
+                    JavaType nextType = m.getType();
                     _addSchemaProperties(builder, intr, typed, nextType, nextUnwrapper);
                     continue;
                 }

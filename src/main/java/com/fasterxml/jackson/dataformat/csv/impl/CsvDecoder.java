@@ -10,7 +10,6 @@ import com.fasterxml.jackson.core.json.JsonReadContext;
 import com.fasterxml.jackson.core.io.IOContext;
 import com.fasterxml.jackson.dataformat.csv.CsvParser;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
-import com.fasterxml.jackson.dataformat.csv.CsvParser.Feature;
 
 /**
  * Low-level helper class that handles actual reading of CSV,
@@ -782,7 +781,7 @@ public class CsvDecoder
             int ptr = _inputPtr;
             if (ptr >= _inputEnd) {
                 if (!loadMore()) { // not ok, missing end quote
-                    _owner._reportCsvError("Missing closing quote for value"); // should indicate start position?
+                    _owner._reportParsingError("Missing closing quote for value"); // should indicate start position?
                 }
                 ptr = _inputPtr;
                 if (checkLF && inputBuffer[ptr] == '\n') {
@@ -1166,7 +1165,6 @@ public class CsvDecoder
     {
         String numStr = _textBuffer.contentsAsString();
         try {
-            // [JACKSON-230] Some long cases still...
             if (NumberInput.inLongRange(buf, offset, len, _numberNegative)) {
                 // Probably faster to construct a String, call parse, than to use BigInteger
                 _numberLong = Long.parseLong(numStr);
@@ -1357,6 +1355,9 @@ public class CsvDecoder
         throw new IllegalStateException("Internal error: code path should never get executed");
     }
 
+    /**
+     * Method for reporting low-level decoding (parsing) problems
+     */
     protected final void _reportError(String msg) throws JsonParseException {
         throw new JsonParseException(msg, getCurrentLocation());
     }

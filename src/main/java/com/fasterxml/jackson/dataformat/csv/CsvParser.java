@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.base.ParserMinimalBase;
 import com.fasterxml.jackson.core.json.DupDetector;
 import com.fasterxml.jackson.core.json.JsonReadContext;
 import com.fasterxml.jackson.core.util.ByteArrayBuilder;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.dataformat.csv.impl.CsvDecoder;
 import com.fasterxml.jackson.dataformat.csv.impl.CsvIOContext;
 import com.fasterxml.jackson.dataformat.csv.impl.TextBuffer;
@@ -700,7 +701,7 @@ public class CsvParser
             }
             // 21-May-2015, tatu: Need to enter recovery mode, to skip remainder of the line
             _state = STATE_SKIP_EXTRA_COLUMNS;
-            _reportCsvError("Too many entries: expected at most "+_columnCount+" (value #"+_columnCount+" ("+next.length()+" chars) \""+next+"\")");
+            _reportMappingError("Too many entries: expected at most "+_columnCount+" (value #"+_columnCount+" ("+next.length()+" chars) \""+next+"\")");
         }
         _currentName = _schema.columnName(_columnIndex);
         return JsonToken.FIELD_NAME;
@@ -711,7 +712,7 @@ public class CsvParser
         String next = _reader.nextString();
 
         if (next != null) { // should end of record or input
-            _reportCsvError("Too many entries: expected at most "+_columnCount+" (value #"+_columnCount+" ("+next.length()+" chars) \""+next+"\")");
+            _reportMappingError("Too many entries: expected at most "+_columnCount+" (value #"+_columnCount+" ("+next.length()+" chars) \""+next+"\")");
         }
         _parsingContext = _parsingContext.getParent();
         if (!_reader.startNewLine()) {
@@ -857,7 +858,7 @@ public class CsvParser
         if (size < 2) { // 1 just because we may get 'empty' header name
             String first = (size == 0) ? "" : newSchema.columnName(0).trim();
             if (first.length() == 0) {
-                _reportError("Empty header line: can not bind data");
+                _reportMappingError("Empty header line: can not bind data");
             }
         }
         // otherwise we will use what we got
@@ -926,7 +927,7 @@ public class CsvParser
     {
         if (_binaryValue == null) {
             if (_currToken != JsonToken.VALUE_STRING) {
-                _reportError("Current token ("+_currToken+") not VALUE_STRING, can not access as binary");
+                _reportMappingError("Current token ("+_currToken+") not VALUE_STRING, can not access as binary");
             }
             ByteArrayBuilder builder = _getByteArrayBuilder();
             _decodeBase64(_currentValue, builder, variant);
@@ -994,17 +995,27 @@ public class CsvParser
     }
 
     /*
-    /**********************************************************************
-    /* Helper methods for CsvReader
-    /**********************************************************************
+    /**********************************************************
+    /* Internal methods, error reporting
+    /**********************************************************
      */
 
-    // must be (re)defined to make package-accessible
-    public void _reportCsvError(String msg)  throws JsonParseException {
-        super._reportError(msg);
+    /**
+     * Method called when there is a problem related to mapping data
+     * (compared to a low-level generation); if so, should be surfaced
+     * as 
+     *
+     * @since 2.7
+     */
+    public void _reportMappingError(String msg)  throws JsonProcessingException {
+        throw JsonMappingException.from(this, msg);
     }
 
-    public void _reportUnexpectedCsvChar(int ch, String msg)  throws JsonParseException {
+    public void _reportParsingError(String msg)  throws JsonProcessingException {
+        super._reportError(msg);
+    }
+    
+    public void _reportUnexpectedCsvChar(int ch, String msg)  throws JsonProcessingException {
         super._reportUnexpectedChar(ch, msg);
     }
 

@@ -1,19 +1,17 @@
 package com.fasterxml.jackson.dataformat.csv.ser;
 
+import java.io.File;
+import java.io.StringWriter;
+
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.core.JsonGenerationException;
+
 import com.fasterxml.jackson.core.JsonGenerator;
+
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.dataformat.csv.CsvFactory;
-import com.fasterxml.jackson.dataformat.csv.CsvGenerator;
-import com.fasterxml.jackson.dataformat.csv.CsvMapper;
-import com.fasterxml.jackson.dataformat.csv.CsvSchema;
-import com.fasterxml.jackson.dataformat.csv.ModuleTestBase;
-
-import java.io.File;
-import java.io.StringWriter;
+import com.fasterxml.jackson.dataformat.csv.*;
 
 public class TestGenerator extends ModuleTestBase
 {
@@ -94,7 +92,7 @@ public class TestGenerator extends ModuleTestBase
         try {
             mapper.writer(schema).writeValueAsString(user);        
             fail("Should fail without columns");
-        } catch (JsonGenerationException e) {
+        } catch (JsonMappingException e) {
             verifyException(e, "contains no column names");
         }
     }
