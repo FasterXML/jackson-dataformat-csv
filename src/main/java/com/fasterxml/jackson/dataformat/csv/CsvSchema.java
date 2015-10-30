@@ -83,6 +83,7 @@ public class CsvSchema
     protected final static int ENCODING_FEATURE_SKIP_FIRST_DATA_ROW = 0x0002;
     protected final static int ENCODING_FEATURE_ALLOW_COMMENTS = 0x0004;
     protected final static int ENCODING_FEATURE_REORDER_COLUMNS = 0x0008;
+    protected final static int ENCODING_FEATURE_STRICT_HEADERS = 0x0016;
 
     protected final static int DEFAULT_ENCODING_FEATURES = 0;
 
@@ -471,6 +472,22 @@ public class CsvSchema
             return this;
         }
 
+
+        /**
+         * Use in combination with setUseHeader.  When use header flag is
+         * is set, this setting will ensure the headers are in the order
+         * of the schema
+         *
+         * @param b         Enable / Disable this setting
+         * @return          This Builder instance
+         *
+         * @since 2.7
+         */
+        public Builder setStrictHeaders(boolean b) {
+            _feature(ENCODING_FEATURE_STRICT_HEADERS, b);
+            return this;
+        }
+
         /**
          * Method for specifying whether Schema should indicate that
          * the first line that is not a header (if header handling enabled)
@@ -805,6 +822,19 @@ public class CsvSchema
     }
 
     /**
+     * Returns a clone of this instance by changing or setting the
+     * strict headers flag
+     *
+     * @param state     New value for setting
+     * @return          A copy of itself, ensuring the setting for
+     *                  the strict headers feature.
+     * @since 2.7
+     */
+    public CsvSchema withStrictColumns(boolean state) {
+        return _withFeature(ENCODING_FEATURE_STRICT_HEADERS, state);
+    }
+
+    /**
      * Helper method for constructing and returning schema instance that
      * is similar to this one, except that it will be using header line.
      */
@@ -1001,6 +1031,7 @@ public class CsvSchema
     public boolean reordersColumns() { return (_features & ENCODING_FEATURE_REORDER_COLUMNS) != 0; }
     public boolean skipsFirstDataRow() { return (_features & ENCODING_FEATURE_SKIP_FIRST_DATA_ROW) != 0; }
     public boolean allowsComments() { return (_features & ENCODING_FEATURE_ALLOW_COMMENTS) != 0; }
+    public boolean strictHeaders() { return (_features & ENCODING_FEATURE_STRICT_HEADERS) != 0; }
 
     /**
      * @deprecated Use {@link #usesHeader()} instead

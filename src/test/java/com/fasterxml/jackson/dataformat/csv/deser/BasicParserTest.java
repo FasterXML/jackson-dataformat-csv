@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.csv.*;
@@ -326,6 +327,81 @@ public class BasicParserTest extends ModuleTestBase {
         assertEquals(JsonToken.VALUE_STRING, parser.nextToken());
         assertEquals("vc", parser.getValueAsString());
         assertEquals(JsonToken.END_OBJECT, parser.nextToken());
+        parser.close();
+    }
+
+    public void testColumnFailsOnOutOfOrder() throws IOException {
+        CsvFactory factory = new CsvFactory();
+        String CSV = "b,a,c\nvb,va,vc\n";
+
+        CsvSchema schema = CsvSchema.builder()
+                .addColumn("a")
+                .addColumn("b")
+                .addColumn("c")
+                .setLineSeparator('\n')
+                .setUseHeader(true)
+                .setStrictHeaders(true)
+                .build();
+
+        CsvParser parser = factory.createParser(CSV);
+        parser.setSchema(schema);
+
+        try {
+            parser.nextToken();
+            fail("Should have failed");
+        } catch (JsonProcessingException e) {
+            verifyException(e, "Expected header a, actual header b");
+        }
+        parser.close();
+    }
+
+    public void testColumnFailsOnTooFew() throws IOException {
+        CsvFactory factory = new CsvFactory();
+        String CSV = "a,b\nvb,va,vc\n";
+
+        CsvSchema schema = CsvSchema.builder()
+                .addColumn("a")
+                .addColumn("b")
+                .addColumn("c")
+                .setLineSeparator('\n')
+                .setUseHeader(true)
+                .setStrictHeaders(true)
+                .build();
+
+        CsvParser parser = factory.createParser(CSV);
+        parser.setSchema(schema);
+
+        try {
+            parser.nextToken();
+            fail("Should have failed");
+        } catch (JsonProcessingException e) {
+            verifyException(e, "Missing header c");
+        }
+        parser.close();
+    }
+
+    public void testColumnFailsOnTooMany() throws IOException {
+        CsvFactory factory = new CsvFactory();
+        String CSV = "a,b,c,d\nvb,va,vc\n";
+
+        CsvSchema schema = CsvSchema.builder()
+                .addColumn("a")
+                .addColumn("b")
+                .addColumn("c")
+                .setLineSeparator('\n')
+                .setUseHeader(true)
+                .setStrictHeaders(true)
+                .build();
+
+        CsvParser parser = factory.createParser(CSV);
+        parser.setSchema(schema);
+
+        try {
+            parser.nextToken();
+            fail("Should have failed");
+        } catch (JsonProcessingException e) {
+            verifyException(e, "Extra header d");
+        }
         parser.close();
     }
 }
