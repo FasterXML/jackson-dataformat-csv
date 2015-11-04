@@ -838,8 +838,24 @@ public class CsvParser
          */
 
         if (_schema.size() > 0 && !_schema.reordersColumns()) {
-            //noinspection StatementWithEmptyBody
-            while (_reader.nextString() != null) { /* does nothing */ }
+            if (_schema.strictHeaders()) {
+                String name;
+                for (CsvSchema.Column column : _schema._columns) {
+                    name = _reader.nextString();
+                    if (name == null) {
+                        _reportError(String.format("Missing header %s", column.getName()));
+                    } else if (!column.getName().equals(name)) {
+                        _reportError(String.format("Expected header %s, actual header %s", column.getName(), name));
+                    }
+                }
+                if ((name = _reader.nextString()) != null) {
+                    _reportError(String.format("Extra header %s", name));
+                }
+            }
+            else {
+                //noinspection StatementWithEmptyBody
+                while (_reader.nextString() != null) { /* does nothing */ }
+            }
             return;
         }
 
