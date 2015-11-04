@@ -44,12 +44,18 @@ import com.fasterxml.jackson.core.FormatSchema;
  *    this String value will be used instead.<br />
  *   With 2.6, value will also be recognized during value reads.
  *  </li>
+ * <li>strictHeaders (boolean) [default: false] (added in Jackson 2.7): whether names of
+ *   columns defined in the schema MUST match with actual declaration from
+ *   the header row (if header row handling enabled): if true, they must be and
+ *   an exception if thrown if order differs: if false, no verification is performed.
+ *  </li>
  * </ul>
  *<p>
  * Note that schemas without any columns are legal, but if no columns
  * are added, behavior of parser/generator is usually different and
  * content will be exposed as logical Arrays instead of Objects.
  *<p>
+ *
  * There are 4 ways to create <code>CsvSchema</code> instances:
  *<ul>
  * <li>Manually build one, using {@link Builder}
@@ -131,8 +137,10 @@ public class CsvSchema
     /**
      * By default we do NOT expect the first line to be header.
      */
+    @Deprecated // since 2.7
     public final static boolean DEFAULT_USE_HEADER = false;
 
+    @Deprecated // since 2.7
     public final static boolean DEFAULT_SKIP_FIRST_DATA_ROW = false;
 
     /*
@@ -474,12 +482,12 @@ public class CsvSchema
 
 
         /**
-         * Use in combination with setUseHeader.  When use header flag is
+         * Use in combination with {@link #setUseHeader}. When use header flag is
          * is set, this setting will ensure the headers are in the order
-         * of the schema
+         * of the schema; if order differs, an exception is thrown.
          *
-         * @param b         Enable / Disable this setting
-         * @return          This Builder instance
+         * @param b Enable / Disable this setting
+         * @return This Builder instance
          *
          * @since 2.7
          */
@@ -649,18 +657,6 @@ public class CsvSchema
     protected final char[] _nullValue;
 
     protected transient String _nullValueAsString;
-    
-    @Deprecated // in 2.5; remove from 2.6
-    public CsvSchema(Column[] columns,
-            boolean useHeader, boolean skipFirstDataRow,
-            char columnSeparator, int quoteChar, int escapeChar,
-            char[] lineSeparator)
-    {
-        this(columns,
-                (useHeader ? ENCODING_FEATURE_USE_HEADER : 0) + (skipFirstDataRow ? ENCODING_FEATURE_SKIP_FIRST_DATA_ROW : 0),
-                columnSeparator, quoteChar, escapeChar, lineSeparator,
-                DEFAULT_ARRAY_ELEMENT_SEPARATOR, DEFAULT_NULL_VALUE);
-    }
 
     /**
      * @since 2.5
