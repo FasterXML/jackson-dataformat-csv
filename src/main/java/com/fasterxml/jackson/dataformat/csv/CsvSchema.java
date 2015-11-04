@@ -826,7 +826,7 @@ public class CsvSchema
      *                  the strict headers feature.
      * @since 2.7
      */
-    public CsvSchema withStrictColumns(boolean state) {
+    public CsvSchema withStrictHeaders(boolean state) {
         return _withFeature(ENCODING_FEATURE_STRICT_HEADERS, state);
     }
 
