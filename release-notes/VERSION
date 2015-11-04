@@ -11,6 +11,8 @@ Project: jackson-dataformat-csv
   with `CsvSchema.setReorderColumns`
  (contributed by Justo-Ruiz F)
 #94: Change schema/mapping related `JsonParseException`s to proper `JsonMappingException`s
+#97: Verify CSV headers are in the order as expected (added `strictHeaders` property in `CsvSchema`)
+ (contributed by Nick B)
 
 2.6.4 (not yet released)
 

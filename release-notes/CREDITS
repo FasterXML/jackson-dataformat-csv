@@ -56,3 +56,9 @@ Justo Ruiz Ferrer (jrferrer@github)
 * Contributed #89: Allow choice of using header-line declaration to reorder columns
   of explicit schema, with `CsvSchema.setReorderColumns`
  (2.7.0)
+
+Nick Babcock (nickbabcock@github)
+
+* Contributed #97: Verify CSV headers are in the order as expected (added `strictHeaders`
+  property in `CsvSchema`)
+ (2.7.0)
