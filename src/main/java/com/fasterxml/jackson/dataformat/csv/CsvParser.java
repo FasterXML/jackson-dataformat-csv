@@ -236,7 +236,7 @@ public class CsvParser
      */
     protected String _arrayValue;
 
-    protected char _arraySeparator;
+    protected String _arraySeparator;
 
     protected String _nullValue;
     
@@ -805,7 +805,7 @@ public class CsvParser
             }
         } else {
             _currentValue = _arrayValue.substring(offset, end);
-            _arrayValueStart = end+1;
+            _arrayValueStart = end+_arraySeparator.length();
         }
         if (isEnabled(Feature.TRIM_SPACES)) {
             _currentValue = _currentValue.trim();
@@ -1067,10 +1067,10 @@ public class CsvParser
         _state = STATE_IN_ARRAY;
         _arrayValueStart = 0;
         _arrayValue = _currentValue;
-        int sep = column.getArrayElementSeparator();
-        if (sep <= 0) {
+        String sep = column.getArrayElementSeparator();
+        if (sep.isEmpty()) {
             sep = _schema.getArrayElementSeparator();
         }
-        _arraySeparator = (char) sep;
+        _arraySeparator = sep;
     }
 }
