@@ -18,6 +18,8 @@ Project: jackson-dataformat-csv
 
 #90: Unexpected output with arrays starting with a null/empty element
  (reported by Jonathan C)
+#98: Escape char is not being escaped during serialization
+ (reported by Oliver R)
 
 2.6.3 (12-Oct-2015)
 
