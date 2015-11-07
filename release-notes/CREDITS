@@ -50,3 +50,8 @@ Jonathan Cheseaux (cheseaux@github)
 
 * Reported #90: Unexpected output with arrays starting with a null/empty element
  (2.6.4)
+
+Oliver Röss (cloudyday@github)
+
+* Reported #98: Escape char is not being escaped during serialization
+ (2.6.4)

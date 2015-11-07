@@ -139,7 +139,7 @@ public class TestGenerator extends ModuleTestBase
         assertEquals("id,\"Some \"\"stuff\"\"\"\n", result);
     }
 
-    // [Issue#14]: String values that cross buffer boundary won't be quoted properly
+    // [dataformat-csv#14]: String values that cross buffer boundary won't be quoted properly
     public void testLongerWithQuotes() throws Exception
     {
         ObjectMapper mapper = mapperForCsv();
@@ -203,7 +203,6 @@ public class TestGenerator extends ModuleTestBase
     // Must comment '#', at least if it starts the line
     public void testQuotingOfCommentChar() throws Exception
     {
-
         // First, with default quoting
         CsvMapper mapper = mapperForCsv();
         final CsvSchema schema = mapper.schemaFor(IdDesc.class);
@@ -218,7 +217,20 @@ public class TestGenerator extends ModuleTestBase
                 .writeValueAsString(new IdDesc("#123", "Foo"));
         assertEquals("\"#123\",Foo\n", csv);
     }
-    
+
+    // for [dataformat-csv#98]
+    public void testBackslashEscape() throws Exception
+    {
+        // First, with default quoting
+        CsvMapper mapper = mapperForCsv();
+        final CsvSchema schema = mapper.schemaFor(IdDesc.class)
+                .withEscapeChar('\\');
+        String csv = mapper.writer(schema)
+                .writeValueAsString(new IdDesc("123", "a\\b"));
+        // Escaping also leads to quoting
+        assertEquals("123,\"a\\\\b\"\n", csv);
+    }
+
     public void testRawWrites() throws Exception
     {
         StringWriter w = new StringWriter();

@@ -47,6 +47,11 @@ public class CsvEncoder
 
     final protected int _cfgQuoteCharacter;
 
+    /**
+     * @since 2.7
+     */
+    final protected int _cfgEscapeCharacter;
+    
     final protected char[] _cfgLineSeparator;
 
     /**
@@ -60,7 +65,7 @@ public class CsvEncoder
     
     /**
      * Lowest-valued character that is safe to output without using
-     * quotes around value
+     * quotes around value, NOT including possible escape character.
      */
     final protected int _cfgMinSafeChar;
 
@@ -161,7 +166,7 @@ public class CsvEncoder
         _cfgOptimalQuoting = CsvGenerator.Feature.STRICT_CHECK_FOR_QUOTING.enabledIn(csvFeatures);
         _cfgIncludeMissingTail = !CsvGenerator.Feature.OMIT_MISSING_TAIL_COLUMNS.enabledIn(_csvFeatures);
         _cfgAlwaysQuoteStrings = CsvGenerator.Feature.ALWAYS_QUOTE_STRINGS.enabledIn(csvFeatures);
-        
+
         _outputBuffer = ctxt.allocConcatBuffer();
         _bufferRecyclable = true;
         _outputEnd = _outputBuffer.length;
@@ -169,6 +174,7 @@ public class CsvEncoder
 
         _cfgColumnSeparator = schema.getColumnSeparator();
         _cfgQuoteCharacter = schema.getQuoteChar();
+        _cfgEscapeCharacter = schema.getEscapeChar();
         _cfgLineSeparator = schema.getLineSeparator();
         _cfgLineSeparatorLength = (_cfgLineSeparator == null) ? 0 : _cfgLineSeparator.length;
         _cfgNullValue = schema.getNullValueOrEmpty();
@@ -196,6 +202,7 @@ public class CsvEncoder
 
         _cfgColumnSeparator = newSchema.getColumnSeparator();
         _cfgQuoteCharacter = newSchema.getQuoteChar();
+        _cfgEscapeCharacter = newSchema.getEscapeChar();
         _cfgLineSeparator = newSchema.getLineSeparator();
         _cfgLineSeparatorLength = _cfgLineSeparator.length;
         _cfgNullValue = newSchema.getNullValueOrEmpty();
@@ -207,6 +214,8 @@ public class CsvEncoder
     {
         // note: quote char may be -1 to signify "no quoting":
         int min = Math.max(_cfgColumnSeparator, _cfgQuoteCharacter);
+        // 06-Nov-2015, tatu: We will NOT apply escape character, because it usually
+        //    has higher ascii value (with backslash); better handle separately.
         for (int i = 0; i < _cfgLineSeparatorLength; ++i) {
             min = Math.max(min, _cfgLineSeparator[i]);
         }
@@ -269,7 +278,11 @@ public class CsvEncoder
             }
             final int len = value.length();
             if (_cfgAlwaysQuoteStrings || _mayNeedQuotes(value, len)) {
-                _writeQuoted(value);
+                if (_cfgEscapeCharacter > 0) {
+                    _writeQuotedAndEscaped(value, (char) _cfgEscapeCharacter);
+                } else {
+                    _writeQuoted(value);
+                }
             } else {
                 writeRaw(value);
             }
@@ -441,7 +454,11 @@ public class CsvEncoder
          */
         final int len = value.length();
         if (_cfgAlwaysQuoteStrings || _mayNeedQuotes(value, len)) {
-            _writeQuoted(value);
+            if (_cfgEscapeCharacter > 0) {
+                _writeQuotedAndEscaped(value, (char) _cfgEscapeCharacter);
+            } else {
+                _writeQuoted(value);
+            }
         } else {
             writeRaw(value);
         }
@@ -536,92 +553,12 @@ public class CsvEncoder
         }
         _outputBuffer[_outputTail++] = _cfgColumnSeparator;
     }
-    
+
     /*
     /**********************************************************
     /* Output methods, unprocessed ("raw")
     /**********************************************************
      */
-
-    public void _writeQuoted(String text) throws IOException
-    {
-        if (_outputTail >= _outputEnd) {
-            _flushBuffer();
-        }
-        // NOTE: caller should guarantee quote char is valid (not -1) at this point:
-        final char q = (char) _cfgQuoteCharacter;
-        _outputBuffer[_outputTail++] = q;
-        // simple case: if we have enough room, no need for boundary checks
-        final int len = text.length();
-        if ((_outputTail + len + len) >= _outputEnd) {
-            _writeLongQuoted(text);
-            return;
-        }
-        // 22-Jan-2015, tatu: Common case is that of no quoting needed, so let's
-        //     make a speculative copy, then scan
-        final char[] buf = _outputBuffer;
-        int ptr = _outputTail;
-
-        text.getChars(0, len, buf, ptr);
-
-        final int end = ptr+len;
-        for (; ptr < end && buf[ptr] != q; ++ptr) { }
-
-        if (ptr == end) { // all good, no quoting!
-            _outputBuffer[ptr] = q;
-            _outputTail = ptr+1;
-        } else { // doh. do need quoting
-            _writeQuoted(text, q, ptr - _outputTail);
-        }
-    }
-
-    protected void _writeQuoted(String text, char q, int i) throws IOException
-    {
-        final char[] buf = _outputBuffer;
-        _outputTail += i;
-        final int len = text.length();
-        for (; i < len; ++i) {
-            char c = text.charAt(i);
-            if (c == q) { // double up
-                if (_outputTail >= _outputEnd) {
-                    _flushBuffer();
-                }
-                buf[_outputTail++] = q;
-            }
-            if (_outputTail >= _outputEnd) {
-                _flushBuffer();
-            }
-            buf[_outputTail++] = c;
-        }
-        if (_outputTail >= _outputEnd) {
-            _flushBuffer();
-        }
-        buf[_outputTail++] = q;
-    }
-
-    private final void _writeLongQuoted(String text) throws IOException
-    {
-        final int len = text.length();
-        // NOTE: caller should guarantee quote char is valid (not -1) at this point:
-        final char q = (char) _cfgQuoteCharacter;
-        for (int i = 0; i < len; ++i) {
-            if (_outputTail >= _outputEnd) {
-                _flushBuffer();
-            }
-            char c = text.charAt(i);
-            if (c == q) { // double up
-                _outputBuffer[_outputTail++] = q;
-                if (_outputTail >= _outputEnd) {
-                    _flushBuffer();
-                }
-            }
-            _outputBuffer[_outputTail++] = c;
-        }
-        if (_outputTail >= _outputEnd) {
-            _flushBuffer();
-        }
-        _outputBuffer[_outputTail++] = q;
-    }
     
     public void writeRaw(String text) throws IOException
     {
@@ -707,7 +644,176 @@ public class CsvEncoder
         text.getChars(offset, offset+len, _outputBuffer, 0);
         _outputTail = len;
     }
+
+    /*
+    /**********************************************************
+    /* Output methods, with quoting and escaping
+    /**********************************************************
+     */
+
+    public void _writeQuoted(String text) throws IOException
+    {
+        if (_outputTail >= _outputEnd) {
+            _flushBuffer();
+        }
+        // NOTE: caller should guarantee quote char is valid (not -1) at this point:
+        final char q = (char) _cfgQuoteCharacter;
+        _outputBuffer[_outputTail++] = q;
+        // simple case: if we have enough room, no need for boundary checks
+        final int len = text.length();
+        if ((_outputTail + len + len) >= _outputEnd) {
+            _writeLongQuoted(text, q);
+            return;
+        }
+        // 22-Jan-2015, tatu: Common case is that of no quoting needed, so let's
+        //     make a speculative copy, then scan
+        // 06-Nov-2015, tatu: Not sure if copy actually improves perf; it did with
+        //   older JVMs (1.5 at least), but not sure about 1.8 and later
+        final char[] buf = _outputBuffer;
+        int ptr = _outputTail;
+
+        text.getChars(0, len, buf, ptr);
+
+        final int end = ptr+len;
+        
+        for (; ptr < end && buf[ptr] != q; ++ptr) { }
+
+        if (ptr == end) { // all good, no quoting or escaping!
+            _outputBuffer[ptr] = q;
+            _outputTail = ptr+1;
+        } else { // doh. do need quoting
+            _writeQuoted(text, q, ptr - _outputTail);
+        }
+    }
+
+    protected void _writeQuoted(String text, char q, int i) throws IOException
+    {
+        final char[] buf = _outputBuffer;
+        _outputTail += i;
+        final int len = text.length();
+        for (; i < len; ++i) {
+            char c = text.charAt(i);
+            if (c == q) { // double up
+                if (_outputTail >= _outputEnd) {
+                    _flushBuffer();
+                }
+                buf[_outputTail++] = q;
+            }
+            if (_outputTail >= _outputEnd) {
+                _flushBuffer();
+            }
+            buf[_outputTail++] = c;
+        }
+        if (_outputTail >= _outputEnd) {
+            _flushBuffer();
+        }
+        buf[_outputTail++] = q;
+    }
+
+    private final void _writeLongQuoted(String text, char q) throws IOException
+    {
+        final int len = text.length();
+        for (int i = 0; i < len; ++i) {
+            if (_outputTail >= _outputEnd) {
+                _flushBuffer();
+            }
+            char c = text.charAt(i);
+            if (c == q) { // double up
+                _outputBuffer[_outputTail++] = q;
+                if (_outputTail >= _outputEnd) {
+                    _flushBuffer();
+                }
+            }
+            _outputBuffer[_outputTail++] = c;
+        }
+        if (_outputTail >= _outputEnd) {
+            _flushBuffer();
+        }
+        _outputBuffer[_outputTail++] = q;
+    }
+
+    public void _writeQuotedAndEscaped(String text, char esc) throws IOException
+    {
+        if (_outputTail >= _outputEnd) {
+            _flushBuffer();
+        }
+        // NOTE: caller should guarantee quote char is valid (not -1) at this point:
+        final char q = (char) _cfgQuoteCharacter;
+        _outputBuffer[_outputTail++] = q;
+        final int len = text.length();
+        if ((_outputTail + len + len) >= _outputEnd) {
+            _writeLongQuotedAndEscaped(text, esc);
+            return;
+        }
+        final char[] buf = _outputBuffer;
+        int ptr = _outputTail;
+
+        text.getChars(0, len, buf, ptr);
+
+        final int end = ptr+len;
+        for (; ptr < end; ++ptr) {
+            char c = buf[ptr];
+            if ((c == q) || (c == esc)) {
+                break;
+            }
+        }
+
+        if (ptr == end) { // all good, no quoting or escaping!
+            _outputBuffer[ptr] = q;
+            _outputTail = ptr+1;
+        } else { // quoting AND escaping
+            _writeQuotedAndEscaped(text, q, esc, ptr - _outputTail);
+        }
+    }
+
+    protected void _writeQuotedAndEscaped(String text, char q, char esc, int i) throws IOException
+    {
+        final char[] buf = _outputBuffer;
+        _outputTail += i;
+        final int len = text.length();
+        for (; i < len; ++i) {
+            char c = text.charAt(i);
+            if ((c == q) || (c == esc)) { // double up, either way
+                if (_outputTail >= _outputEnd) {
+                    _flushBuffer();
+                }
+                buf[_outputTail++] = c;
+            }
+            if (_outputTail >= _outputEnd) {
+                _flushBuffer();
+            }
+            buf[_outputTail++] = c;
+        }
+        if (_outputTail >= _outputEnd) {
+            _flushBuffer();
+        }
+        buf[_outputTail++] = q;
+    }
     
+    private final void _writeLongQuotedAndEscaped(String text, char esc) throws IOException
+    {
+        final int len = text.length();
+        // NOTE: caller should guarantee quote char is valid (not -1) at this point:
+        final char q = (char) _cfgQuoteCharacter;
+        for (int i = 0; i < len; ++i) {
+            if (_outputTail >= _outputEnd) {
+                _flushBuffer();
+            }
+            char c = text.charAt(i);
+            if ((c == q) || (c == esc)) { // double up, either way
+                _outputBuffer[_outputTail++] = c;
+                if (_outputTail >= _outputEnd) {
+                    _flushBuffer();
+                }
+            }
+            _outputBuffer[_outputTail++] = c;
+        }
+        if (_outputTail >= _outputEnd) {
+            _flushBuffer();
+        }
+        _outputBuffer[_outputTail++] = q;
+    }
+
     /*
     /**********************************************************
     /* Writer API, state changes
@@ -753,10 +859,16 @@ public class CsvEncoder
         }
         // may skip checks unless we want exact checking
         if (_cfgOptimalQuoting) {
+            if (_cfgEscapeCharacter > 0) {
+                return _needsQuotingStrict(value, _cfgEscapeCharacter);
+            }
             return _needsQuotingStrict(value);
         }
         if (length > _cfgMaxQuoteCheckChars) {
             return true;
+        }
+        if (_cfgEscapeCharacter > 0) {
+            return _needsQuotingLoose(value, _cfgEscapeCharacter);
         }
         return _needsQuotingLoose(value);
     }
@@ -778,20 +890,54 @@ public class CsvEncoder
         return false;
     }
 
+    protected final boolean _needsQuotingLoose(String value, int esc)
+    {
+        for (int i = 0, len = value.length(); i < len; ++i) {
+            int ch = value.charAt(i);
+            if ((ch < _cfgMinSafeChar) || (ch == esc)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     /**
      * @since 2.4
      */
     protected boolean _needsQuotingStrict(String value)
     {
+        final int minSafe = _cfgMinSafeChar;
         for (int i = 0, len = value.length(); i < len; ++i) {
-            char c = value.charAt(i);
-            if (c < _cfgMinSafeChar) {
+            int c = value.charAt(i);
+            if (c < minSafe) {
                 if (c == _cfgColumnSeparator || c == _cfgQuoteCharacter
                         || c == '\r' || c == '\n'
                         // 31-Dec-2014, tatu: Comment lines start with # so quote if starts with #
                         || (c == '#' && i == 0)) {
                     return true;
                 }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @since 2.7
+     */
+    protected boolean _needsQuotingStrict(String value, int esc)
+    {
+        final int minSafe = _cfgMinSafeChar;
+        for (int i = 0, len = value.length(); i < len; ++i) {
+            int c = value.charAt(i);
+            if (c < minSafe) {
+                if (c == _cfgColumnSeparator || c == _cfgQuoteCharacter
+                        || c == '\r' || c == '\n'
+                        // 31-Dec-2014, tatu: Comment lines start with # so quote if starts with #
+                        || (c == '#' && i == 0)) {
+                    return true;
+                }
+            } else if (c == esc) {
+                return true;
             }
         }
         return false;
