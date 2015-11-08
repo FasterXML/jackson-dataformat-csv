@@ -153,12 +153,12 @@ public class CsvGenerator extends GeneratorBase
     protected boolean _skipValue;
 
     /**
-     * Flag set during writing of (simple) array value, to be encoded as a
-     * single column value.
-     * 
+     * Separator to use during writing of (simple) array value, to be encoded as a
+     * single column value, if any.
+     *
      * @since 2.5
      */
-    protected String _arraySeparator = "";
+    protected String _arraySeparator = CsvSchema.NO_ARRAY_ELEMENT_SEPARATOR;
 
     /**
      * Accumulated contents of an array cell, if any
@@ -432,9 +432,9 @@ public class CsvGenerator extends GeneratorBase
                 
                 if (_nextColumnByName >= 0) {
                     CsvSchema.Column col = _schema.column(_nextColumnByName);
-                    sep = col.isArray() ? col.getArrayElementSeparator() : "";
+                    sep = col.isArray() ? col.getArrayElementSeparator() : CsvSchema.NO_ARRAY_ELEMENT_SEPARATOR;
                 } else {
-                    sep = "";
+                    sep = CsvSchema.NO_ARRAY_ELEMENT_SEPARATOR;
                 }
                 if (sep.isEmpty()) {
                     if (!_schema.hasArrayElementSeparator()) {
@@ -466,7 +466,7 @@ public class CsvGenerator extends GeneratorBase
             _reportError("Current context not an ARRAY but "+_writeContext.getTypeDesc());
         }
         if (!_arraySeparator.isEmpty()) {
-            _arraySeparator = "";
+            _arraySeparator = CsvSchema.NO_ARRAY_ELEMENT_SEPARATOR;
             _writer.write(_columnIndex(), _arrayContents.toString());
         }
         _writeContext = _writeContext.getParent();
