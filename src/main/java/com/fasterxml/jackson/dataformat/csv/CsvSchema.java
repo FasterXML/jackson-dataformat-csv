@@ -26,6 +26,8 @@ import com.fasterxml.jackson.core.FormatSchema;
  * <li>columnSeparator (char) [default: comma (',')]: character used to separate values.
  *     Other commonly used values include tab ('\t') and pipe ('|')
  *  </li>
+ * <li>arrayElementSeparator (String) [default: semicolon (";")]: string used to separate array elements.
+ *  </li>
  * <li>lineSeparator (String) [default: "\n"]: character used to separate data rows.
  *    Only used by generator; parser accepts three standard linefeeds ("\r", "\r\n", "\n").
  *  </li>
@@ -110,7 +112,7 @@ public class CsvSchema
      * Default separator for array elements within a column value is
      * semicolon.
      */
-    public final static char DEFAULT_ARRAY_ELEMENT_SEPARATOR = ';';
+    public final static String DEFAULT_ARRAY_ELEMENT_SEPARATOR = ";";
 
     public final static char DEFAULT_QUOTE_CHAR = '"';
 
@@ -245,7 +247,7 @@ public class CsvSchema
         /**
          * @since 2.5
          */
-        private final int _arrayElementSeparator;
+        private final String _arrayElementSeparator;
 
         /**
          * Link to the next column within schema, if one exists;
@@ -256,14 +258,22 @@ public class CsvSchema
         private final Column _next;
         
         public Column(int index, String name) {
-            this(index, name, ColumnType.STRING, -1);
+            this(index, name, ColumnType.STRING, "");
         }
 
         public Column(int index, String name, ColumnType type) {
-            this(index, name, type, -1);
+            this(index, name, type, "");
         }
 
-        public Column(int index, String name, ColumnType type, int arrayElementSep)
+        /**
+         * @deprecated use {@link #Column(int, String, ColumnType, String)} instead
+         */
+        @Deprecated // in 2.7; remove from 2.8
+        public Column(int index, String name, ColumnType type, int arrayElementSep) {
+            this(index, name, type, arrayElementSep == -1 ? "" : Character.toString((char) arrayElementSep));
+        }
+
+        public Column(int index, String name, ColumnType type, String arrayElementSep)
         {
             _index = index;
             _name = name;
@@ -287,14 +297,25 @@ public class CsvSchema
             }
             return new Column(_index, newName, _type, _arrayElementSeparator);
         }
+
         public Column withType(ColumnType newType) {
             if (newType == _type) {
                 return this;
             }
             return new Column(_index, _name, newType, _arrayElementSeparator);
         }
-        public Column withElementSeparator(int sep) {
-            if (_arrayElementSeparator == sep) {
+
+        /**
+         * @deprecated use {@link #withArrayElementSeparator(String)} instead
+         */
+        @Deprecated // in 2.7; remove from 2.8
+        public Column withElementSeparator(int separator) {
+            return withArrayElementSeparator(separator == -1 ? "" : Character.toString((char) separator));
+        }
+
+        public Column withArrayElementSeparator(String separator) {
+            String sep = separator == null ? "" : separator;
+            if (_arrayElementSeparator.equals(sep)) {
                 return this;
             }
             return new Column(_index, _name, _type, sep);
@@ -331,7 +352,7 @@ public class CsvSchema
         /**
          * @since 2.5
          */
-        public int getArrayElementSeparator() { return _arrayElementSeparator; }
+        public String getArrayElementSeparator() { return _arrayElementSeparator; }
 
         public boolean isArray() {
             return (_type == ColumnType.ARRAY);
@@ -354,8 +375,7 @@ public class CsvSchema
         
         protected char _columnSeparator = DEFAULT_COLUMN_SEPARATOR;
 
-        // note: need to use int to allow -1 for 'none'
-        protected int _arrayElementSeparator = DEFAULT_ARRAY_ELEMENT_SEPARATOR;
+        protected String _arrayElementSeparator = DEFAULT_ARRAY_ELEMENT_SEPARATOR;
         
         // note: need to use int to allow -1 for 'none'
         protected int _quoteChar = DEFAULT_QUOTE_CHAR;
@@ -406,9 +426,22 @@ public class CsvSchema
 
         public Builder addArrayColumn(String name) {
             int index = _columns.size();
-            return addColumn(new Column(index, name, ColumnType.ARRAY, -1));
+            return addColumn(new Column(index, name, ColumnType.ARRAY, ""));
         }
+
+        /**
+         * @deprecated use {@link #addArrayColumn(String, String)} instead
+         */
+        @Deprecated // in 2.7; remove from 2.8
         public Builder addArrayColumn(String name, int elementSeparator) {
+            int index = _columns.size();
+            return addColumn(new Column(index, name, ColumnType.ARRAY, elementSeparator));
+        }
+
+        /**
+         * @since 2.7
+         */
+        public Builder addArrayColumn(String name, String elementSeparator) {
             int index = _columns.size();
             return addColumn(new Column(index, name, ColumnType.ARRAY, elementSeparator));
         }
@@ -435,11 +468,23 @@ public class CsvSchema
         }
         public void removeArrayElementSeparator(int index) {
             _checkIndex(index);
-            _columns.set(index, _columns.get(index).withElementSeparator(-1));
+            _columns.set(index, _columns.get(index).withArrayElementSeparator(""));
         }
+        /**
+         * @deprecated use {@link #setArrayElementSeparator(String)} instead
+         */
+        @Deprecated // in 2.7; remove from 2.8
         public void setArrayElementSeparator(int index, char sep) {
             _checkIndex(index);
             _columns.set(index, _columns.get(index).withElementSeparator(sep));
+        }
+
+        /**
+         * @since 2.7
+         */
+        public void setArrayElementSeparator(int index, String sep) {
+            _checkIndex(index);
+            _columns.set(index, _columns.get(index).withArrayElementSeparator(sep));
         }
 
         public Builder clearColumns() {
@@ -534,19 +579,44 @@ public class CsvSchema
 
         /**
          * @since 2.5
+         * @deprecated use {@link #setArrayElementSeparator(String)} instead
          */
+        @Deprecated // in 2.7; remove from 2.8
         public Builder setArrayElementSeparator(char c) {
-            _arrayElementSeparator = c;
+            _arrayElementSeparator = Character.toString(c);
             return this;
         }
 
         /**
-         * @since 2.5
+         * Method for specifying character used to separate array element
+         * values.
+         * Default value is semicolon (";")
+         *
+         * @since 2.7
          */
-        public Builder disableElementSeparator(char c) {
-            _arrayElementSeparator = -1;
+        public Builder setArrayElementSeparator(String separator) {
+            _arrayElementSeparator = separator;
             return this;
         }
+
+
+        /**
+         * @since 2.5
+         * @deprecated use {@link #disableArrayElementSeparator()} instead
+         */
+        @Deprecated // in 2.7; remove from 2.8
+        public Builder disableElementSeparator(char c) {
+            return disableArrayElementSeparator();
+        }
+
+        /**
+         * @since 2.7
+         */
+        public Builder disableArrayElementSeparator() {
+            _arrayElementSeparator = null;
+            return this;
+        }
+
         
         /**
          * Method for specifying character used for optional quoting
@@ -643,7 +713,7 @@ public class CsvSchema
 
     protected final char _columnSeparator;
 
-    protected final int _arrayElementSeparator;
+    protected final String _arrayElementSeparator;
     
     protected final int _quoteChar;
     
@@ -660,10 +730,23 @@ public class CsvSchema
 
     /**
      * @since 2.5
+     * @deprecated use {@link #CsvSchema(Column[], int, char, int, int, char[], String, char[])} instead
+     */
+    @Deprecated // in 2.7; remove from 2.8
+    public CsvSchema(Column[] columns, int features,
+        char columnSeparator, int quoteChar, int escapeChar,
+        char[] lineSeparator, int arrayElementSeparator,
+        char[] nullValue) {
+        this(columns, features, columnSeparator, quoteChar, escapeChar, lineSeparator,
+            arrayElementSeparator == -1 ? "" : Character.toString((char) arrayElementSeparator), nullValue);
+    }
+
+    /**
+     * @since 2.7
      */
     public CsvSchema(Column[] columns, int features,
             char columnSeparator, int quoteChar, int escapeChar,
-            char[] lineSeparator, int arrayElementSeparator,
+            char[] lineSeparator, String arrayElementSeparator,
             char[] nullValue)
     {
         if (columns == null) {
@@ -697,7 +780,7 @@ public class CsvSchema
      */
     protected CsvSchema(Column[] columns, int features,
             char columnSeparator, int quoteChar, int escapeChar,
-            char[] lineSeparator, int arrayElementSeparator,
+            char[] lineSeparator, String arrayElementSeparator,
             char[] nullValue,
             Map<String,Column> columnsByName)
     {
@@ -922,21 +1005,34 @@ public class CsvSchema
 
     /**
      * @since 2.5
+     * @deprecated use {@link #withArrayElementSeparator(String)} instead
      */
+    @Deprecated // in 2.7; remove in 2.8
     public CsvSchema withArrayElementSeparator(char c) {
-        return (_arrayElementSeparator == c) ? this
+        return (Character.toString(c).equals(_arrayElementSeparator)) ? this
                 : new CsvSchema(_columns, _features,
-                        _columnSeparator, _quoteChar, _escapeChar, _lineSeparator, c,
+                        _columnSeparator, _quoteChar, _escapeChar, _lineSeparator, Character.toString(c),
                         _nullValue, _columnsByName);
     }
+
+    /**
+     * @since 2.7
+     */
+    public CsvSchema withArrayElementSeparator(String separator) {
+        String sep = separator == null ? "" : separator;
+        return (_arrayElementSeparator.equals(sep)) ? this : new CsvSchema(_columns, _features,
+            _columnSeparator, _quoteChar, _escapeChar, _lineSeparator, separator,
+            _nullValue, _columnsByName);
+    }
+
 
     /**
      * @since 2.5
      */
     public CsvSchema withoutArrayElementSeparator() {
-        return (_arrayElementSeparator == -1) ? this
+        return (_arrayElementSeparator.isEmpty()) ? this
                 : new CsvSchema(_columns, _features,
-                        _columnSeparator, _quoteChar, _escapeChar, _lineSeparator, -1,
+                        _columnSeparator, _quoteChar, _escapeChar, _lineSeparator, "",
                         _nullValue, _columnsByName);
     }
     
@@ -1042,7 +1138,7 @@ public class CsvSchema
     public boolean skipFirstDataRow() { return (_features & ENCODING_FEATURE_SKIP_FIRST_DATA_ROW) != 0; }
     
     public char getColumnSeparator() { return _columnSeparator; }
-    public int getArrayElementSeparator() { return _arrayElementSeparator; }
+    public String getArrayElementSeparator() { return _arrayElementSeparator; }
     public int getQuoteChar() { return _quoteChar; }
     public int getEscapeChar() { return _escapeChar; }
 
@@ -1090,7 +1186,7 @@ public class CsvSchema
     /**
      * @since 2.5
      */
-    public boolean hasArrayElementSeparator() { return _arrayElementSeparator >= 0; }
+    public boolean hasArrayElementSeparator() { return !_arrayElementSeparator.isEmpty(); }
     
     /*
     /**********************************************************************
