@@ -60,7 +60,7 @@ CsvSchema schema = CsvSchema.builder()
 // NOTE: reads schema and uses it for binding
 CsvSchema bootstrapSchema = CsvSchema.emptySchema().withHeader();
 ObjectMapper mapper = new CsvMapper();
-mapper.reader(Pojo.class).with(bootstrapSchema).readValue(json);
+mapper.readerFor(Pojo.class).with(bootstrapSchema).readValue(json);
 ```
 
 It is important to note that the schema object is needed to ensure correct ordering of columns; schema instances are immutable and fully reusable (as are `ObjectWriter` instances).
@@ -81,7 +81,7 @@ CsvMapper mapper = new CsvMapper();
 Pojo value = ...;
 CsvSchema schema = mapper.schemaFor(Pojo.class); // schema from 'Pojo' definition
 String csv = mapper.writer(schema).writeValueAsString(value);
-Pojo result = mapper.reader(Pojo.class).with(schema).read(csv);
+Pojo result = mapper.readerFor(Pojo.class).with(schema).read(csv);
 ```
 
 ## Data-binding without schema
@@ -112,7 +112,7 @@ CsvMapper mapper = new CsvMapper();
 // important: we need "array wrapping" (see next section) here:
 mapper.enable(CsvParser.Feature.WRAP_AS_ARRAY);
 File csvFile = new File("input.csv"); // or from String, URL etc
-MappingIterator<String[]> it = mapper.reader(String[].class).readValues(csvFile);
+MappingIterator<String[]> it = mapper.readerFor(String[].class).readValues(csvFile);
 while (it.hasNext()) {
   String[] row = it.next();
   // and voila, column values in an array. Works with Lists as well
@@ -135,7 +135,7 @@ we could use following code:
 
 ```java
 CsvSchema schema = CsvSchema.emptySchema().withHeader(); // use first row as header; otherwise defaults are fine
-MappingIterator<Map<String,String>> it = mapper.reader(Map.class)
+MappingIterator<Map<String,String>> it = mapper.readerFor(Map.class)
    .with(schema)
    .readValues(csvFile);
 while (it.hasNext()) {
