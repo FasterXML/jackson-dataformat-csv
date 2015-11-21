@@ -134,6 +134,7 @@ Barbara,36
 we could use following code:
 
 ```java
+CsvMapper mapper = new CsvMapper();
 CsvSchema schema = CsvSchema.emptySchema().withHeader(); // use first row as header; otherwise defaults are fine
 MappingIterator<Map<String,String>> it = mapper.readerFor(Map.class)
    .with(schema)
@@ -152,6 +153,19 @@ and get two rows as `java.util.Map`s, similar to what JSON like this
 ```
 
 would produce.
+
+Additionally, to generate a schema for the `Map<String,String>`,
+we could do the following :
+
+```java
+CsvSchema.Builder schema = new CsvSchema.Builder();
+for (String value : map.keySet())
+{
+    schema.addColumn(value, CsvSchema.ColumnType.STRING);
+}
+new CsvMapper().writerFor(Map.class).with(schema.build());
+```
+
 
 ## Adding virtual Array wrapping
 
