@@ -4,7 +4,7 @@ Project: jackson-dataformat-csv
 === Releases ===
 ------------------------------------------------------------------------
 
-2.6.4 (not yet released)
+2.6.4 (07-Dec-2015)
 
 #90: Unexpected output with arrays starting with a null/empty element
  (reported by Jonathan C)
