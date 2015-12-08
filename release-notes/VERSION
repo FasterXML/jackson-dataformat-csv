@@ -4,6 +4,10 @@ Project: jackson-dataformat-csv
 === Releases ===
 ------------------------------------------------------------------------
 
+2.5.5 (07-Dec-2015)
+
+No changes since 2.5.4
+
 2.5.4 (09-Jun-2015)
 
 - Fixes to potential ArrayIndexOutOfBoundsException on `CsvEncoder`, bounds check
