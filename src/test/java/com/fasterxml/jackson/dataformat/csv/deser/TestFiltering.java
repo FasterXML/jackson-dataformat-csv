@@ -97,5 +97,32 @@ public class TestFiltering extends ModuleTestBase
         assertEquals(",name2,ticker2", br.readLine());
         assertEquals(",name3,ticker3", br.readLine());
         assertNull(br.readLine());
-    }    
+    }
+
+    public void testWithJsonFilterFieldSuppressed() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        final CsvSchema schema = new CsvSchema.Builder()
+                .addColumn("name")
+                .addColumn("ticker")
+                .setLineSeparator("\n").setUseHeader(true)
+                .build();
+
+        SimpleFilterProvider filterProvider = new SimpleFilterProvider()
+                .addFilter(COMPANY_FILTER, FilterExceptFilter.filterOutAllExcept("name", "ticker"));
+
+        List<Company> companies = Arrays.asList(
+                new Company(1, "name1", "ticker1")
+                , new Company(2, "name2", "ticker2")
+                , new Company(3, "name3", "ticker3"));
+        String actual = mapper.writer(filterProvider).with(schema).writeValueAsString(companies);
+//        System.out.println(actual);
+
+        BufferedReader br = new BufferedReader(new StringReader(actual.trim()));
+        assertEquals("name,ticker", br.readLine());
+        assertEquals("name1,ticker1", br.readLine());
+        assertEquals("name2,ticker2", br.readLine());
+        assertEquals("name3,ticker3", br.readLine());
+        assertNull(br.readLine());
+    }
 }

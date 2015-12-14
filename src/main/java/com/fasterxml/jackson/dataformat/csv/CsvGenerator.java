@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.base.GeneratorBase;
 import com.fasterxml.jackson.core.json.JsonWriteContext;
 import com.fasterxml.jackson.core.io.IOContext;
+import com.fasterxml.jackson.core.json.PackageVersion;
 import com.fasterxml.jackson.dataformat.csv.impl.CsvEncoder;
 
 public class CsvGenerator extends GeneratorBase
@@ -793,16 +794,16 @@ public class CsvGenerator extends GeneratorBase
     @Override
     public void writeOmittedField(String fieldName) throws IOException
     {
-        // basically combination of "writeFieldName()" and "writeNull()"
-        if (_writeContext.writeFieldName(fieldName) == JsonWriteContext.STATUS_EXPECT_VALUE) {
-            _reportError("Can not skip a field, expecting a value");
-        }
         // Hmmh. Should we require a match? Actually, let's use logic: if field found,
         // assumption is we must add a placeholder; if not, we can merely ignore
         CsvSchema.Column col = _schema.column(fieldName);
         if (col == null) {
             // assumed to have been removed from schema too
         } else {
+            // basically combination of "writeFieldName()" and "writeNull()"
+            if (_writeContext.writeFieldName(fieldName) == JsonWriteContext.STATUS_EXPECT_VALUE) {
+                _reportError("Can not skip a field, expecting a value");
+            }
             // and all we do is just note index to use for following value write
             _nextColumnByName = col.getIndex();
             // We can basically copy what 'writeNull()' does...
