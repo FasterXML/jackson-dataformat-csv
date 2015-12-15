@@ -16,7 +16,12 @@ Project: jackson-dataformat-csv
 #97: Verify CSV headers are in the order as expected (added `strictHeaders` property in `CsvSchema`)
  (contributed by Nick B)
 
-2.6.4 (not yet released)
+2.6.5 (not yet released)
+
+#93: CSV mapper does not support Views or filtering correctly for serialization
+ (reported by triviski@github; fix contributed by Rob B)
+
+2.6.4 (07-Dec-2015)
 
 #90: Unexpected output with arrays starting with a null/empty element
  (reported by Jonathan C)

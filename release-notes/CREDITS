@@ -56,14 +56,22 @@ Oliver Röss (cloudyday@github)
 * Reported #98: Escape char is not being escaped during serialization
  (2.6.4)
 
+<<<<<<< HEAD
 Justo Ruiz Ferrer (jrferrer@github)
 
 * Contributed #89: Allow choice of using header-line declaration to reorder columns
   of explicit schema, with `CsvSchema.setReorderColumns`
  (2.7.0)
 
+Rob Baily (rob-baily@github)
+
+* Contributed fix for #93: CSV mapper does not support Views or filtering correctly
+  for serialization
+ (2.6.5)
+
 Nick Babcock (nickbabcock@github)
 
 * Contributed #97: Verify CSV headers are in the order as expected (added `strictHeaders`
   property in `CsvSchema`)
  (2.7.0)
+
