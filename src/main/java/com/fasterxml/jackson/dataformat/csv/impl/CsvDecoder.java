@@ -925,7 +925,7 @@ public class CsvDecoder
                 }
             }
             char ch = _inputBuffer[_inputPtr++];
-            if (ch > ' ') {
+            if (ch > ' ' || ch == _separatorChar) {
                 return ch;
             }
             switch (ch) {
