@@ -15,6 +15,7 @@ Project: jackson-dataformat-csv
 #94: Change schema/mapping related `JsonParseException`s to proper `JsonMappingException`s
 #97: Verify CSV headers are in the order as expected (added `strictHeaders` property in `CsvSchema`)
  (contributed by Nick B)
+#103: `JsonGenerator.Feature.IGNORE_UNKNOWN` does not prevent error when writing structured values
 
 2.6.5 (not yet released)
 

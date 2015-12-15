@@ -173,7 +173,15 @@ public class CsvGenerator extends GeneratorBase
      * @since 2.7
      */
     protected int _arrayElements;
-    
+
+    /**
+     * When skipping output (for "unknown" output), outermost write context
+     * where skipping should occur
+     *
+     * @since 2.7
+     */
+    protected JsonWriteContext _skipWithin;
+
     /*
     /**********************************************************
     /* Life-cycle
@@ -346,6 +354,11 @@ public class CsvGenerator extends GeneratorBase
             // not a low-level error, so:
             _reportMappingError("Unrecognized column '"+name+"', can not resolve without CsvSchema");
         }
+        if (_skipWithin != null) { // new in 2.7
+            _skipValue = true;
+            _nextColumnByName = -1;
+            return;
+        }
         // note: we are likely to get next column name, so pass it as hint
         CsvSchema.Column col = _schema.column(name, _nextColumnByName+1);
         if (col == null) {
@@ -482,11 +495,16 @@ public class CsvGenerator extends GeneratorBase
     public final void writeStartObject() throws IOException
     {
         _verifyValueWrite("start an object");
-        /* No nesting for objects; can write Objects inside logical
-         * root-level arrays.
-         */
+        // No nesting for objects; can write Objects inside logical root-level arrays.
+        // 14-Dec-2015, tatu: ... except, should be fine if we are ignoring the property
         if (_writeContext.inObject()) {
-            _reportMappingError("CSV generator does not support Object values for properties");
+            if (_skipWithin == null) { // new in 2.7
+                if (_skipValue && isEnabled(JsonGenerator.Feature.IGNORE_UNKNOWN)) {
+                    _skipWithin = _writeContext;
+                } else {
+                    _reportMappingError("CSV generator does not support Object values for properties");
+                }
+            }
         }
         _writeContext = _writeContext.createChildObjectContext();
     }
@@ -498,6 +516,11 @@ public class CsvGenerator extends GeneratorBase
             _reportError("Current context not an object but "+_writeContext.getTypeDesc());
         }
         _writeContext = _writeContext.getParent();
+        // 14-Dec-2015, tatu: To complete skipping of ignored structured value, need this:
+        if (_writeContext == _skipWithin) {
+            _skipWithin = null;
+            return;
+        }
         // not 100% fool-proof, but chances are row should be done now
         finishRow();
     }
