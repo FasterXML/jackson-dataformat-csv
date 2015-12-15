@@ -92,4 +92,38 @@ public class ParserTrimSpacesTest extends ModuleTestBase
         assertFalse(it.hasNext());
         it.close();
     }
+
+    // for [dataformat-csv#100]: Do not eat tabs when trimming space
+    public void testTrimmingTabSeparated() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        mapper.enable(CsvParser.Feature.TRIM_SPACES);
+        CsvSchema schema = mapper.schemaFor(Entry.class).withColumnSeparator('\t');
+        MappingIterator<Entry> it = mapper.readerFor(Entry.class).with(schema).
+        readValues(
+            "a\t\t  c\n 1\t2\t\" 3\" \n\"ab\" \t\"c  \t\"\t  \n"
+        );
+        Entry entry;
+
+        assertTrue(it.hasNext());
+        assertNotNull(entry = it.nextValue());
+        assertEquals("a", entry.a);
+        assertEquals("", entry.b);
+        assertEquals("c", entry.c);
+
+        assertTrue(it.hasNext());
+        assertNotNull(entry = it.nextValue());
+        assertEquals("1", entry.a);
+        assertEquals("2", entry.b);
+        assertEquals(" 3", entry.c); // note: space within quotes is preserved
+
+        assertTrue(it.hasNext());
+        assertNotNull(entry = it.nextValue());
+        assertEquals("ab", entry.a);
+        assertEquals("c  \t", entry.b);
+        assertEquals("", entry.c);
+
+        assertFalse(it.hasNext());
+        it.close();
+    }
 }

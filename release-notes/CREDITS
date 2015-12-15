@@ -69,9 +69,13 @@ Rob Baily (rob-baily@github)
   for serialization
  (2.6.5)
 
+dharaburda@github)
+
+* Contributed fix for #100: trim spaces: don't trim/strip separator character
+ (2.6.5)
+
 Nick Babcock (nickbabcock@github)
 
 * Contributed #97: Verify CSV headers are in the order as expected (added `strictHeaders`
   property in `CsvSchema`)
  (2.7.0)
-

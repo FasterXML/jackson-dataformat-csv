@@ -915,9 +915,10 @@ public class CsvDecoder
         }
         return _inputBuffer[_inputPtr++];
     }
-    
+
     protected final int _skipLeadingSpace() throws IOException
     {
+        final int sep = _separatorChar;
         while (true) {
             if (_inputPtr >= _inputEnd) {
                 if (!loadMore()) {
@@ -925,7 +926,7 @@ public class CsvDecoder
                 }
             }
             char ch = _inputBuffer[_inputPtr++];
-            if (ch > ' ') {
+            if ((ch > ' ') || (ch == sep)) {
                 return ch;
             }
             switch (ch) {
@@ -935,7 +936,7 @@ public class CsvDecoder
             }
         }
     }
-    
+
     /*
     /**********************************************************************
     /* Numeric accessors for CsvParser
