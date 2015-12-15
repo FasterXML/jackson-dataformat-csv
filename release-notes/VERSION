@@ -4,6 +4,11 @@ Project: jackson-dataformat-csv
 === Releases ===
 ------------------------------------------------------------------------
 
+2.6.5 (not yet released)
+
+#93: CSV mapper does not support Views or filtering correctly for serialization
+ (reported by triviski@github; fix contributed by Rob B)
+
 2.6.4 (07-Dec-2015)
 
 #90: Unexpected output with arrays starting with a null/empty element
