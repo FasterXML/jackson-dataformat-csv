@@ -61,3 +61,8 @@ Rob Baily (rob-baily@github)
 * Contributed fix for #93: CSV mapper does not support Views or filtering correctly
   for serialization
  (2.6.5)
+
+dharaburda@github)
+
+* Contributed fix for #100: trim spaces: don't trim/strip separator character
+ (2.6.5)
