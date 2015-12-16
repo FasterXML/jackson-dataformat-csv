@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.csv.*;
+import com.google.common.collect.Lists;
 
 import static org.junit.Assert.assertArrayEquals;
 
@@ -403,5 +404,24 @@ public class BasicParserTest extends ModuleTestBase {
             verifyException(e, "Extra header d");
         }
         parser.close();
+    }
+
+    public void testStrictColumnReturnsExpectedData() throws IOException {
+        CsvSchema schema = MAPPER.schemaFor(Point.class).withHeader().withStrictHeaders(true);
+
+        String CSV = "x,y,z\n1,2,3\n4,5,6\n7,8,9";
+
+        final MappingIterator<Point> iter = MAPPER.readerFor(Point.class).with(schema).readValues(CSV);
+        final ArrayList<Point> values = Lists.newArrayList(iter);
+        assertEquals(3, values.size());
+        assertEquals(1, values.get(0).x);
+        assertEquals(2, values.get(0).y.intValue());
+        assertEquals(3, values.get(0).z.intValue());
+        assertEquals(4, values.get(1).x);
+        assertEquals(5, values.get(1).y.intValue());
+        assertEquals(6, values.get(1).z.intValue());
+        assertEquals(7, values.get(2).x);
+        assertEquals(8, values.get(2).y.intValue());
+        assertEquals(9, values.get(2).z.intValue());
     }
 }

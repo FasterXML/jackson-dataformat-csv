@@ -91,7 +91,7 @@ public class CsvSchema
     protected final static int ENCODING_FEATURE_SKIP_FIRST_DATA_ROW = 0x0002;
     protected final static int ENCODING_FEATURE_ALLOW_COMMENTS = 0x0004;
     protected final static int ENCODING_FEATURE_REORDER_COLUMNS = 0x0008;
-    protected final static int ENCODING_FEATURE_STRICT_HEADERS = 0x0016;
+    protected final static int ENCODING_FEATURE_STRICT_HEADERS = 0x0010;
 
     protected final static int DEFAULT_ENCODING_FEATURES = 0;
 
