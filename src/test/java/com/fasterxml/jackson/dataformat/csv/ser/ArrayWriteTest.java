@@ -52,7 +52,7 @@ public class ArrayWriteTest extends ModuleTestBase
         ValueEntry input = new ValueEntry("foo", "stuff", 1, 2, 3);
         String csv = mapper.writer(CsvSchema.builder()
                 .addColumn("id")
-                .addArrayColumn("values", ' ')
+                .addArrayColumn("values", " ")
                 .addColumn("extra")
                 .build())
                 .writeValueAsString(input)
