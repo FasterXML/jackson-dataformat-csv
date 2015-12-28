@@ -439,7 +439,10 @@ public class CsvGenerator extends GeneratorBase
          * can not nest arrays in objects
          */
         if (_writeContext.inObject()) {
-            if (!_skipValue) {
+            if ((_skipWithin == null)
+                    && _skipValue && isEnabled(JsonGenerator.Feature.IGNORE_UNKNOWN)) {
+                _skipWithin = _writeContext;
+            } else if (!_skipValue) {
                 // First: column may have its own separator
                 String sep;
                 
@@ -463,11 +466,12 @@ public class CsvGenerator extends GeneratorBase
                 }
                 _arrayElements = 0;
             }
-        } else if (!_arraySeparator.isEmpty()) {
-            // also: no nested arrays, yet
-            _reportError("CSV generator does not support nested Array values");
+        } else {
+            if (!_arraySeparator.isEmpty()) {
+                // also: no nested arrays, yet
+                _reportError("CSV generator does not support nested Array values");
+            }
         }
-            
         _writeContext = _writeContext.createChildArrayContext();
         // and that's about it, really
     }
@@ -478,11 +482,18 @@ public class CsvGenerator extends GeneratorBase
         if (!_writeContext.inArray()) {
             _reportError("Current context not an ARRAY but "+_writeContext.getTypeDesc());
         }
+        _writeContext = _writeContext.getParent();
+        // 14-Dec-2015, tatu: To complete skipping of ignored structured value, need this:
+        if (_skipWithin != null) {
+            if (_writeContext == _skipWithin) {
+                _skipWithin = null;
+            }
+            return;
+        }
         if (!_arraySeparator.isEmpty()) {
             _arraySeparator = CsvSchema.NO_ARRAY_ELEMENT_SEPARATOR;
             _writer.write(_columnIndex(), _arrayContents.toString());
         }
-        _writeContext = _writeContext.getParent();
         /* 20-Nov-2014, tatu: When doing "untyped"/"raw" output, this means that row
          *    is now done. But not if writing such an array field, so:
          */
@@ -517,8 +528,10 @@ public class CsvGenerator extends GeneratorBase
         }
         _writeContext = _writeContext.getParent();
         // 14-Dec-2015, tatu: To complete skipping of ignored structured value, need this:
-        if (_writeContext == _skipWithin) {
-            _skipWithin = null;
+        if (_skipWithin != null) {
+            if (_writeContext == _skipWithin) {
+                _skipWithin = null;
+            }
             return;
         }
         // not 100% fool-proof, but chances are row should be done now

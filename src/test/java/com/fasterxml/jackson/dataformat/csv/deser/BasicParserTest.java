@@ -423,5 +423,6 @@ public class BasicParserTest extends ModuleTestBase {
         assertEquals(7, values.get(2).x);
         assertEquals(8, values.get(2).y.intValue());
         assertEquals(9, values.get(2).z.intValue());
+        iter.close();
     }
 }

@@ -30,6 +30,24 @@ public class GeneratorIgnoreUnknownTest extends ModuleTestBase
 
         public PointAndStuff(Object s) { stuff = s; }
     }
+
+    // for [dataformat-csv#104]
+    @JsonPropertyOrder({ "x", "points", "y" })
+    public static class PointAndArray {
+        public int x = 1, y = 2;
+        
+        public List<Point> points = new ArrayList<Point>();
+        {
+            points.add(new Point());
+            points.add(new Point());
+        }
+
+        protected PointAndArray() { }
+        protected PointAndArray(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+    }    
     
     /*
     /**********************************************************
@@ -88,5 +106,25 @@ public class GeneratorIgnoreUnknownTest extends ModuleTestBase
         csv = writer.writeValueAsString(new PointAndStuff(m));
         assertNotNull(csv);
         assertEquals("1,2\n", csv);
+    }
+
+    // for [dataformat-csv#104]
+    public void testIgnoreNested() throws Exception
+    {
+        ObjectMapper mapper = mapperForCsv();
+        final CsvSchema schema = CsvSchema.builder()
+                .addColumn("x")
+                .addColumn("y")
+                .build();
+        ObjectWriter writer = mapper.writerFor(PointAndArray.class)
+                .with(schema)
+                .with(JsonGenerator.Feature.IGNORE_UNKNOWN);
+
+        String csv = writer.writeValueAsString(new PointAndArray(3,5));
+
+System.err.       println("CSV:\n"+csv);
+        
+        assertNotNull(csv);
+        assertEquals("3,5\n", csv);
     }
 }
