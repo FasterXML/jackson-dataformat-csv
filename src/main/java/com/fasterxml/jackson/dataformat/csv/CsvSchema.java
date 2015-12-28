@@ -77,7 +77,7 @@ import com.fasterxml.jackson.core.FormatSchema;
 public class CsvSchema 
     implements FormatSchema,
         Iterable<CsvSchema.Column>,
-        java.io.Serializable // since 2.4.3
+        java.io.Serializable // since 2.5
 {
     private static final long serialVersionUID = 1L; // 2.5
 
@@ -289,9 +289,13 @@ public class CsvSchema
             _next = null;
         }
 
-        public Column(Column src, Column next)
+        public Column(Column src, Column next) {
+            this(src, src._index, next);
+        }
+
+        protected Column(Column src, int index, Column next)
         {
-            _index = src._index;
+            _index = index;
             _name = src._name;
             _type = src._type;
             _arrayElementSeparator = src._arrayElementSeparator;
@@ -333,6 +337,16 @@ public class CsvSchema
                 return this;
             }
             return new Column(this, next);
+        }
+
+        /**
+         * @since 2.7
+         */
+        public Column withNext(int index, Column next) {
+            if ((_index == index) && (_next == next)) {
+                return this;
+            }
+            return new Column(this, index, next);
         }
         
         public int getIndex() { return _index; }
@@ -768,7 +782,7 @@ public class CsvSchema
         _escapeChar = escapeChar;
         _lineSeparator = lineSeparator;
         _nullValue = nullValue;
-        
+
         // and then we may need to create a mapping
         if (_columns.length == 0) {
             _columnsByName = Collections.emptyMap();
@@ -805,7 +819,8 @@ public class CsvSchema
      * Copy constructor used for creating variants using
      * <code>sortedBy()</code> methods.
      */
-    protected CsvSchema(CsvSchema base, Column[] columns) {
+    protected CsvSchema(CsvSchema base, Column[] columns)
+    {
         _columns = _link(columns);
         _features = base._features;
         _columnSeparator = base._columnSeparator;
@@ -814,7 +829,16 @@ public class CsvSchema
         _lineSeparator = base._lineSeparator;
         _arrayElementSeparator = base._arrayElementSeparator;
         _nullValue = base._nullValue;
-        _columnsByName = base._columnsByName;
+ 
+        // and then we may need to create a mapping
+        if (_columns.length == 0) {
+            _columnsByName = Collections.emptyMap();
+        } else {
+            _columnsByName = new HashMap<String,Column>(4 + _columns.length);
+            for (Column c : _columns) {
+                _columnsByName.put(c.getName(), c);
+            }
+        }
     }
     
     /**
@@ -835,14 +859,16 @@ public class CsvSchema
     }
 
     /**
-     * Helper method used for chaining columns together using next-linkage
+     * Helper method used for chaining columns together using next-linkage,
+     * as well as ensuring that indexes are correct.
      */
-    private static Column[] _link(Column[] orig) {
+    private static Column[] _link(Column[] orig)
+    {
         int i = orig.length;
         Column[] result = new Column[i];
         Column prev = null;
         for (; --i >= 0; ) {
-            Column curr = orig[i].withNext(prev);
+            Column curr = orig[i].withNext(i, prev);
             result[i] = curr;
             prev = curr;
         }
@@ -1080,7 +1106,8 @@ public class CsvSchema
      * 
      * @since 2.4
      */
-    public CsvSchema sortedBy(String... columnNames) {
+    public CsvSchema sortedBy(String... columnNames)
+    {
         LinkedHashMap<String,Column> map = new LinkedHashMap<String,Column>();
         for (String colName : columnNames) {
             Column col = _columnsByName.get(colName);
