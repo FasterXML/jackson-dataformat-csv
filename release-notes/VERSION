@@ -8,6 +8,8 @@ Project: jackson-dataformat-csv
 
 #93: CSV mapper does not support Views or filtering correctly for serialization
  (reported by triviski@github; fix contributed by Rob B)
+#96: SortedBy only apply to headers and actual data
+ (reported by ShijunK@github)
 
 2.6.4 (07-Dec-2015)
 
