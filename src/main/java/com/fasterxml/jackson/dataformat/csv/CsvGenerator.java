@@ -706,15 +706,20 @@ public class CsvGenerator extends GeneratorBase
         if (!_skipValue) {
             if (!_arraySeparator.isEmpty()) {
                 _addToArray(_schema.getNullValueOrEmpty());
-            } else if (!_writeContext.inObject()) { // as per [#69]
+            } else if (!_writeContext.inObject()) {
+                // [#106] write single null when allow null fields enabled
+                if (_schema.allowNullFields()) {
+                    _writer.writeNull(_columnIndex());
+                }
+
+                // as per [#69]
                 // note: 'root' not enough, for case of wrap-as array, or serialize List
-                
                 // or, to write 'empty Object' (for common case), would
                 // write single null, then finish row, like so:
                 /*
-                _writer.writeNull(_columnIndex());
                 finishRow();
-*/
+                */
+
             } else {
                 _writer.writeNull(_columnIndex());
             }
