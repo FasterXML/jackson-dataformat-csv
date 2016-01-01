@@ -2,6 +2,8 @@ package com.fasterxml.jackson.dataformat.csv.ser;
 
 import java.io.ByteArrayOutputStream;
 import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.List;
 
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.csv.*;
@@ -67,15 +69,58 @@ public class NullWritingTest extends ModuleTestBase
     // [dataformat-csv#53]
     public void testCustomNullValue() throws Exception
     {
-        ObjectMapper mapper = mapperForCsv();
+        CsvMapper mapper = mapperForCsv();
         CsvSchema schema = CsvSchema.builder()
                 .setNullValue("n/a")
                 .addColumn("id")
                 .addColumn("desc")
                 .build();
-        
         String result = mapper.writer(schema).writeValueAsString(new IdDesc("id", null));
         // MUST use doubling for quotes!
         assertEquals("id,n/a\n", result);
+    }
+
+    public void testCustomNullValueInObjectListIssue106() throws Exception
+    {
+        ObjectMapper mapper = mapperForCsv();
+        CsvSchema schema = CsvSchema.builder()
+            .setArrayElementSeparator(",")
+            .setNullValue("n/a")
+            .setAllowNullFields(true)
+            .build();
+
+        List list = Arrays.asList("d0", null, "d2");
+
+        String result = mapper.writer(schema).writeValueAsString(list);
+        assertEquals("d0,n/a,d2\n", result);
+
+        list = Arrays.asList(null, "d1", "d2");
+        result = mapper.writer(schema).writeValueAsString(list);
+        assertEquals("n/a,d1,d2\n", result);
+
+        list = Arrays.asList("d0", "d1", null);
+        result = mapper.writer(schema).writeValueAsString(list);
+        assertEquals("d0,d1,n/a\n", result);
+    }
+
+    public void testDefaultNullValueInObjectListIssue106() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        CsvSchema schema = CsvSchema.builder()
+            .setArrayElementSeparator(",")
+            .setAllowNullFields(true)
+            .build();
+
+        List list = Arrays.asList("d0", null, "d2");
+        String result = mapper.writer(schema).writeValueAsString(list);
+        assertEquals("d0,,d2\n", result);
+
+        list = Arrays.asList(null, "d1", "d2");
+        result = mapper.writer(schema).writeValueAsString(list);
+        assertEquals(",d1,d2\n", result);
+
+        list = Arrays.asList("d0", "d1", null);
+        result = mapper.writer(schema).writeValueAsString(list);
+        assertEquals("d0,d1,\n", result);
     }
 }

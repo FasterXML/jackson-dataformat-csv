@@ -51,6 +51,11 @@ import com.fasterxml.jackson.core.FormatSchema;
  *   the header row (if header row handling enabled): if true, they must be and
  *   an exception if thrown if order differs: if false, no verification is performed.
  *  </li>
+ *  <li>allowNullFields (boolean) [default: false] (added in Jackson 2.7): whether to
+ *    treat null values and objects as a field when serializing data. When enabled null
+ *    objects as a row may result in empty rows, and null objects as a field may result
+ *    in an empty character or the nullValue written between separators.
+ *  </li>
  * </ul>
  *<p>
  * Note that schemas without any columns are legal, but if no columns
@@ -92,6 +97,7 @@ public class CsvSchema
     protected final static int ENCODING_FEATURE_ALLOW_COMMENTS = 0x0004;
     protected final static int ENCODING_FEATURE_REORDER_COLUMNS = 0x0008;
     protected final static int ENCODING_FEATURE_STRICT_HEADERS = 0x0010;
+    protected final static int ENCODING_FEATURE_ALLOW_NULL_FIELDS = 0x0020;
 
     protected final static int DEFAULT_ENCODING_FEATURES = 0;
 
@@ -583,6 +589,11 @@ public class CsvSchema
             _feature(ENCODING_FEATURE_ALLOW_COMMENTS, b);
             return this;
         }
+
+        public Builder setAllowNullFields(boolean b) {
+            _feature(ENCODING_FEATURE_ALLOW_NULL_FIELDS, b);
+            return this;
+        }
         
         protected final void _feature(int feature, boolean state) {
             _encodingFeatures = state ? (_encodingFeatures | feature) : (_encodingFeatures & ~feature);
@@ -995,6 +1006,14 @@ public class CsvSchema
         return _withFeature(ENCODING_FEATURE_ALLOW_COMMENTS, false);
     }
 
+    public CsvSchema withAllowNullFields() {
+        return _withFeature(ENCODING_FEATURE_ALLOW_NULL_FIELDS, true);
+    }
+
+    public CsvSchema withoutAllowNullFields() {
+        return _withFeature(ENCODING_FEATURE_ALLOW_NULL_FIELDS, false);
+    }
+
     protected CsvSchema _withFeature(int feature, boolean state) {
         int newFeatures = state ? (_features | feature) : (_features & ~feature);
         return (newFeatures == _features) ? this : new CsvSchema(this, newFeatures);
@@ -1157,6 +1176,7 @@ public class CsvSchema
     public boolean skipsFirstDataRow() { return (_features & ENCODING_FEATURE_SKIP_FIRST_DATA_ROW) != 0; }
     public boolean allowsComments() { return (_features & ENCODING_FEATURE_ALLOW_COMMENTS) != 0; }
     public boolean strictHeaders() { return (_features & ENCODING_FEATURE_STRICT_HEADERS) != 0; }
+    public boolean allowNullFields() { return (_features & ENCODING_FEATURE_ALLOW_NULL_FIELDS) != 0; }
 
     /**
      * @deprecated Use {@link #usesHeader()} instead
@@ -1314,7 +1334,8 @@ public class CsvSchema
         sb.append(", header? ").append(usesHeader());
         sb.append(", skipFirst? ").append(skipsFirstDataRow());
         sb.append(", comments? ").append(allowsComments());
-        
+        sb.append(", allowNullFields? ").append(allowNullFields());
+
         sb.append(']');
         return sb.toString();
     }
