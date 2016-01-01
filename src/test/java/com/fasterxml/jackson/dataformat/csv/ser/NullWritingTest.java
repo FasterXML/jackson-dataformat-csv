@@ -2,6 +2,8 @@ package com.fasterxml.jackson.dataformat.csv.ser;
 
 import java.io.ByteArrayOutputStream;
 import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.List;
 
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.csv.*;
@@ -77,5 +79,44 @@ public class NullWritingTest extends ModuleTestBase
         String result = mapper.writer(schema).writeValueAsString(new IdDesc("id", null));
         // MUST use doubling for quotes!
         assertEquals("id,n/a\n", result);
+    }
+
+    public void testNullFieldsOfListsContainedByMainLevelListIssue106() throws Exception {
+        CsvMapper mapper = mapperForCsv();
+
+        CsvSchema schema = CsvSchema.builder().build();
+
+        List row1 = Arrays.asList("d0", null, "d2");
+        List row2 = Arrays.asList(null, "d1", "d2");
+        List row3 = Arrays.asList("d0", "d1", null);
+
+        List dataList = Arrays.asList(row1, row2, row3);
+
+        String result = mapper.writer(schema).writeValueAsString(dataList);
+        assertEquals("d0,,d2\n,d1,d2\nd0,d1,\n", result);
+
+        schema = schema.withNullValue("n/a");
+        result = mapper.writer(schema).writeValueAsString(dataList);
+        assertEquals("d0,n/a,d2\nn/a,d1,d2\nd0,d1,n/a\n", result);
+    }
+
+    public void testNullElementsOfMainLevelListIssue106() throws Exception {
+        CsvMapper mapper = mapperForCsv();
+        CsvSchema schema = CsvSchema.builder().build();
+
+        List row1 = Arrays.asList("d0", null, "d2");
+        List row2 = Arrays.asList(null, "d1", "d2");
+        List row3 = Arrays.asList("d0", "d1", null);
+
+        // when serialized, the added root level nulls at index 1 and 3
+        // should be absent from the output
+        List dataList = Arrays.asList(row1, null, row2, null, row3);
+
+        String result = mapper.writer(schema).writeValueAsString(dataList);
+        assertEquals("d0,,d2\n,d1,d2\nd0,d1,\n", result);
+
+        schema = schema.withNullValue("n/a");
+        result = mapper.writer(schema).writeValueAsString(dataList);
+        assertEquals("d0,n/a,d2\nn/a,d1,d2\nd0,d1,n/a\n", result);
     }
 }

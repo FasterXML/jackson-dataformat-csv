@@ -706,7 +706,22 @@ public class CsvGenerator extends GeneratorBase
         if (!_skipValue) {
             if (!_arraySeparator.isEmpty()) {
                 _addToArray(_schema.getNullValueOrEmpty());
-            } else if (!_writeContext.inObject()) { // as per [#69]
+            } else if (!_writeContext.inObject()) {
+
+                // per issue 106:
+                // this checks to see if this null item is at a level deeper
+                // than the root level list of items.
+                // Example Snippet:
+                //      List mainList = Arrays.asList(item1, item2, item3);
+                // If one of the item1..3 are null, it will not be processed.
+                // but if this null is part of a sub-list of item1..3,
+                // then the null will be processed.
+                if (_writeContext.getParent() != null
+                        && _writeContext.getParent().getParent() != null) {
+                    _writer.writeNull(_columnIndex());
+                }
+
+                // the initial 'inObject()' check is done as per [#69]
                 // note: 'root' not enough, for case of wrap-as array, or serialize List
                 
                 // or, to write 'empty Object' (for common case), would
@@ -714,7 +729,7 @@ public class CsvGenerator extends GeneratorBase
                 /*
                 _writer.writeNull(_columnIndex());
                 finishRow();
-*/
+                */
             } else {
                 _writer.writeNull(_columnIndex());
             }
