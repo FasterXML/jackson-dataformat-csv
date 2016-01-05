@@ -16,6 +16,8 @@ Project: jackson-dataformat-csv
 #97: Verify CSV headers are in the order as expected (added `strictHeaders` property in `CsvSchema`)
  (contributed by Nick B)
 #103: `JsonGenerator.Feature.IGNORE_UNKNOWN` does not prevent error when writing structured values
+#106: Null fields are always ignored when serializing list of objects
+ (reported, fix contributed by Brian M)
 
 2.6.5 (not yet released)
 

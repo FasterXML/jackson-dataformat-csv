@@ -706,17 +706,24 @@ public class CsvGenerator extends GeneratorBase
         if (!_skipValue) {
             if (!_arraySeparator.isEmpty()) {
                 _addToArray(_schema.getNullValueOrEmpty());
-            } else if (!_writeContext.inObject()) { // as per [#69]
-                // note: 'root' not enough, for case of wrap-as array, or serialize List
-                
-                // or, to write 'empty Object' (for common case), would
-                // write single null, then finish row, like so:
+            } else if (_writeContext.inObject()) {
+                _writer.writeNull(_columnIndex());
+            } else if (_writeContext.inArray()) {
+                // [dataformat-csv#106]: Need to make sure we don't swallow nulls in arrays either
+                // 04-Jan-2016, tatu: but check for case of array-wrapping, in which case null stands for absence
+                //   of Object. In this case, could either add an empty row, or skip -- for now, we'll
+                //   just skip; can change, if so desired, to expose "root null" as empty rows, possibly
+                //   based on either schema property, or CsvGenerator.Feature.
+                //  Note: if nulls are to be written that way, would need to call `finishRow()` right after `writeNull()`
+                if (!_writeContext.getParent().inRoot()) {
+                    _writer.writeNull(_columnIndex());
+                }
+
+                // ... so, for "root-level nulls" (with or without array-wrapping), we would do:
                 /*
                 _writer.writeNull(_columnIndex());
                 finishRow();
 */
-            } else {
-                _writer.writeNull(_columnIndex());
             }
         }
     }
