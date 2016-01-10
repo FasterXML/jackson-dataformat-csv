@@ -1337,7 +1337,7 @@ public class CsvDecoder
     }
 
     protected final JsonParseException constructError(String msg, Throwable t) {
-        return new JsonParseException(msg, getCurrentLocation(), t);
+        return new JsonParseException(_owner, msg, t);
     }
     
     protected final static String _getCharDesc(int ch)
@@ -1360,6 +1360,6 @@ public class CsvDecoder
      * Method for reporting low-level decoding (parsing) problems
      */
     protected final void _reportError(String msg) throws JsonParseException {
-        throw new JsonParseException(msg, getCurrentLocation());
+        throw new JsonParseException(_owner, msg);
     }
 }

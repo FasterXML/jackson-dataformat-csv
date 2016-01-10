@@ -118,6 +118,14 @@ public class CsvSchema
      * Marker for the case where no array element separator is used
      */
     public final static String NO_ARRAY_ELEMENT_SEPARATOR = "";
+
+    /**
+     * By default no "any properties" (properties for 'extra' columns; ones
+     * not specified in schema) are used, so <code>null</code> is used as marker.
+     *
+     * @since 2.7
+     */
+    public final static String DEFAULT_ANY_PROPERTY_NAME = null;
     
     public final static char DEFAULT_QUOTE_CHAR = '"';
 
@@ -388,7 +396,7 @@ public class CsvSchema
         protected final ArrayList<Column> _columns = new ArrayList<Column>();
 
         /**
-         * Bitflag for general-purpose on/off features.
+         * Bit-flag for general-purpose on/off features.
          * 
          * @since 2.5
          */
@@ -397,6 +405,19 @@ public class CsvSchema
         protected char _columnSeparator = DEFAULT_COLUMN_SEPARATOR;
 
         protected String _arrayElementSeparator = DEFAULT_ARRAY_ELEMENT_SEPARATOR;
+
+        /**
+         * If "any properties" (properties for 'extra' columns; ones
+         * not specified in schema) are enabled, they are mapped to
+         * this name: leaving it as <code>null</code> disables use of
+         * "any properties" (and they are either ignored, or an exception
+         * is thrown, depending on other settings); setting it to a non-null
+         * String value will expose all extra properties under one specified
+         * name. 
+         * 
+         * @since 2.7
+         */
+        protected String _anyPropertyName = DEFAULT_ANY_PROPERTY_NAME;
         
         // note: need to use int to allow -1 for 'none'
         protected int _quoteChar = DEFAULT_QUOTE_CHAR;
@@ -429,8 +450,9 @@ public class CsvSchema
             _escapeChar = src._escapeChar;
             _lineSeparator = src._lineSeparator;
             _nullValue = src._nullValue;
+            _anyPropertyName = src._anyPropertyName;
         }
-        
+
         public Builder addColumn(String name) {
             int index = _columns.size();
             return addColumn(new Column(index, name));
@@ -475,22 +497,30 @@ public class CsvSchema
             return addColumn(new Column(index, name, ColumnType.BOOLEAN));
         }
 
-        public void replaceColumn(int index, Column c) {
+        public Builder replaceColumn(int index, Column c) {
             _checkIndex(index);
             _columns.set(index, c);
+            return this;
         }
-        public void renameColumn(int index, String newName) {
+
+        public Builder renameColumn(int index, String newName) {
             _checkIndex(index);
             _columns.set(index, _columns.get(index).withName(newName));
+            return this;
         }
-        public void setColumnType(int index, ColumnType type) {
+
+        public Builder setColumnType(int index, ColumnType type) {
             _checkIndex(index);
             _columns.set(index, _columns.get(index).withType(type));
+            return this;
         }
-        public void removeArrayElementSeparator(int index) {
+
+        public Builder removeArrayElementSeparator(int index) {
             _checkIndex(index);
             _columns.set(index, _columns.get(index).withArrayElementSeparator(""));
+            return this;
         }
+
         /**
          * @deprecated use {@link #setArrayElementSeparator(String)} instead
          */
@@ -503,9 +533,15 @@ public class CsvSchema
         /**
          * @since 2.7
          */
-        public void setArrayElementSeparator(int index, String sep) {
+        public Builder setArrayElementSeparator(int index, String sep) {
             _checkIndex(index);
             _columns.set(index, _columns.get(index).withArrayElementSeparator(sep));
+            return this;
+        }
+
+        public Builder setAnyPropertyName(String name) {
+            _anyPropertyName = name;
+            return this;
         }
 
         public Builder clearColumns() {
@@ -545,7 +581,6 @@ public class CsvSchema
             _feature(ENCODING_FEATURE_REORDER_COLUMNS, b);
             return this;
         }
-
 
         /**
          * Use in combination with {@link #setUseHeader}. When use header flag is
@@ -700,7 +735,7 @@ public class CsvSchema
             return new CsvSchema(cols, _encodingFeatures,
                     _columnSeparator, _quoteChar, _escapeChar,
                     _lineSeparator, _arrayElementSeparator,
-                    _nullValue);
+                    _nullValue, _anyPropertyName);
         }
 
         protected void _checkIndex(int index) {
@@ -749,8 +784,20 @@ public class CsvSchema
     protected transient String _nullValueAsString;
 
     /**
-     * @since 2.5
-     * @deprecated use {@link #CsvSchema(Column[], int, char, int, int, char[], String, char[])} instead
+     * If "any properties" (properties for 'extra' columns; ones
+     * not specified in schema) are enabled, they are mapped to
+     * this name: leaving it as <code>null</code> disables use of
+     * "any properties" (and they are either ignored, or an exception
+     * is thrown, depending on other settings); setting it to a non-null
+     * String value will expose all extra properties under one specified
+     * name. 
+     *
+     * @since 2.7
+     */
+    protected final String _anyPropertyName;
+
+    /**
+     * @deprecated use {@link #CsvSchema(Column[], int, char, int, int, char[], String, char[], String)} instead
      */
     @Deprecated // in 2.7; remove from 2.8
     public CsvSchema(Column[] columns, int features,
@@ -758,7 +805,8 @@ public class CsvSchema
         char[] lineSeparator, int arrayElementSeparator,
         char[] nullValue) {
         this(columns, features, columnSeparator, quoteChar, escapeChar, lineSeparator,
-            arrayElementSeparator == -1 ? "" : Character.toString((char) arrayElementSeparator), nullValue);
+            arrayElementSeparator == -1 ? "" : Character.toString((char) arrayElementSeparator), nullValue,
+                    DEFAULT_ANY_PROPERTY_NAME);
     }
 
     /**
@@ -767,7 +815,7 @@ public class CsvSchema
     public CsvSchema(Column[] columns, int features,
             char columnSeparator, int quoteChar, int escapeChar,
             char[] lineSeparator, String arrayElementSeparator,
-            char[] nullValue)
+            char[] nullValue, String anyPropertyName)
     {
         if (columns == null) {
             columns = NO_COLUMNS;
@@ -782,6 +830,7 @@ public class CsvSchema
         _escapeChar = escapeChar;
         _lineSeparator = lineSeparator;
         _nullValue = nullValue;
+        _anyPropertyName = anyPropertyName;
 
         // and then we may need to create a mapping
         if (_columns.length == 0) {
@@ -802,7 +851,7 @@ public class CsvSchema
             char columnSeparator, int quoteChar, int escapeChar,
             char[] lineSeparator, String arrayElementSeparator,
             char[] nullValue,
-            Map<String,Column> columnsByName)
+            Map<String,Column> columnsByName, String anyPropertyName)
     {
         _columns = columns;
         _features = features;
@@ -813,6 +862,7 @@ public class CsvSchema
         _arrayElementSeparator = arrayElementSeparator;
         _nullValue = nullValue;
         _columnsByName = columnsByName;
+        _anyPropertyName = anyPropertyName;
     }    
 
     /**
@@ -829,7 +879,8 @@ public class CsvSchema
         _lineSeparator = base._lineSeparator;
         _arrayElementSeparator = base._arrayElementSeparator;
         _nullValue = base._nullValue;
- 
+        _anyPropertyName = base._anyPropertyName;
+
         // and then we may need to create a mapping
         if (_columns.length == 0) {
             _columnsByName = Collections.emptyMap();
@@ -855,6 +906,7 @@ public class CsvSchema
         _lineSeparator = base._lineSeparator;
         _arrayElementSeparator = base._arrayElementSeparator;
         _nullValue = base._nullValue;
+        _anyPropertyName = base._anyPropertyName;
         _columnsByName = base._columnsByName;
     }
 
@@ -1004,35 +1056,35 @@ public class CsvSchema
         return (_columnSeparator == sep) ? this :
             new CsvSchema(_columns, _features,
                     sep, _quoteChar, _escapeChar, _lineSeparator, _arrayElementSeparator,
-                    _nullValue, _columnsByName);
+                    _nullValue, _columnsByName, _anyPropertyName);
     }
 
     public CsvSchema withQuoteChar(char c) {
         return (_quoteChar == c) ? this :
             new CsvSchema(_columns, _features,
                     _columnSeparator, c, _escapeChar, _lineSeparator,_arrayElementSeparator,
-                    _nullValue, _columnsByName);
+                    _nullValue, _columnsByName, _anyPropertyName);
     }
 
     public CsvSchema withoutQuoteChar() {
         return (_quoteChar == -1) ? this :
             new CsvSchema(_columns, _features,
                     _columnSeparator, -1, _escapeChar, _lineSeparator, _arrayElementSeparator,
-                    _nullValue, _columnsByName);
+                    _nullValue, _columnsByName, _anyPropertyName);
     }
 
     public CsvSchema withEscapeChar(char c) {
         return (_escapeChar == c) ? this
                 : new CsvSchema(_columns, _features,
                         _columnSeparator, _quoteChar, c, _lineSeparator, _arrayElementSeparator,
-                        _nullValue, _columnsByName);
+                        _nullValue, _columnsByName, _anyPropertyName);
     }
 
     public CsvSchema withoutEscapeChar() {
         return (_escapeChar == -1) ? this
                 : new CsvSchema(_columns, _features,
                         _columnSeparator, _quoteChar, -1, _lineSeparator, _arrayElementSeparator,
-                        _nullValue, _columnsByName);
+                        _nullValue, _columnsByName, _anyPropertyName);
     }
 
     /**
@@ -1044,7 +1096,7 @@ public class CsvSchema
         return (Character.toString(c).equals(_arrayElementSeparator)) ? this
                 : new CsvSchema(_columns, _features,
                         _columnSeparator, _quoteChar, _escapeChar, _lineSeparator, Character.toString(c),
-                        _nullValue, _columnsByName);
+                        _nullValue, _columnsByName, _anyPropertyName);
     }
 
     /**
@@ -1054,7 +1106,7 @@ public class CsvSchema
         String sep = separator == null ? "" : separator;
         return (_arrayElementSeparator.equals(sep)) ? this : new CsvSchema(_columns, _features,
             _columnSeparator, _quoteChar, _escapeChar, _lineSeparator, separator,
-            _nullValue, _columnsByName);
+            _nullValue, _columnsByName, _anyPropertyName);
     }
 
 
@@ -1065,13 +1117,13 @@ public class CsvSchema
         return (_arrayElementSeparator.isEmpty()) ? this
                 : new CsvSchema(_columns, _features,
                         _columnSeparator, _quoteChar, _escapeChar, _lineSeparator, "",
-                        _nullValue, _columnsByName);
+                        _nullValue, _columnsByName, _anyPropertyName);
     }
     
     public CsvSchema withLineSeparator(String sep) {
         return new CsvSchema(_columns, _features,
                 _columnSeparator, _quoteChar, _escapeChar, sep.toCharArray(),
-                _arrayElementSeparator, _nullValue, _columnsByName);
+                _arrayElementSeparator, _nullValue, _columnsByName, _anyPropertyName);
     }
 
     /**
@@ -1082,15 +1134,24 @@ public class CsvSchema
                 _columnSeparator, _quoteChar, _escapeChar, _lineSeparator,
                 _arrayElementSeparator,
                 (nvl == null) ? null : nvl.toCharArray(),
-                _columnsByName);
+                _columnsByName, _anyPropertyName);
     }
     
     public CsvSchema withoutColumns() {
         return new CsvSchema(NO_COLUMNS, _features,
                 _columnSeparator, _quoteChar, _escapeChar, _lineSeparator, _arrayElementSeparator,
-                _nullValue, _columnsByName);
+                _nullValue, _columnsByName, _anyPropertyName);
     }
 
+    /**
+     * @since 2.7
+     */
+    public CsvSchema withAnyPropertyName(String name) {
+        return new CsvSchema(_columns, _features,
+                _columnSeparator, _quoteChar, _escapeChar, _lineSeparator, _arrayElementSeparator,
+                _nullValue, _columnsByName, name);
+    }
+    
     /**
      * Mutant factory method that will construct a new instance in which columns
      * are sorted based on names given as argument. Columns not listed in argument
@@ -1220,7 +1281,12 @@ public class CsvSchema
      * @since 2.5
      */
     public boolean hasArrayElementSeparator() { return !_arrayElementSeparator.isEmpty(); }
-    
+
+    /**
+     * @since 2.7
+     */
+    public String getAnyPropertyName() { return _anyPropertyName; }
+
     /*
     /**********************************************************************
     /* Public API, extended; column access
@@ -1314,6 +1380,13 @@ public class CsvSchema
         sb.append(", header? ").append(usesHeader());
         sb.append(", skipFirst? ").append(skipsFirstDataRow());
         sb.append(", comments? ").append(allowsComments());
+        sb.append(", any-properties? ");
+        String anyProp = getAnyPropertyName();
+        if (anyProp == null) {
+            sb.append("N/A");
+        } else {
+            sb.append("as '").append(anyProp).append("'");
+        }
         
         sb.append(']');
         return sb.toString();

@@ -20,6 +20,8 @@ Project: jackson-dataformat-csv
 #103: `JsonGenerator.Feature.IGNORE_UNKNOWN` does not prevent error when writing structured values
 #106: Null fields are always ignored when serializing list of objects
  (reported, fix contributed by Brian M)
+#109: Allow specifying (via `CsvSchema`) a way to map "extra" columns into specific
+ key (to use via any setter)
 
 2.6.5 (not yet released)
 

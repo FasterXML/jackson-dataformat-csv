@@ -692,51 +692,64 @@ public class CsvParser
         }
         _currentValue = next;
         if (_columnIndex >= _columnCount) {
-            _currentName = null;
-
-            // 09-Jan-2016, tatu: With [dataformat-csv#95], this may actually be just fine
-            if (Feature.IGNORE_TRAILING_UNMAPPABLE.enabledIn(_formatFeatures)) {
-                _state = STATE_SKIP_EXTRA_COLUMNS;
-                return _skipUntilEndOfLine();
-            }
-
-            // 14-Mar-2012, tatu: As per [dataformat-csv#1], let's allow one specific case
-            // of extra: if we get just one all-whitespace entry, that can be just skipped
-            if (_columnIndex == _columnCount) {
-                next = next.trim();
-                if (next.length() == 0) {
-                    /* if so, need to verify we then get the end-of-record;
-                     * easiest to do by just calling ourselves again...
-                     */
-                    return _handleNextEntryExpectEOL();
-                }
-            }
-            
-            // 21-May-2015, tatu: Need to enter recovery mode, to skip remainder of the line
-            _state = STATE_SKIP_EXTRA_COLUMNS;
-            _reportMappingError("Too many entries: expected at most "+_columnCount+" (value #"+_columnCount+" ("+next.length()+" chars) \""+next+"\")");
+            return _handleExtraColumn(next);
         }
         _state = STATE_NAMED_VALUE;
         _currentName = _schema.columnName(_columnIndex);
         return JsonToken.FIELD_NAME;
     }
 
-    protected JsonToken _handleNextEntryExpectEOL() throws IOException
+    /**
+     * Helper method called when an extraneous column value is found.
+     * What happens then depends on configuration, but there are three
+     * main choices: ignore value (and rest of line); expose extra value
+     * as "any property" using configured name, or throw an exception.
+     *
+     * @since 2.7
+     */
+    protected JsonToken _handleExtraColumn(String value) throws IOException
     {
-        String next = _reader.nextString();
+        // If "any properties" enabled, expose as such
+        String anyProp = _schema.getAnyPropertyName();
+        if (anyProp != null) {
+            _currentName = anyProp;
+            _state = STATE_NAMED_VALUE;
+            return JsonToken.FIELD_NAME;
+        }
 
-        if (next != null) { // should end of record or input
-            _reportMappingError("Too many entries: expected at most "+_columnCount+" (value #"+_columnCount+" ("+next.length()+" chars) \""+next+"\")");
+        _currentName = null;
+        // With [dataformat-csv#95] we'll simply ignore extra
+        if (Feature.IGNORE_TRAILING_UNMAPPABLE.enabledIn(_formatFeatures)) {
+            _state = STATE_SKIP_EXTRA_COLUMNS;
+            return _skipUntilEndOfLine();
         }
-        _parsingContext = _parsingContext.getParent();
-        if (!_reader.startNewLine()) {
-            _state = STATE_DOC_END;
-        } else {
-            _state = STATE_RECORD_START;
+
+        // 14-Mar-2012, tatu: As per [dataformat-csv#1], let's allow one specific case
+        // of extra: if we get just one all-whitespace entry, that can be just skipped
+        _state = STATE_SKIP_EXTRA_COLUMNS;
+        if (_columnIndex == _columnCount) {
+            value = value.trim();
+            if (value.isEmpty()) {
+                // if so, need to verify we then get the end-of-record;
+                // easiest to do by just calling ourselves again...
+                String next = _reader.nextString();
+                if (next == null) { // should end of record or input
+                    _parsingContext = _parsingContext.getParent();
+                    if (!_reader.startNewLine()) {
+                        _state = STATE_DOC_END;
+                    } else {
+                        _state = STATE_RECORD_START;
+                    }
+                    return JsonToken.END_OBJECT;
+                }
+            }
         }
-        return JsonToken.END_OBJECT;
+
+        // 21-May-2015, tatu: Need to enter recovery mode, to skip remainder of the line
+        _reportMappingError("Too many entries: expected at most "+_columnCount+" (value #"+_columnCount+" ("+value.length()+" chars) \""+value+"\")");
+        return null;
     }
-    
+
     protected JsonToken _handleNamedValue() throws IOException
     {
         // 06-Oct-2015, tatu: During recovery, may get past all regular columns,
