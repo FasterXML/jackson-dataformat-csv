@@ -47,7 +47,7 @@ public class CsvParser
         /**
          * Feature that determines how stream of records (usually CSV lines, but sometimes
          * multiple lines when linefeeds are included in quoted values) is exposed:
-         * either as a sequence of Objects (false), or as an array of Objects (true).
+         * either as a sequence of Objects (false), or as an Array of Objects (true).
          * Using stream of Objects is convenient when using
          * <code>ObjectMapper.readValues(...)</code>
          * and array of Objects convenient when binding to <code>List</code>s or
@@ -56,7 +56,17 @@ public class CsvParser
          * Default value is false, meaning that by default a CSV document is exposed as
          * a sequence of root-level Object entries.
          */
-        WRAP_AS_ARRAY(false)
+        WRAP_AS_ARRAY(false),
+
+        /**
+         * Feature that allows ignoring of unmappable "extra" columns; that is, values for
+         * columns that appear after columns for which types are defined. When disabled,
+         * an exception is thrown for such column values, but if enabled, they are
+         * silently ignored.
+         *
+         * @since 2.7
+         */
+        IGNORE_TRAILING_UNMAPPABLE(false),
         ;
 
         final boolean _defaultState;
@@ -516,17 +526,7 @@ public class CsvParser
             return (_currToken = _handleArrayValue());
         case STATE_SKIP_EXTRA_COLUMNS:
             // Need to just skip whatever remains
-            _state = STATE_RECORD_START;
-            while (_reader.nextString() != null) { }
-
-            // But once we hit the end of the logical line, get out
-            // NOTE: seems like we should always be within Object, but let's be conservative
-            // and check just in case
-            _parsingContext = _parsingContext.getParent();
-            _state = _reader.startNewLine() ? STATE_RECORD_START : STATE_DOC_END;
-            return (_currToken = _parsingContext.inArray()
-                    ? JsonToken.END_ARRAY : JsonToken.END_OBJECT);
-
+            return _skipUntilEndOfLine();
         case STATE_DOC_END:
             _reader.close();
             if (_parsingContext.inRoot()) {
@@ -690,14 +690,18 @@ public class CsvParser
             }
             return JsonToken.END_OBJECT;
         }
-        _state = STATE_NAMED_VALUE;
         _currentValue = next;
         if (_columnIndex >= _columnCount) {
             _currentName = null;
-            /* 14-Mar-2012, tatu: As per [Issue-1], let's allow one specific
-             *  case of extra: if we get just one all-whitespace entry, that
-             *  can be just skipped
-             */
+
+            // 09-Jan-2016, tatu: With [dataformat-csv#95], this may actually be just fine
+            if (Feature.IGNORE_TRAILING_UNMAPPABLE.enabledIn(_formatFeatures)) {
+                _state = STATE_SKIP_EXTRA_COLUMNS;
+                return _skipUntilEndOfLine();
+            }
+
+            // 14-Mar-2012, tatu: As per [dataformat-csv#1], let's allow one specific case
+            // of extra: if we get just one all-whitespace entry, that can be just skipped
             if (_columnIndex == _columnCount) {
                 next = next.trim();
                 if (next.length() == 0) {
@@ -707,10 +711,12 @@ public class CsvParser
                     return _handleNextEntryExpectEOL();
                 }
             }
+            
             // 21-May-2015, tatu: Need to enter recovery mode, to skip remainder of the line
             _state = STATE_SKIP_EXTRA_COLUMNS;
             _reportMappingError("Too many entries: expected at most "+_columnCount+" (value #"+_columnCount+" ("+next.length()+" chars) \""+next+"\")");
         }
+        _state = STATE_NAMED_VALUE;
         _currentName = _schema.columnName(_columnIndex);
         return JsonToken.FIELD_NAME;
     }
@@ -889,6 +895,19 @@ public class CsvParser
         setSchema(builder.build());
     }
 
+    protected final JsonToken _skipUntilEndOfLine() throws IOException
+    {
+        while (_reader.nextString() != null) { }
+
+        // But once we hit the end of the logical line, get out
+        // NOTE: seems like we should always be within Object, but let's be conservative
+        // and check just in case
+        _parsingContext = _parsingContext.getParent();
+        _state = _reader.startNewLine() ? STATE_RECORD_START : STATE_DOC_END;
+        return (_currToken = _parsingContext.inArray()
+                ? JsonToken.END_ARRAY : JsonToken.END_OBJECT);
+    }
+    
     /*
     /**********************************************************
     /* String value handling

@@ -13,6 +13,8 @@ Project: jackson-dataformat-csv
 #92: Allow multi-character separator values
  (contributed by dharaburda@github)
 #94: Change schema/mapping related `JsonParseException`s to proper `JsonMappingException`s
+#95: Add `CsvParser.Feature.IGNORE_TRAILING_UNMAPPABLE` to allow skipping of
+  all extra, unmappable columns
 #97: Verify CSV headers are in the order as expected (added `strictHeaders` property in `CsvSchema`)
  (contributed by Nick B)
 #103: `JsonGenerator.Feature.IGNORE_UNKNOWN` does not prevent error when writing structured values
