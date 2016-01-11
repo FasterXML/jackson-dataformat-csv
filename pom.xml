@@ -9,7 +9,7 @@
   <groupId>com.fasterxml.jackson.dataformat</groupId>
   <artifactId>jackson-dataformat-csv</artifactId>
   <name>Jackson-dataformat-CSV</name>
-  <version>2.7.0-rc4-SNAPSHOT</version>
+  <version>2.7.0-SNAPSHOT</version>
   <packaging>bundle</packaging>
   <description>Support for reading and writing CSV-encoded data via Jackson
 abstractions.
@@ -23,8 +23,7 @@ abstractions.
   </scm>
 
   <properties>
-    <jackson.version.annotations>2.7.0-rc3</jackson.version.annotations>
-    <jackson.version.core>2.7.0-rc3</jackson.version.core>
+    <jackson.version.core>2.7.0</jackson.version.core>
     <!-- Generate PackageVersion.java into this directory. -->
     <packageVersion.dir>com/fasterxml/jackson/dataformat/csv</packageVersion.dir>
     <packageVersion.package>${project.groupId}.csv</packageVersion.package>
@@ -49,7 +48,6 @@ abstractions.
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-      <version>${jackson.version.annotations}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
