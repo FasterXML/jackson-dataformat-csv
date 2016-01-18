@@ -9,7 +9,7 @@ Project is licensed under [Apache License 2.0](http://www.apache.org/licenses/LI
 As of version 2.3, this module is considered complete and production ready.
 All Jackson layers (streaming, databind, tree model) are supported.
 
-[![Build Status](https://fasterxml.ci.cloudbees.com/job/jackson-dataformat-csv-master/badge/icon)](https://fasterxml.ci.cloudbees.com/job/jackson-dataformat-csv-master/)
+[![Build Status](https://travis-ci.org/FasterXML/jackson-dataformat-csv.svg?branch=master)](https://travis-ci.org/FasterXML/jackson-dataformat-csv)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.fasterxml.jackson.dataformat/jackson-dataformat-csv/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.fasterxml.jackson.dataformat/jackson-dataformat-csv/)
 [![Javadoc](https://javadoc-emblem.rhcloud.com/doc/com.fasterxml.jackson.dataformat/jackson-dataformat-csv/badge.svg)](http://www.javadoc.io/doc/com.fasterxml.jackson.dataformat/jackson-dataformat-csv)
 
