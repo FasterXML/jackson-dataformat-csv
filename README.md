@@ -6,7 +6,7 @@ Project is licensed under [Apache License 2.0](http://www.apache.org/licenses/LI
 
 # Status
 
-As of version 2.3, this module is considered complete and production ready.
+Since version 2.3 this module is considered complete and production ready.
 All Jackson layers (streaming, databind, tree model) are supported.
 
 [![Build Status](https://travis-ci.org/FasterXML/jackson-dataformat-csv.svg?branch=master)](https://travis-ci.org/FasterXML/jackson-dataformat-csv)
@@ -21,7 +21,7 @@ To use this extension on Maven-based projects, use following dependency:
 <dependency>
   <groupId>com.fasterxml.jackson.dataformat</groupId>
   <artifactId>jackson-dataformat-csv</artifactId>
-  <version>2.5.3</version>
+  <version>2.7.0</version>
 </dependency>
 ```
 
