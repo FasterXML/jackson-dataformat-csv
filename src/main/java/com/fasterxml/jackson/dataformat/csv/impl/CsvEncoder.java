@@ -121,7 +121,7 @@ public class CsvEncoder
     /* Output buffering, low-level
     /**********************************************************
      */
-    
+
     /**
      * Intermediate buffer in which contents are buffered before
      * being written using {@link #_out}.
@@ -135,7 +135,7 @@ public class CsvEncoder
     protected boolean _bufferRecyclable;
     
     /**
-     * Pointer to the next available byte in {@link #_outputBuffer}
+     * Pointer to the next available char position in {@link #_outputBuffer}
      */
     protected int _outputTail = 0;
 
