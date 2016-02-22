@@ -93,6 +93,8 @@ public class TestParserQuotes extends ModuleTestBase
     public void testDefaultSimpleQuotes() throws Exception
     {
         CsvMapper mapper = mapperForCsv();
+
+        // first without array wrapping:
         mapper.disable(CsvParser.Feature.WRAP_AS_ARRAY);
         MappingIterator<String[]> it = mapper.readerFor(String[].class)
                 .readValues("\"te,st\"");
@@ -104,7 +106,18 @@ public class TestParserQuotes extends ModuleTestBase
         // 21-Feb-2016, tatu: Surprisingly this fails; not directly related to
         //    reported problem, so covered by a separate unit test, left commented out here
 //        assertFalse(it.hasNextValue());
-        
+        it.close();
+
+        // then with array wrapping
+        mapper = mapperForCsv();
+        mapper.enable(CsvParser.Feature.WRAP_AS_ARRAY);
+        it = mapper.readerFor(String[].class)
+                .readValues("\"te,st\"");
+        assertTrue(it.hasNextValue());
+        row = it.nextValue();
+        assertEquals(1, row.length);
+        assertEquals("te,st", row[0]);
+
         it.close();
     }
 }
