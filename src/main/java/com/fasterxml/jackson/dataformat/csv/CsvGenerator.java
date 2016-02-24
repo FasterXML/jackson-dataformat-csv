@@ -88,9 +88,12 @@ public class CsvGenerator extends GeneratorBase
             _defaultState = defaultState;
             _mask = (1 << ordinal());
         }
-        
+
+        @Override
         public boolean enabledIn(int flags) { return (flags & _mask) != 0; }
+        @Override
         public boolean enabledByDefault() { return _defaultState; }
+        @Override
         public int getMask() { return _mask; }
     }
 
