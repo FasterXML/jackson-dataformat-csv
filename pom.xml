@@ -24,6 +24,11 @@ abstractions.
 
   <properties>
     <jackson.version.core>2.7.1</jackson.version.core>
+
+    <!-- 23-Feb-2016, tatu: Try to keep JDK6 runtime for 2.7 at least -->
+    <javac.src.version>1.6</javac.src.version>
+    <javac.target.version>1.6</javac.target.version>
+
     <!-- Generate PackageVersion.java into this directory. -->
     <packageVersion.dir>com/fasterxml/jackson/dataformat/csv</packageVersion.dir>
     <packageVersion.package>${project.groupId}.csv</packageVersion.package>
