@@ -23,7 +23,7 @@ abstractions.
   </scm>
 
   <properties>
-    <jackson.version.core>2.7.3-SNAPSHOT</jackson.version.core>
+    <jackson.version.core>2.7.3</jackson.version.core>
 
     <!-- 23-Feb-2016, tatu: Try to keep JDK6 runtime for 2.7 at least -->
     <javac.src.version>1.6</javac.src.version>
