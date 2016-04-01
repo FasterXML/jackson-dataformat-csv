@@ -248,15 +248,6 @@ public class CsvDecoder
 
     protected BigDecimal _numberBigDecimal;
 
-    // And then other information about value itself
-
-    /**
-     * Flag that indicates whether numeric value has a negative
-     * value. That is, whether its textual representation starts
-     * with minus character.
-     */
-    protected boolean _numberNegative;
-
     /*
     /**********************************************************************
     /* Life-cycle
@@ -1069,24 +1060,33 @@ public class CsvDecoder
         if (_textBuffer.looksLikeInt()) {
             char[] buf = _textBuffer.getTextBuffer();
             int offset = _textBuffer.getTextOffset();
-            int len = buf.length - offset;
-            if (_numberNegative) {
+            char c = buf[offset];
+            boolean neg;
+            
+            if (c == '-') {
+                neg = true;
                 ++offset;
+            } else {
+                neg = false;
+                if (c == '+') {
+                    ++offset;
+                }
             }
+            int len = buf.length - offset;
             if (len <= 9) { // definitely fits in int
                 int i = NumberInput.parseInt(buf, offset, len);
-                _numberInt = _numberNegative ? -i : i;
+                _numberInt = neg ? -i : i;
                 _numTypesValid = NR_INT;
                 return;
             }
             if (len <= 18) { // definitely fits AND is easy to parse using 2 int parse calls
                 long l = NumberInput.parseLong(buf, offset, len);
-                if (_numberNegative) {
+                if (neg) {
                     l = -l;
                 }
                 // [JACKSON-230] Could still fit in int, need to check
                 if (len == 10) {
-                    if (_numberNegative) {
+                    if (neg) {
                         if (l >= MIN_INT_L) {
                             _numberInt = (int) l;
                             _numTypesValid = NR_INT;
@@ -1104,7 +1104,7 @@ public class CsvDecoder
                 _numTypesValid = NR_LONG;
                 return;
             }
-            _parseSlowIntValue(expType, buf, offset, len);
+            _parseSlowIntValue(expType, buf, offset, len, neg);
             return;
         }
         /*
@@ -1142,12 +1142,13 @@ public class CsvDecoder
         }
     }
     
-    private final void _parseSlowIntValue(int expType, char[] buf, int offset, int len)
+    private final void _parseSlowIntValue(int expType, char[] buf, int offset, int len,
+            boolean neg)
         throws IOException
     {
         String numStr = _textBuffer.contentsAsString();
         try {
-            if (NumberInput.inLongRange(buf, offset, len, _numberNegative)) {
+            if (NumberInput.inLongRange(buf, offset, len, neg)) {
                 // Probably faster to construct a String, call parse, than to use BigInteger
                 _numberLong = Long.parseLong(numStr);
                 _numTypesValid = NR_LONG;

@@ -14,7 +14,7 @@ public class StreamingReadTest extends ModuleTestBase
     public void testNumbers() throws Exception
     {
         CsvFactory factory = new CsvFactory();
-        String CSV = "111,16.25,37\n";
+        String CSV = "111,16.25,-123456789\n";
 
         CsvSchema schema = CsvSchema.builder()
                 .addColumn("a")
@@ -40,7 +40,7 @@ public class StreamingReadTest extends ModuleTestBase
         assertTrue(parser.nextFieldName(new SerializedString("c")));
 
         assertToken(JsonToken.VALUE_STRING, parser.nextToken());
-        assertEquals(37, parser.getIntValue());
+        assertEquals(-123456789, parser.getIntValue());
 
         assertToken(JsonToken.END_OBJECT, parser.nextToken());
         assertNull(parser.nextToken());

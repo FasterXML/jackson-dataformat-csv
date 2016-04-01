@@ -341,15 +341,20 @@ public final class TextBuffer
         final char[] ch = contentsAsArray();
         final int len = ch.length;
 
+        if (len == 0) {
+            return false;
+        }
+        
         int i = 0;
-        if (len > 1) {
-            char c = ch[0];
-            if (c == '-' || c == '+') {
-                ++i;
+        char c = ch[0];
+        if (c == '-' || c == '+') {
+            if (len == 1) {
+                return false;
             }
+            ++i;
         }
         for (; i < len; ++i) {
-            char c = ch[i];
+            c = ch[i];
             if (c > '9' || c < '0') {
                 return false;
             }
