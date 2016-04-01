@@ -4,6 +4,10 @@ Project: jackson-dataformat-csv
 === Releases ===
 ------------------------------------------------------------------------
 
+2.7.4 (not yet released)
+
+- Minor fixes to `parser.getIntValue()` (and related) implementations
+
 2.7.3 (16-Mar-2016)
 
 No changes since 2.7.2

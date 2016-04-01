@@ -63,6 +63,8 @@ public final class NumberInput
      */
     public final static int parseInt(String str)
     {
+    System.err.println("ParseINT/2");
+
         /* Ok: let's keep strategy simple: ignoring optional minus sign,
          * we'll accept 1 - 9 digits and parse things efficiently;
          * otherwise just defer to JDK parse functionality.

@@ -257,25 +257,6 @@ public class CsvDecoder
      */
     protected boolean _numberNegative;
 
-    /**
-     * Length of integer part of the number, in characters
-     */
-    protected int _intLength;
-
-    /**
-     * Length of the fractional part (not including decimal
-     * point or exponent), in characters.
-     * Not used for  pure integer values.
-     */
-    protected int _fractLength;
-
-    /**
-     * Length of the exponent part of the number, if any, not
-     * including 'e' marker or sign, just digits. 
-     * Not used for  pure integer values.
-     */
-    protected int _expLength;
-    
     /*
     /**********************************************************************
     /* Life-cycle
@@ -1088,7 +1069,7 @@ public class CsvDecoder
         if (_textBuffer.looksLikeInt()) {
             char[] buf = _textBuffer.getTextBuffer();
             int offset = _textBuffer.getTextOffset();
-            int len = _intLength;
+            int len = buf.length - offset;
             if (_numberNegative) {
                 ++offset;
             }
@@ -1186,9 +1167,8 @@ public class CsvDecoder
     /* Numeric conversions
     /**********************************************************************
      */    
-    
-    protected void convertNumberToInt()
-        throws IOException
+
+    protected void convertNumberToInt() throws IOException
     {
         // First, converting from long ought to be easy
         if ((_numTypesValid & NR_LONG) != 0) {
@@ -1220,8 +1200,7 @@ public class CsvDecoder
         _numTypesValid |= NR_INT;
     }
     
-    protected void convertNumberToLong()
-        throws IOException
+    protected void convertNumberToLong() throws IOException
     {
         if ((_numTypesValid & NR_INT) != 0) {
             _numberLong = _numberInt;
