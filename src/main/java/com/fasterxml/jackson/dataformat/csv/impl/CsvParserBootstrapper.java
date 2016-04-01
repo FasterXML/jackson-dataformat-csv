@@ -209,7 +209,7 @@ public final class CsvParserBootstrapper
      * be improved as necessary.
      */
     public static MatchStrength hasCSVFormat(InputAccessor acc,
-            char quoteChar, char separatorChar) throws IOException
+            int quoteChar, char separatorChar) throws IOException
     {
         // No really good heuristics for CSV, since value starts with either
         // double-quote, or alpha-num, but can also be preceded by white space...
@@ -239,20 +239,29 @@ public final class CsvParserBootstrapper
         }
         // Then possible leading space
         int ch = skipSpace(acc, b);
-        if (ch < 0) {
+        if (ch < 0) { // end of input? Unlikely but...
             return MatchStrength.INCONCLUSIVE;
         }
-        /* First of all; seeing a quote char is actually reasonable match;
-         * and same for separator char
-         * 
-         */
-        if (ch == quoteChar || ch == separatorChar) {
-            // still rather weak a match, however:
+        // Control character? Not very good either
+        if (ch < 32) {
+            return MatchStrength.NO_MATCH;
+        }
+        
+        // But seeing a quote char is actually reasonable match
+        if (ch == quoteChar) {
+            return MatchStrength.SOLID_MATCH;
+        }
+        // and separator at least weak
+        if (ch == separatorChar) {
             return MatchStrength.WEAK_MATCH;
         }
         /* otherwise, well, almost anything could in theory do it; 
          * let's trust other format detectors to find positive cases
          */
+        // Let's consider letters, numbers to suggest a good match
+        if (Character.isDigit(ch) || Character.isAlphabetic(ch)) {
+            return MatchStrength.SOLID_MATCH;
+        }
         return MatchStrength.INCONCLUSIVE;
     }
 

@@ -1,5 +1,8 @@
 package com.fasterxml.jackson.dataformat.csv.deser;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.io.SerializedString;
 import com.fasterxml.jackson.dataformat.csv.*;
@@ -58,10 +61,7 @@ public class StreamingReadTest extends ModuleTestBase
     }
 
     private void _testInts(boolean useBytes, int a, int b, int c) throws Exception {
-        String CSV = String.format("%d,%d,%d\n", a, b, c);
-        CsvParser parser = useBytes ? CSV_F.createParser(CSV.getBytes("UTF-8"))
-                : CSV_F.createParser(CSV);
-        parser.setSchema(ABC_SCHEMA);
+        CsvParser parser = _parser(String.format("%d,%d,%d\n", a, b, c), useBytes, ABC_SCHEMA);
 
         assertToken(JsonToken.START_OBJECT, parser.nextToken());
 
@@ -88,11 +88,9 @@ public class StreamingReadTest extends ModuleTestBase
         parser.close();
     }
 
-    private void _testLongs(boolean useBytes, long a, long b) throws Exception {
-        String CSV = String.format("%d,%d\n", a, b);
-        CsvParser parser = useBytes ? CSV_F.createParser(CSV.getBytes("UTF-8"))
-                : CSV_F.createParser(CSV);
-        parser.setSchema(ABC_SCHEMA);
+    private void _testLongs(boolean useBytes, long a, long b) throws Exception
+    {
+        CsvParser parser = _parser(String.format("%d,%d\n", a, b), useBytes, ABC_SCHEMA);
 
         assertToken(JsonToken.START_OBJECT, parser.nextToken());
 
@@ -114,10 +112,7 @@ public class StreamingReadTest extends ModuleTestBase
     private void _testDoubles(boolean useBytes, double a, double b, double c)
             throws Exception
     {
-        String CSV = String.format("%s,%s,%s\n", a, b, c);
-        CsvParser parser = useBytes ? CSV_F.createParser(CSV.getBytes("UTF-8"))
-                : CSV_F.createParser(CSV);
-        parser.setSchema(ABC_SCHEMA);
+        CsvParser parser = _parser(String.format("%s,%s,%s\n", a, b, c), useBytes, ABC_SCHEMA);
 
         assertToken(JsonToken.START_OBJECT, parser.nextToken());
 
@@ -142,5 +137,18 @@ public class StreamingReadTest extends ModuleTestBase
         assertNull(parser.nextToken());
         
         parser.close();
+    }
+
+    private CsvParser _parser(String csv, boolean useBytes, CsvSchema schema)
+        throws IOException
+    {
+        CsvParser p;
+        if (useBytes) {
+            p = CSV_F.createParser(new ByteArrayInputStream(csv.getBytes("UTF-8")));
+        } else {
+            p = CSV_F.createParser(csv);
+        }
+        p.setSchema(schema);
+        return p;
     }
 }

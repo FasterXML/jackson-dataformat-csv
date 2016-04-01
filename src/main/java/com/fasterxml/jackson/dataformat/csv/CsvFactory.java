@@ -150,15 +150,12 @@ public class CsvFactory extends JsonFactory
     public String getFormatName() {
         return FORMAT_NAME_CSV;
     }
-    
-    /**
-     * Sub-classes need to override this method (as of 1.8)
-     */
+
     @Override
     public MatchStrength hasFormat(InputAccessor acc) throws IOException
     {
-        // !!! TBI [Issue#2] -- but how?
-        return MatchStrength.INCONCLUSIVE;
+        return CsvParserBootstrapper.hasCSVFormat(acc, _schema.getQuoteChar(),
+                _schema.getColumnSeparator());
     }
 
     @Override
@@ -362,8 +359,7 @@ public class CsvFactory extends JsonFactory
     //protected IOContext _createContext(Object srcRef, boolean resourceManaged)
 
     /**
-     * Overridable factory method that actually instantiates desired
-     * parser.
+     * Overridable factory method that actually instantiates desired parser.
      */
     @Override
     protected CsvParser _createParser(InputStream in, IOContext ctxt) throws IOException {
