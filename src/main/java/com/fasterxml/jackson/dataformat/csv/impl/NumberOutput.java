@@ -17,10 +17,10 @@ public final class NumberOutput
     private static long MIN_INT_AS_LONG = Integer.MIN_VALUE;
     private static long MAX_INT_AS_LONG = Integer.MAX_VALUE;
 
-    final static String SMALLEST_LONG = String.valueOf(Long.MIN_VALUE);
+    private final static String SMALLEST_LONG = String.valueOf(Long.MIN_VALUE);
 
-    final static char[] LEADING_TRIPLETS = new char[4000];
-    final static char[] FULL_TRIPLETS = new char[4000];
+    private final static char[] LEADING_TRIPLETS = new char[4000];
+    private final static char[] FULL_TRIPLETS = new char[4000];
     static {
         /* Let's fill it with NULLs for ignorable leading digits,
          * and digit chars for others
@@ -47,19 +47,12 @@ public final class NumberOutput
         }
     }
 
-    final static byte[] FULL_TRIPLETS_B = new byte[4000];
+    private final static byte[] FULL_TRIPLETS_B = new byte[4000];
     static {
         for (int i = 0; i < 4000; ++i) {
             FULL_TRIPLETS_B[i] = (byte) FULL_TRIPLETS[i];
         }
     }
-    
-    final static String[] sSmallIntStrs = new String[] {
-        "0","1","2","3","4","5","6","7","8","9","10"
-    };
-    final static String[] sSmallIntStrs2 = new String[] {
-        "-1","-2","-3","-4","-5","-6","-7","-8","-9","-10"
-    };
 
     /*
     /**********************************************************
@@ -193,10 +186,14 @@ public final class NumberOutput
     /* Secondary convenience serialization methods
     /**********************************************************
      */
+/*
+    final static String[] sSmallIntStrs = new String[] {
+        "0","1","2","3","4","5","6","7","8","9","10"
+    };
+    final static String[] sSmallIntStrs2 = new String[] {
+        "-1","-2","-3","-4","-5","-6","-7","-8","-9","-10"
+    };
 
-    /* !!! 05-Aug-2008, tatus: Any ways to further optimize
-     *   these? (or need: only called by diagnostics methods?)
-     */
 
     public static String toString(int value)
     {
@@ -221,6 +218,7 @@ public final class NumberOutput
         }
         return Long.toString(value);
     }
+    */
 
     public static String toString(double value)
     {
@@ -231,7 +229,6 @@ public final class NumberOutput
     {
         return Float.toString(value);
     }
-
 
     /*
     /**********************************************************

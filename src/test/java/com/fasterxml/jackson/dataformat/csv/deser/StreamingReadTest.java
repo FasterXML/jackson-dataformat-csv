@@ -67,7 +67,12 @@ public class StreamingReadTest extends ModuleTestBase
 
         assertToken(JsonToken.FIELD_NAME, parser.nextToken());
         assertEquals("a", parser.getCurrentName());
-        assertEquals(""+a, parser.nextTextValue());
+        String numStr = String.valueOf(a);
+        assertEquals(numStr, parser.nextTextValue());
+        char[] ch = parser.getTextCharacters();
+        String str2 = new String(ch, parser.getTextOffset(), parser.getTextLength());
+        assertEquals(numStr, str2);
+        
         assertEquals(a, parser.getIntValue());
         assertEquals((long) a, parser.getLongValue());
 
