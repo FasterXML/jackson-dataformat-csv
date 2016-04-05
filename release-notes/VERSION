@@ -40,6 +40,10 @@ No changes since 2.7.0
 #109: Allow specifying (via `CsvSchema`) a way to map "extra" columns into specific
  key (to use via any setter)
 
+2.6.6 (05-Apr-2016)
+
+No changes since 2.6.5.
+
 2.6.5 (18-Jan-2016)
 
 #93: CSV mapper does not support Views or filtering correctly for serialization
