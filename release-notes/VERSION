@@ -4,7 +4,11 @@ Project: jackson-dataformat-csv
 === Releases ===
 ------------------------------------------------------------------------
 
-2.7.4 (not yet released)
+2.8.0 (not yet released)
+
+No changes since 2.7.
+
+2.7.4 (29-Apr-2016)
 
 #??: Implement basic format detection
 - Minor fixes to `parser.getIntValue()` (and related) implementations
