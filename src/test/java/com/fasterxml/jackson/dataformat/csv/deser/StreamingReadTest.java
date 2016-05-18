@@ -2,6 +2,7 @@ package com.fasterxml.jackson.dataformat.csv.deser;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.StringWriter;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.io.SerializedString;
@@ -67,11 +68,19 @@ public class StreamingReadTest extends ModuleTestBase
 
         assertToken(JsonToken.FIELD_NAME, parser.nextToken());
         assertEquals("a", parser.getCurrentName());
+
+        StringWriter w = new StringWriter();
+        assertEquals(1, parser.getText(w));
+        assertEquals("a", w.toString());
+        
         String numStr = String.valueOf(a);
         assertEquals(numStr, parser.nextTextValue());
         char[] ch = parser.getTextCharacters();
         String str2 = new String(ch, parser.getTextOffset(), parser.getTextLength());
         assertEquals(numStr, str2);
+        w = new StringWriter();
+        assertEquals(numStr.length(), parser.getText(w));
+        assertEquals(numStr, w.toString());
         
         assertEquals(a, parser.getIntValue());
         assertEquals((long) a, parser.getLongValue());

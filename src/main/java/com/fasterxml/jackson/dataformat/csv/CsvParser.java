@@ -968,6 +968,17 @@ public class CsvParser
         return 0;
     }
 
+    @Override // since 2.8
+    public int getText(Writer w) throws IOException {
+        String value = (_currToken == JsonToken.FIELD_NAME) ?
+                _currentName : _currentValue;
+        if (value == null) {
+            return 0;
+        }
+        w.write(value);
+        return value.length();
+    }
+    
     /*
     /**********************************************************************
     /* Binary (base64)
