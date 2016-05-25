@@ -8,6 +8,11 @@ Project: jackson-dataformat-csv
 
 - Removed unused `CsvEncoding` class.
 
+2.7.5 (not yet released)
+
+#124: jackson-annotations are not included as a dependency within jackson-dataformat-csv
+ (reported by zauberjoe@github)
+
 2.7.4 (29-Apr-2016)
 
 #??: Implement basic format detection
