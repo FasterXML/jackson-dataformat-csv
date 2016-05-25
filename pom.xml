@@ -48,13 +48,16 @@ abstractions.
       <artifactId>jackson-databind</artifactId>
       <version>${jackson.version.core}</version>
     </dependency>
-
-     <!-- and for testing -->
+    <!-- we do not 100% need dep here because it is transitive dependency
+        through databind: however, since it is needed anyway let's force
+        suitable version by adding direct dep
+      -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-      <scope>test</scope>
     </dependency>
+
+     <!-- and for testing -->
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
