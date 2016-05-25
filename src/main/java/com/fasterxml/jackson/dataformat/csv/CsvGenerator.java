@@ -310,7 +310,10 @@ public class CsvGenerator extends GeneratorBase
         // Nope: CSV requires at least a placeholder
         return false;
     }
-    
+
+    @Override
+    public boolean canWriteFormattedNumbers() { return true; }
+
     /*
     /**********************************************************************
     /* Overridden methods; writing field names

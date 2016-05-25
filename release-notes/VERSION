@@ -6,7 +6,7 @@ Project: jackson-dataformat-csv
 
 2.8.0 (not yet released)
 
-No changes since 2.7.
+- Removed unused `CsvEncoding` class.
 
 2.7.4 (29-Apr-2016)
 
