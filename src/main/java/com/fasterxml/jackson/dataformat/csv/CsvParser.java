@@ -1057,11 +1057,11 @@ public class CsvParser
     /* Helper methods from base class
     /**********************************************************************
      */
-    
+
     @Override
     protected void _handleEOF() throws JsonParseException {
         // I don't think there's problem with EOFs usually; except maybe in quoted stuff?
-        _reportInvalidEOF(": expected closing quote character");
+        _reportInvalidEOF(": expected closing quote character", null);
     }
 
     /*

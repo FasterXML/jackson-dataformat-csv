@@ -486,7 +486,7 @@ public class CsvGenerator extends GeneratorBase
     public final void writeEndArray() throws IOException
     {
         if (!_writeContext.inArray()) {
-            _reportError("Current context not an ARRAY but "+_writeContext.getTypeDesc());
+            _reportError("Current context not Array but "+_writeContext.typeDesc());
         }
         _writeContext = _writeContext.getParent();
         // 14-Dec-2015, tatu: To complete skipping of ignored structured value, need this:
@@ -530,7 +530,7 @@ public class CsvGenerator extends GeneratorBase
     public final void writeEndObject() throws IOException
     {
         if (!_writeContext.inObject()) {
-            _reportError("Current context not an object but "+_writeContext.getTypeDesc());
+            _reportError("Current context not Object but "+_writeContext.typeDesc());
         }
         _writeContext = _writeContext.getParent();
         // 14-Dec-2015, tatu: To complete skipping of ignored structured value, need this:
