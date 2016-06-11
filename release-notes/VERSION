@@ -8,7 +8,7 @@ Project: jackson-dataformat-csv
 
 No changes since 2.7.
 
-2.7.5 (not yet released)
+2.7.5 (11-Jun-2016)
 
 #124: jackson-annotations are not included as a dependency within jackson-dataformat-csv
  (reported by zauberjoe@github)
