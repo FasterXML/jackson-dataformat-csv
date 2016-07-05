@@ -281,7 +281,7 @@ public class CsvSchema
         }
 
         /**
-         * @deprecated use {@link #Column(int, String, ColumnType, String)} instead
+         * @deprecated use variant where `arrayElementSep` is <code>String</code>
          */
         @Deprecated // in 2.7; remove from 2.8
         public Column(int index, String name, ColumnType type, int arrayElementSep) {
