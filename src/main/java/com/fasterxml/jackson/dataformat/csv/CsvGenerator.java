@@ -543,7 +543,7 @@ public class CsvGenerator extends GeneratorBase
         // not 100% fool-proof, but chances are row should be done now
         finishRow();
     }
-    
+
     /*
     /**********************************************************
     /* Output method implementations, textual
