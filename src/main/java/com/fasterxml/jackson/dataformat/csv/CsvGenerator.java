@@ -428,6 +428,12 @@ public class CsvGenerator extends GeneratorBase
 
         // Let's mark row as closed, if we had any...
         finishRow();
+        
+        // Write the header if necessary, occurs when no rows written
+        if (_handleFirstLine) {
+            _handleFirstLine();
+        }
+
         _writer.close(_ioContext.isResourceManaged() || isEnabled(JsonGenerator.Feature.AUTO_CLOSE_TARGET));
     }
 
