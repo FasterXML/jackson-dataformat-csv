@@ -22,19 +22,19 @@ public class HeaderWriteTest extends ModuleTestBase
     public void testNoLines() throws Exception
     {
         List<String> headers = Arrays.asList("TestHeader1", "TestHeader2");
-    	List<List<String>> dataSource = Arrays.asList();
-		String result = runTest(headers, dataSource);
-		
-		assertEquals("Headers should have been written even with no other data", "TestHeader1,TestHeader2\n", result);
+        List<List<String>> dataSource = Arrays.asList();
+        String result = runTest(headers, dataSource);
+        
+        assertEquals("Headers should have been written even with no other data", "TestHeader1,TestHeader2\n", result);
     }
     
     public void testOneLine() throws Exception
     {
         List<String> headers = Arrays.asList("TestHeader1", "TestHeader2");
-    	List<List<String>> dataSource = Arrays.asList(Arrays.asList("TestValue1", "TestValue2"));
-		String result = runTest(headers, dataSource);
-		
-		assertEquals("Headers should have been written before line", "TestHeader1,TestHeader2\nTestValue1,TestValue2\n", result);
+        List<List<String>> dataSource = Arrays.asList(Arrays.asList("TestValue1", "TestValue2"));
+        String result = runTest(headers, dataSource);
+        
+        assertEquals("Headers should have been written before line", "TestHeader1,TestHeader2\nTestValue1,TestValue2\n", result);
     }
     
     private String runTest(List<String> headers, List<List<String>> dataSource) throws IOException 
@@ -48,14 +48,14 @@ public class HeaderWriteTest extends ModuleTestBase
         
         CsvSchema schema = builder.setUseHeader(true).build();
         try (SequenceWriter csvWriter = MAPPER.writerWithDefaultPrettyPrinter()
-        		                              .with(schema)
-        		                              .forType(List.class)
-        		                              .writeValues(writer);) {
+                                              .with(schema)
+                                              .forType(List.class)
+                                              .writeValues(writer);) {
             for(List<String> nextRow : dataSource) {
-            	csvWriter.write(nextRow);
+                csvWriter.write(nextRow);
             }
         }
         
-		return writer.toString();
+        return writer.toString();
     }
 }
