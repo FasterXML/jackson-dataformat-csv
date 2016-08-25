@@ -173,7 +173,7 @@ public class BasicParserTest extends ModuleTestBase {
         mi.close();
     }
 
-    // [Issue#12]
+    // [dataformat-csv#12]
     public void testEmptyHandlingForInteger() throws Exception {
         CsvSchema schema = MAPPER.typedSchemaFor(Point.class).withoutHeader();
 
@@ -194,7 +194,7 @@ public class BasicParserTest extends ModuleTestBase {
         assertNull(result.z);
     }
 
-    // [Issue#41]
+    // [dataformat-csv#41]
     public void testIncorrectDups41() throws Exception {
         final String INPUT = "\"foo\",\"bar\",\"foo\"";
         CsvSchema schema = CsvSchema.builder().addColumn("Col1").addColumn("Col2")
@@ -215,7 +215,7 @@ public class BasicParserTest extends ModuleTestBase {
         assertEquals("foo", m.get("Col3"));
     }
 
-    // for pull request 89
+    // for [dataformat-csv#89]
     public void testColumnReordering() throws IOException {
         CsvFactory factory = new CsvFactory();
         String CSV = "b,a,c\nvb,va,vc\n";
