@@ -56,7 +56,6 @@ Oliver Röss (cloudyday@github)
 * Reported #98: Escape char is not being escaped during serialization
  (2.6.4)
 
-<<<<<<< HEAD
 Justo Ruiz Ferrer (jrferrer@github)
 
 * Contributed #89: Allow choice of using header-line declaration to reorder columns
@@ -84,3 +83,8 @@ Brian Moriarty (morbrian@github)
 
 * Contributed #106: Null fields are always ignored when serializing list of objects
  (2.7.0)
+
+Peter Ansell (ansell@github)
+
+* Contributed fix for #128: Write out headers even if no data rows written
+ (2.7.7)
