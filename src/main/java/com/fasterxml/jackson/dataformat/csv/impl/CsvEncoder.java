@@ -88,6 +88,8 @@ public class CsvEncoder
      * @since 2.5
      */
     protected boolean _cfgAlwaysQuoteStrings;
+
+    protected boolean _cfgAlwaysQuoteEmptyStrings;
     
     /*
     /**********************************************************
@@ -166,6 +168,7 @@ public class CsvEncoder
         _cfgOptimalQuoting = CsvGenerator.Feature.STRICT_CHECK_FOR_QUOTING.enabledIn(csvFeatures);
         _cfgIncludeMissingTail = !CsvGenerator.Feature.OMIT_MISSING_TAIL_COLUMNS.enabledIn(_csvFeatures);
         _cfgAlwaysQuoteStrings = CsvGenerator.Feature.ALWAYS_QUOTE_STRINGS.enabledIn(csvFeatures);
+        _cfgAlwaysQuoteEmptyStrings = CsvGenerator.Feature.ALWAYS_QUOTE_EMPTY_STRINGS.enabledIn(csvFeatures);
 
         _outputBuffer = ctxt.allocConcatBuffer();
         _bufferRecyclable = true;
@@ -193,7 +196,8 @@ public class CsvEncoder
         _cfgOptimalQuoting = base._cfgOptimalQuoting;
         _cfgIncludeMissingTail = base._cfgIncludeMissingTail;
         _cfgAlwaysQuoteStrings = base._cfgAlwaysQuoteStrings;
-        
+        _cfgAlwaysQuoteEmptyStrings = base._cfgAlwaysQuoteEmptyStrings;
+
         _outputBuffer = base._outputBuffer;
         _bufferRecyclable = base._bufferRecyclable;
         _outputEnd = base._outputEnd;
@@ -232,6 +236,7 @@ public class CsvEncoder
             _cfgOptimalQuoting = CsvGenerator.Feature.STRICT_CHECK_FOR_QUOTING.enabledIn(feat);
             _cfgIncludeMissingTail = !CsvGenerator.Feature.OMIT_MISSING_TAIL_COLUMNS.enabledIn(feat);
             _cfgAlwaysQuoteStrings = CsvGenerator.Feature.ALWAYS_QUOTE_STRINGS.enabledIn(feat);
+            _cfgAlwaysQuoteEmptyStrings = CsvGenerator.Feature.ALWAYS_QUOTE_EMPTY_STRINGS.enabledIn(feat);
         }
         return this;
     }
@@ -869,6 +874,9 @@ public class CsvEncoder
         }
         if (_cfgEscapeCharacter > 0) {
             return _needsQuotingLoose(value, _cfgEscapeCharacter);
+        }
+        if (_cfgAlwaysQuoteEmptyStrings && length == 0) {
+            return true;
         }
         return _needsQuotingLoose(value);
     }
