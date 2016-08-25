@@ -6,6 +6,9 @@ Project: jackson-dataformat-csv
 
 2.9.0 (not yet released)
 
+#127: Add `CsvGenerator.Feature.ALWAYS_QUOTE_EMPTY_STRINGS` to allow forced
+  quoting of empty Strings.
+ (contributed by georgewfraser@github)
 #130: Add fluent addColumns operation to CsvSchema.Builder
  (contributed by Peter A)
 

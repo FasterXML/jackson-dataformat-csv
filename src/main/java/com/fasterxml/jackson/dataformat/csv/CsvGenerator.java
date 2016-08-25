@@ -68,6 +68,8 @@ public class CsvGenerator extends GeneratorBase
         /**
          * Feature that determines whether values written as empty Strings (from <code>java.lang.String</code>
          * valued POJO properties) should be forced to be quoted.
+         *
+         * @since 2.9
          */
         ALWAYS_QUOTE_EMPTY_STRINGS(false),
         ;

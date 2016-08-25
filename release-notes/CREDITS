@@ -88,3 +88,9 @@ Peter Ansell (ansell@github)
 
 * Contributed fix for #128: Write out headers even if no data rows written
  (2.7.7)
+
+George Fraser (georgewfraser@github)
+
+* Contributed #127: Add `CsvGenerator.Feature.ALWAYS_QUOTE_EMPTY_STRINGS` to allow forced
+  quoting of empty Strings.
+ (2.9.0)
