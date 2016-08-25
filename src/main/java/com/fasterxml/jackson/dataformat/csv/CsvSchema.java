@@ -466,6 +466,19 @@ public class CsvSchema
             _columns.add(c);
             return this;
         }
+        public Builder addColumns(Iterable<Column> cs) {
+            for (Column c : cs) {
+                _columns.add(c);
+            }
+            return this;
+        }
+        public Builder addColumns(Iterable<String> names, ColumnType type) {
+            Builder result = this;
+            for (String name : names) {
+                result = addColumn(name, type);
+            }
+            return result;
+        }
 
         public Builder addArrayColumn(String name) {
             int index = _columns.size();
