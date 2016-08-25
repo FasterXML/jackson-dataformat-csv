@@ -466,12 +466,20 @@ public class CsvSchema
             _columns.add(c);
             return this;
         }
+
+        /**
+         * @since 2.9
+         */
         public Builder addColumns(Iterable<Column> cs) {
             for (Column c : cs) {
                 _columns.add(c);
             }
             return this;
         }
+
+        /**
+         * @since 2.9
+         */
         public Builder addColumns(Iterable<String> names, ColumnType type) {
             Builder result = this;
             for (String name : names) {
