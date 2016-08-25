@@ -433,7 +433,6 @@ public class CsvGenerator extends GeneratorBase
         if (_handleFirstLine) {
             _handleFirstLine();
         }
-
         _writer.close(_ioContext.isResourceManaged() || isEnabled(JsonGenerator.Feature.AUTO_CLOSE_TARGET));
     }
 
