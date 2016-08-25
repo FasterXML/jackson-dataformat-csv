@@ -12,6 +12,9 @@ No changes since 2.7.
 
 #128: Write out headers even if no data rows written
  (contributed by Peter A)
+#132: Invalid UTF8-character in non-UTF8 file is detected too early,
+  so parsing can not be continued
+ (reported by flappingeagle@github)
 
 2.7.6 (23-Jul-2016)
 2.7.5 (11-Jun-2016)
