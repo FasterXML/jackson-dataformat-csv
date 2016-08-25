@@ -1,4 +1,4 @@
-package com.fasterxml.jackson.dataformat.csv.failing;
+package com.fasterxml.jackson.dataformat.csv.deser;
 
 import java.io.ByteArrayOutputStream;
 import java.io.CharConversionException;
