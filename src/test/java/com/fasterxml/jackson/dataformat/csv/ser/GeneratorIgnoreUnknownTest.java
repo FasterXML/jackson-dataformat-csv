@@ -122,7 +122,7 @@ public class GeneratorIgnoreUnknownTest extends ModuleTestBase
 
         String csv = writer.writeValueAsString(new PointAndArray(3,5));
 
-System.err.       println("CSV:\n"+csv);
+//System.err.       println("CSV:\n"+csv);
         
         assertNotNull(csv);
         assertEquals("3,5\n", csv);
