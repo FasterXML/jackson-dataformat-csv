@@ -188,13 +188,13 @@ public class TestGenerator extends ModuleTestBase
     public void testForcedQuoting60() throws Exception
     {
         CsvMapper mapper = mapperForCsv();
-        mapper.enable(CsvGenerator.Feature.ALWAYS_QUOTE_STRINGS);
         CsvSchema schema = CsvSchema.builder()
                                     .addColumn("id")
                                     .addColumn("amount")
                                     .build();
         String result = mapper.writer(schema)
-                              .writeValueAsString(new Entry("abc", 1.25));
+                .with(CsvGenerator.Feature.ALWAYS_QUOTE_STRINGS)
+                .writeValueAsString(new Entry("abc", 1.25));
         assertEquals("\"abc\",1.25\n", result);
 
         // Also, as per [dataformat-csv#81], should be possible to change dynamically

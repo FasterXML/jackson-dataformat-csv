@@ -3,7 +3,6 @@ package com.fasterxml.jackson.dataformat.csv.deser;
 import java.io.ByteArrayOutputStream;
 import java.io.CharConversionException;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.dataformat.csv.*;
 
