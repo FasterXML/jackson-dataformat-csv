@@ -12,6 +12,7 @@ Project: jackson-dataformat-csv
 #130: Add fluent addColumns operation to CsvSchema.Builder
  (contributed by Peter A)
 
+2.8.3 (17-Sep-2016)
 2.8.2 (30-Aug-2016)
 2.8.1 (20-Jul-2016)
 
