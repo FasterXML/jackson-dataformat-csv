@@ -8,6 +8,7 @@ Project: jackson-dataformat-csv
 
 No changes since 2.7.
 
+2.7.8 (26-Sep-2016)
 2.7.7 (27-Aug-2016)
 
 #128: Write out headers even if no data rows written
