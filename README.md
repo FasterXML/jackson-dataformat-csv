@@ -198,7 +198,7 @@ schema = schema.withColumnSeparator('|')
    // and write Java nulls as "NULL" (instead of empty string)
    .withNullValue("NULL")
    // and let's NOT allow escaping with backslash ('\')
-   .withoutEscapaChar()
+   .withoutEscapeChar()
    ;
 ObjectReader r = mapper.readerFor(Pojo.class).with(schema);
 Pojo value = r.readValue(csvInput);
