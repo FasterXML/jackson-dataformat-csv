@@ -67,6 +67,15 @@ public class CsvParser
          * @since 2.7
          */
         IGNORE_TRAILING_UNMAPPABLE(false),
+
+        /**
+         * Feature that allows there to be a trailing single extraneous data
+         * column that is empty. When this feature is disabled, any extraneous
+         * column, regardless of content will cause an exception to be thrown.
+         * Disabling this feature is only useful when
+         * IGNORE_TRAILING_UNMAPPABLE is also disabled.
+         */
+        ALLOW_TRAILING_COMMA(true),
         ;
 
         final boolean _defaultState;
@@ -730,7 +739,7 @@ public class CsvParser
         // 14-Mar-2012, tatu: As per [dataformat-csv#1], let's allow one specific case
         // of extra: if we get just one all-whitespace entry, that can be just skipped
         _state = STATE_SKIP_EXTRA_COLUMNS;
-        if (_columnIndex == _columnCount) {
+        if (_columnIndex == _columnCount && Feature.ALLOW_TRAILING_COMMA.enabledIn(_formatFeatures)) {
             value = value.trim();
             if (value.isEmpty()) {
                 // if so, need to verify we then get the end-of-record;
