@@ -78,6 +78,9 @@ Nick Babcock (nickbabcock@github)
 * Contributed #97: Verify CSV headers are in the order as expected (added `strictHeaders`
   property in `CsvSchema`)
  (2.7.0)
+* Constributed #139: Add `CsvParser.Feature.ALLOW_TRAILING_COMMA` to allow enforcing
+  strict handling
+ (2.9.0)
 
 Brian Moriarty (morbrian@github)
 
