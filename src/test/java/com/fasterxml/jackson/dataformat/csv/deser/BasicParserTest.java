@@ -194,6 +194,14 @@ public class BasicParserTest extends ModuleTestBase {
         assertNull(result.z);
     }
 
+    public void testLeadingZeroesForInts() throws Exception {
+        CsvSchema schema = MAPPER.typedSchemaFor(Point.class).withoutHeader();
+        Point result = MAPPER.readerFor(Point.class).with(schema).readValue("012,\"090\",\n");
+        assertEquals(12, result.x);
+        assertEquals(Integer.valueOf(90), result.y);
+        assertNull(result.z);
+    }
+
     // [dataformat-csv#41]
     public void testIncorrectDups41() throws Exception {
         final String INPUT = "\"foo\",\"bar\",\"foo\"";
