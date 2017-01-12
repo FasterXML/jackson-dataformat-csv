@@ -3,8 +3,8 @@
   <modelVersion>4.0.0</modelVersion> 
   <parent>
     <groupId>com.fasterxml.jackson</groupId>
-    <artifactId>jackson-parent</artifactId>
-    <version>2.8</version>
+    <artifactId>jackson-bom</artifactId>
+    <version>2.8.6</version>
   </parent>
   <groupId>com.fasterxml.jackson.dataformat</groupId>
   <artifactId>jackson-dataformat-csv</artifactId>
@@ -23,8 +23,6 @@ abstractions.
   </scm>
 
   <properties>
-    <version.jackson.core>2.8.5</version.jackson.core>
-
     <!-- Generate PackageVersion.java into this directory. -->
     <packageVersion.dir>com/fasterxml/jackson/dataformat/csv</packageVersion.dir>
     <packageVersion.package>${project.groupId}.csv</packageVersion.package>
@@ -37,12 +35,10 @@ abstractions.
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>
-      <version>${version.jackson.core}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>${version.jackson.core}</version>
     </dependency>
     <!-- we do not 100% need dep here because it is transitive dependency
         through databind: however, since it is needed anyway let's force
