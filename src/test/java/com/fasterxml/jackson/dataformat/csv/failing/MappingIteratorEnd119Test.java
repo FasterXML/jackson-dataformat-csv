@@ -19,5 +19,7 @@ public class MappingIteratorEnd119Test extends ModuleTestBase
 
         assertFalse(it.hasNextValue());
         assertFalse(it.hasNext());
+
+        it.close();
     }
 }
