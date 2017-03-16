@@ -11,6 +11,8 @@ Project: jackson-dataformat-csv
  (contributed by georgewfraser@github)
 #130: Add fluent addColumns operation to CsvSchema.Builder
  (contributed by Peter A)
+#137: Inject "missing" trailing columns as `null`s
+   (`JsonParser.Feature.INSERT_NULLS_FOR_MISSING_COLUMNS`)
 #139: Add `CsvParser.Feature.ALLOW_TRAILING_COMMA` to allow enforcing strict handling
  (contributed by Nick B)
 #142: Add methods for appending columns of a `CsvSchema` into another

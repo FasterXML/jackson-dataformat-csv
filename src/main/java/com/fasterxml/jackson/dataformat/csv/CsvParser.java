@@ -76,6 +76,20 @@ public class CsvParser
          * IGNORE_TRAILING_UNMAPPABLE is also disabled.
          */
         ALLOW_TRAILING_COMMA(true),
+
+        /**
+         * Feature that allows "inserting" virtual key / `null` value pairs in case
+         * a row contains fewer columns than declared by configured schema.
+         * This typically has the effect of forcing an explicit `null` assigment (or
+         * corresponding "null value", if so configured) at databinding level.
+         * If disabled, no extra work is done and values for "missing" columns are
+         * not exposed as part of the token stream.
+         *<p>
+         * Feature is disabled by default.
+         *
+         * @since 2.9
+         */
+        INSERT_NULLS_FOR_MISSING_COLUMNS(false),
         ;
 
         final boolean _defaultState;
@@ -173,13 +187,31 @@ public class CsvParser
     protected final static int STATE_SKIP_EXTRA_COLUMNS = 6;
 
     /**
+     * State in which we should expose name token for a "missing column"
+     * (for which placeholder `null` value is to be added as well);
+     * see {@link Feature#INSERT_NULLS_FOR_MISSING_COLUMNS} for details.
+     *
+     * @since 2.9
+     */
+    protected final static int STATE_MISSING_NAME = 7;
+
+    /**
+     * State in which we should expose `null` value token as a value for
+     * "missing" column;
+     * see {@link Feature#INSERT_NULLS_FOR_MISSING_COLUMNS} for details.
+     *
+     * @since 2.9
+     */
+    protected final static int STATE_MISSING_VALUE = 8;
+
+    /**
      * State in which end marker is returned; either
      * null (if no array wrapping), or
      * {@link JsonToken#END_ARRAY} for wrapping.
      * This step will loop, returning series of nulls
      * if {@link #nextToken} is called multiple times.
      */
-    protected final static int STATE_DOC_END = 7;
+    protected final static int STATE_DOC_END = 9;
 
     /*
     /**********************************************************************
@@ -539,6 +571,10 @@ public class CsvParser
         case STATE_SKIP_EXTRA_COLUMNS:
             // Need to just skip whatever remains
             return _skipUntilEndOfLine();
+        case STATE_MISSING_NAME:
+            return (_currToken = _handleMissingName());
+        case STATE_MISSING_VALUE:
+            return (_currToken = _handleMissingValue());
         case STATE_DOC_END:
             _reader.close();
             if (_parsingContext.inRoot()) {
@@ -618,10 +654,81 @@ public class CsvParser
 
     /*
     /**********************************************************
-    /* Parsing, helper methods
+    /* Parsing, helper methods, regular
     /**********************************************************
      */
-    
+
+    /**
+     * Method called to process the expected header line
+     */
+    protected void _readHeaderLine() throws IOException {
+        /*
+            When the header line is present and the settings ask for it
+            to be processed, two different options are possible:
+
+            a) The schema has been populated.  In this case, build a new
+               schema where the order matches the *actual* order in which
+               the given CSV file offers its columns, iif _schema.reordersColumns()
+               is set to true; there cases the consumer of the csv file
+               knows about the columns but not necessarily the order in
+               which they are defined.
+
+            b) The schema has not been populated.  In this case, build a
+               default schema based on the columns found in the header.
+         */
+
+        if (_schema.size() > 0 && !_schema.reordersColumns()) {
+            if (_schema.strictHeaders()) {
+                String name;
+                for (CsvSchema.Column column : _schema._columns) {
+                    name = _reader.nextString();
+                    if (name == null) {
+                        _reportError(String.format("Missing header %s", column.getName()));
+                    } else if (!column.getName().equals(name)) {
+                        _reportError(String.format("Expected header %s, actual header %s", column.getName(), name));
+                    }
+                }
+                if ((name = _reader.nextString()) != null) {
+                    _reportError(String.format("Extra header %s", name));
+                }
+            }
+            else {
+                //noinspection StatementWithEmptyBody
+                while (_reader.nextString() != null) { /* does nothing */ }
+            }
+            return;
+        }
+
+        // either the schema is empty or reorder columns flag is set
+        String name;
+        CsvSchema.Builder builder = _schema.rebuild().clearColumns();
+
+        while ((name = _reader.nextString()) != null) {
+            // one more thing: always trim names, regardless of config settings
+            name = name.trim();
+
+            // See if "old" schema defined type; if so, use that type...
+            CsvSchema.Column prev = _schema.column(name);
+            if (prev != null) {
+                builder.addColumn(name, prev.getType());
+            } else {
+                builder.addColumn(name);
+            }
+        }
+
+        // Ok: did we get any  columns?
+        CsvSchema newSchema = builder.build();
+        int size = newSchema.size();
+        if (size < 2) { // 1 just because we may get 'empty' header name
+            String first = (size == 0) ? "" : newSchema.columnName(0).trim();
+            if (first.length() == 0) {
+                _reportMappingError("Empty header line: can not bind data");
+            }
+        }
+        // otherwise we will use what we got
+        setSchema(builder.build());
+    }
+
     /**
      * Method called to handle details of initializing things to return
      * the very first token.
@@ -692,15 +799,13 @@ public class CsvParser
         }
 
         if (next == null) { // end of record or input...
-            _parsingContext = _parsingContext.getParent();
-            // let's handle EOF or linefeed
-            if (!_reader.startNewLine()) {
-                _state = STATE_DOC_END;
-            } else {
-                // no, just end of record
-                _state = STATE_RECORD_START;
+            // 16-Mar-2017, tatu: [dataformat-csv#137] Missing column(s)?
+            if (_columnIndex < _columnCount) {
+                if (Feature.INSERT_NULLS_FOR_MISSING_COLUMNS.enabledIn(_formatFeatures)) {
+                    return _injectMissingColumns();
+                }
             }
-            return JsonToken.END_OBJECT;
+            return _handleObjectRowEnd();
         }
         _currentValue = next;
         if (_columnIndex >= _columnCount) {
@@ -709,57 +814,6 @@ public class CsvParser
         _state = STATE_NAMED_VALUE;
         _currentName = _schema.columnName(_columnIndex);
         return JsonToken.FIELD_NAME;
-    }
-
-    /**
-     * Helper method called when an extraneous column value is found.
-     * What happens then depends on configuration, but there are three
-     * main choices: ignore value (and rest of line); expose extra value
-     * as "any property" using configured name, or throw an exception.
-     *
-     * @since 2.7
-     */
-    protected JsonToken _handleExtraColumn(String value) throws IOException
-    {
-        // If "any properties" enabled, expose as such
-        String anyProp = _schema.getAnyPropertyName();
-        if (anyProp != null) {
-            _currentName = anyProp;
-            _state = STATE_NAMED_VALUE;
-            return JsonToken.FIELD_NAME;
-        }
-
-        _currentName = null;
-        // With [dataformat-csv#95] we'll simply ignore extra
-        if (Feature.IGNORE_TRAILING_UNMAPPABLE.enabledIn(_formatFeatures)) {
-            _state = STATE_SKIP_EXTRA_COLUMNS;
-            return _skipUntilEndOfLine();
-        }
-
-        // 14-Mar-2012, tatu: As per [dataformat-csv#1], let's allow one specific case
-        // of extra: if we get just one all-whitespace entry, that can be just skipped
-        _state = STATE_SKIP_EXTRA_COLUMNS;
-        if (_columnIndex == _columnCount && Feature.ALLOW_TRAILING_COMMA.enabledIn(_formatFeatures)) {
-            value = value.trim();
-            if (value.isEmpty()) {
-                // if so, need to verify we then get the end-of-record;
-                // easiest to do by just calling ourselves again...
-                String next = _reader.nextString();
-                if (next == null) { // should end of record or input
-                    _parsingContext = _parsingContext.getParent();
-                    if (!_reader.startNewLine()) {
-                        _state = STATE_DOC_END;
-                    } else {
-                        _state = STATE_RECORD_START;
-                    }
-                    return JsonToken.END_OBJECT;
-                }
-            }
-        }
-
-        // 21-May-2015, tatu: Need to enter recovery mode, to skip remainder of the line
-        _reportMappingError("Too many entries: expected at most "+_columnCount+" (value #"+_columnCount+" ("+value.length()+" chars) \""+value+"\")");
-        return null;
     }
 
     protected JsonToken _handleNamedValue() throws IOException
@@ -849,75 +903,114 @@ public class CsvParser
         return JsonToken.VALUE_STRING;
     }
 
-    /**
-     * Method called to process the expected header line
+    /*
+    /**********************************************************
+    /* Parsing, helper methods, extra column(s)
+    /**********************************************************
      */
-    protected void _readHeaderLine() throws IOException {
-        /*
-            When the header line is present and the settings ask for it
-            to be processed, two different options are possible:
 
-            a) The schema has been populated.  In this case, build a new
-               schema where the order matches the *actual* order in which
-               the given CSV file offers its columns, iif _schema.reordersColumns()
-               is set to true; there cases the consumer of the csv file
-               knows about the columns but not necessarily the order in
-               which they are defined.
+    /**
+     * Helper method called when an extraneous column value is found.
+     * What happens then depends on configuration, but there are three
+     * main choices: ignore value (and rest of line); expose extra value
+     * as "any property" using configured name, or throw an exception.
+     *
+     * @since 2.7
+     */
+    protected JsonToken _handleExtraColumn(String value) throws IOException
+    {
+        // If "any properties" enabled, expose as such
+        String anyProp = _schema.getAnyPropertyName();
+        if (anyProp != null) {
+            _currentName = anyProp;
+            _state = STATE_NAMED_VALUE;
+            return JsonToken.FIELD_NAME;
+        }
+        _currentName = null;
+        // With [dataformat-csv#95] we'll simply ignore extra
+        if (Feature.IGNORE_TRAILING_UNMAPPABLE.enabledIn(_formatFeatures)) {
+            _state = STATE_SKIP_EXTRA_COLUMNS;
+            return _skipUntilEndOfLine();
+        }
 
-            b) The schema has not been populated.  In this case, build a
-               default schema based on the columns found in the header.
-         */
-
-        if (_schema.size() > 0 && !_schema.reordersColumns()) {
-            if (_schema.strictHeaders()) {
-                String name;
-                for (CsvSchema.Column column : _schema._columns) {
-                    name = _reader.nextString();
-                    if (name == null) {
-                        _reportError(String.format("Missing header %s", column.getName()));
-                    } else if (!column.getName().equals(name)) {
-                        _reportError(String.format("Expected header %s, actual header %s", column.getName(), name));
-                    }
+        // 14-Mar-2012, tatu: As per [dataformat-csv#1], let's allow one specific case
+        // of extra: if we get just one all-whitespace entry, that can be just skipped
+        _state = STATE_SKIP_EXTRA_COLUMNS;
+        if (_columnIndex == _columnCount && Feature.ALLOW_TRAILING_COMMA.enabledIn(_formatFeatures)) {
+            value = value.trim();
+            if (value.isEmpty()) {
+                // if so, need to verify we then get the end-of-record;
+                // easiest to do by just calling ourselves again...
+                String next = _reader.nextString();
+                if (next == null) { // should end of record or input
+                    return _handleObjectRowEnd();
                 }
-                if ((name = _reader.nextString()) != null) {
-                    _reportError(String.format("Extra header %s", name));
-                }
-            }
-            else {
-                //noinspection StatementWithEmptyBody
-                while (_reader.nextString() != null) { /* does nothing */ }
-            }
-            return;
-        }
-
-        // either the schema is empty or reorder columns flag is set
-        String name;
-        CsvSchema.Builder builder = _schema.rebuild().clearColumns();
-
-        while ((name = _reader.nextString()) != null) {
-            // one more thing: always trim names, regardless of config settings
-            name = name.trim();
-
-            // See if "old" schema defined type; if so, use that type...
-            CsvSchema.Column prev = _schema.column(name);
-            if (prev != null) {
-                builder.addColumn(name, prev.getType());
-            } else {
-                builder.addColumn(name);
             }
         }
+        // 21-May-2015, tatu: Need to enter recovery mode, to skip remainder of the line
+        _reportMappingError("Too many entries: expected at most %s (value #%d (%d chars) \"%s\")",
+                _columnCount, _columnCount, value.length(), value);
+        return null;
+    }
 
-        // Ok: did we get any  columns?
-        CsvSchema newSchema = builder.build();
-        int size = newSchema.size();
-        if (size < 2) { // 1 just because we may get 'empty' header name
-            String first = (size == 0) ? "" : newSchema.columnName(0).trim();
-            if (first.length() == 0) {
-                _reportMappingError("Empty header line: can not bind data");
-            }
+    /*
+    /**********************************************************
+    /* Parsing, helper methods, missing column(s)
+    /**********************************************************
+     */
+
+    /**
+     * Helper method called when end of row occurs before finding values for
+     * all schema-specified columns.
+     *
+     * @since 2.9
+     */
+    protected JsonToken _injectMissingColumns() throws IOException
+    {
+        _state = STATE_MISSING_VALUE;
+        _currentName = _schema.columnName(_columnIndex);
+        _currentValue = null;
+        return JsonToken.FIELD_NAME;
+    }
+
+    protected JsonToken _handleMissingName() throws IOException
+    {
+        if (++_columnIndex < _columnCount) {
+            _state = STATE_MISSING_VALUE;
+            _currentName = _schema.columnName(_columnIndex);
+            // _currentValue already set to null earlier
+            return JsonToken.FIELD_NAME;
         }
-        // otherwise we will use what we got
-        setSchema(builder.build());
+        return _handleObjectRowEnd();
+    }
+
+    protected JsonToken _handleMissingValue() throws IOException
+    {
+        _state = STATE_MISSING_NAME;
+        return JsonToken.VALUE_NULL;
+    }
+
+    /*
+    /**********************************************************
+    /* Parsing, helper methods: row end handling, recover
+    /**********************************************************
+     */
+
+    /**
+     * Helper method called to handle details of state update when end of logical
+     * record occurs.
+     *
+     * @since 2.9
+     */
+    protected final JsonToken _handleObjectRowEnd() throws IOException
+    {
+        _parsingContext = _parsingContext.getParent();
+        if (!_reader.startNewLine()) {
+            _state = STATE_DOC_END;
+        } else {
+            _state = STATE_RECORD_START;
+        }
+        return JsonToken.END_OBJECT;
     }
 
     protected final JsonToken _skipUntilEndOfLine() throws IOException
@@ -932,13 +1025,14 @@ public class CsvParser
         return (_currToken = _parsingContext.inArray()
                 ? JsonToken.END_ARRAY : JsonToken.END_OBJECT);
     }
-    
+
     /*
     /**********************************************************
     /* String value handling
     /**********************************************************
      */
-
+    
+    
     // For now we do not store char[] representation...
     @Override
     public boolean hasTextCharacters() {
@@ -1006,7 +1100,7 @@ public class CsvParser
     {
         if (_binaryValue == null) {
             if (_currToken != JsonToken.VALUE_STRING) {
-                _reportMappingError("Current token ("+_currToken+") not VALUE_STRING, can not access as binary");
+                _reportMappingError("Current token (%s) not VALUE_STRING, can not access as binary", _currToken);
             }
             ByteArrayBuilder builder = _getByteArrayBuilder();
             _decodeBase64(_currentValue, builder, variant);
@@ -1086,7 +1180,10 @@ public class CsvParser
      *
      * @since 2.7
      */
-    public void _reportMappingError(String msg)  throws JsonProcessingException {
+    public void _reportMappingError(String msg, Object... args)  throws JsonProcessingException {
+        if (args.length > 0) {
+            msg = String.format(msg, args);
+        }
         throw JsonMappingException.from(this, msg);
     }
 

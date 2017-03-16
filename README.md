@@ -83,7 +83,15 @@ CsvMapper mapper = new CsvMapper();
 Pojo value = ...;
 CsvSchema schema = mapper.schemaFor(Pojo.class); // schema from 'Pojo' definition
 String csv = mapper.writer(schema).writeValueAsString(value);
-Pojo result = mapper.readerFor(Pojo.class).with(schema).read(csv);
+MappingIterator<Pojo> it = mapper.readerFor(Pojo.class).with(schema)
+  .readValues(csv);
+// Either read them all one by one (streaming)
+while (it.hasNextValue()) {
+  Pojo value = it.nextValue();
+  // ... do something with the value
+}
+// or, alternatively all in one go
+List<Pojo> all = it.readAll();
 ```
 
 ## Data-binding without schema
@@ -235,7 +243,8 @@ Jackson supports following extension or variations:
 # Limitations
 
 * Due to tabular nature of `CSV` format, deeply nested data structures are not well supported.
-* Use of Tree Model (`JsonNode`) is supported, but only within limitations of `CSv` format.
+    * You can use `@JsonUnwrapped` to get around this
+* Use of Tree Model (`JsonNode`) is supported, but only within limitations of `CSV` format.
 
 # Future improvements
 
