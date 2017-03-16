@@ -77,12 +77,29 @@ public class CsvParser
         ALLOW_TRAILING_COMMA(true),
 
         /**
+         * Feature that allows failing (with a {@link CsvMappingException}) in cases
+         * where number of column values encountered is less than number of columns
+         * declared in active schema ("missing columns").
+         *<p>
+         * Note that this feature has precedence over {@link #INSERT_NULLS_FOR_MISSING_COLUMNS}
+         *<p>
+         * Feature is disabled by default.
+         *
+         * @since 2.9
+         */
+        FAIL_ON_MISSING_COLUMNS(false),
+        
+        /**
          * Feature that allows "inserting" virtual key / `null` value pairs in case
          * a row contains fewer columns than declared by configured schema.
          * This typically has the effect of forcing an explicit `null` assigment (or
          * corresponding "null value", if so configured) at databinding level.
          * If disabled, no extra work is done and values for "missing" columns are
          * not exposed as part of the token stream.
+         *<p>
+         * Note that this feature is only considered if
+         * {@link #INSERT_NULLS_FOR_MISSING_COLUMNS}
+         * is disabled.
          *<p>
          * Feature is disabled by default.
          *
@@ -800,9 +817,7 @@ public class CsvParser
         if (next == null) { // end of record or input...
             // 16-Mar-2017, tatu: [dataformat-csv#137] Missing column(s)?
             if (_columnIndex < _columnCount) {
-                if (Feature.INSERT_NULLS_FOR_MISSING_COLUMNS.enabledIn(_formatFeatures)) {
-                    return _injectMissingColumns();
-                }
+                return _handleMissingColumns();
             }
             return _handleObjectRowEnd();
         }
@@ -947,9 +962,8 @@ public class CsvParser
             }
         }
         // 21-May-2015, tatu: Need to enter recovery mode, to skip remainder of the line
-        _reportCsvMappingError("Too many entries: expected at most %s (value #%d (%d chars) \"%s\")",
-                _columnCount, _columnCount, value.length(), value);
-        return null;
+        return _reportCsvMappingError("Too many entries: expected at most %d (value #%d (%d chars) \"%s\")",
+                _columnCount, _columnIndex, value.length(), value);
     }
 
     /*
@@ -964,12 +978,22 @@ public class CsvParser
      *
      * @since 2.9
      */
-    protected JsonToken _injectMissingColumns() throws IOException
+    protected JsonToken _handleMissingColumns() throws IOException
     {
-        _state = STATE_MISSING_VALUE;
-        _currentName = _schema.columnName(_columnIndex);
-        _currentValue = null;
-        return JsonToken.FIELD_NAME;
+        if (Feature.FAIL_ON_MISSING_COLUMNS.enabledIn(_formatFeatures)) {
+            // First: to allow recovery, set states to expose next line, if any
+            _handleObjectRowEnd();
+            // and then report actual problem
+            return _reportCsvMappingError("Not enough column values: expected %d, found %d",
+                    _columnCount, _columnIndex);
+        }
+        if (Feature.INSERT_NULLS_FOR_MISSING_COLUMNS.enabledIn(_formatFeatures)) {
+            _state = STATE_MISSING_VALUE;
+            _currentName = _schema.columnName(_columnIndex);
+            _currentValue = null;
+            return JsonToken.FIELD_NAME;
+        }
+        return _handleObjectRowEnd();
     }
 
     protected JsonToken _handleMissingName() throws IOException
@@ -1179,7 +1203,7 @@ public class CsvParser
      *
      * @since 2.9
      */
-    public void _reportCsvMappingError(String msg, Object... args) throws JsonProcessingException {
+    public <T> T _reportCsvMappingError(String msg, Object... args) throws JsonProcessingException {
         if (args.length > 0) {
             msg = String.format(msg, args);
         }

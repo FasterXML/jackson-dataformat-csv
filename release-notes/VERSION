@@ -15,8 +15,12 @@ Project: jackson-dataformat-csv
    (`JsonParser.Feature.INSERT_NULLS_FOR_MISSING_COLUMNS`)
 #139: Add `CsvParser.Feature.ALLOW_TRAILING_COMMA` to allow enforcing strict handling
  (contributed by Nick B)
+#140: Fail for missing column values (`JsonParser.Feature.FAIL_ON_MISSING_COLUMNS`)
+ (suggested by jwilmoth@github)
 #142: Add methods for appending columns of a `CsvSchema` into another
  (suggested by Austin S)
+- Add new exception type `CsvMappingException` to indicate CSV-mapping issues (and
+  give access to effective Schema)
 
 2.8.6 (12-Jan-2017)
 2.8.5 (14-Nov-2016)
