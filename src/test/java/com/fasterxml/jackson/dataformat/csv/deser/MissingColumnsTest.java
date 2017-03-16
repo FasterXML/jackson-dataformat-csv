@@ -70,4 +70,6 @@ public class MissingColumnsTest extends ModuleTestBase
         assertNull(result.c);
         assertNull(result.d);
     }
+
+    // [dataformat-csv#140]: report error for missing columns
 }

@@ -9,7 +9,6 @@ import com.fasterxml.jackson.core.base.ParserMinimalBase;
 import com.fasterxml.jackson.core.json.DupDetector;
 import com.fasterxml.jackson.core.json.JsonReadContext;
 import com.fasterxml.jackson.core.util.ByteArrayBuilder;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.dataformat.csv.impl.CsvDecoder;
 import com.fasterxml.jackson.dataformat.csv.impl.CsvIOContext;
 import com.fasterxml.jackson.dataformat.csv.impl.TextBuffer;
@@ -722,7 +721,7 @@ public class CsvParser
         if (size < 2) { // 1 just because we may get 'empty' header name
             String first = (size == 0) ? "" : newSchema.columnName(0).trim();
             if (first.length() == 0) {
-                _reportMappingError("Empty header line: can not bind data");
+                _reportCsvMappingError("Empty header line: can not bind data");
             }
         }
         // otherwise we will use what we got
@@ -948,7 +947,7 @@ public class CsvParser
             }
         }
         // 21-May-2015, tatu: Need to enter recovery mode, to skip remainder of the line
-        _reportMappingError("Too many entries: expected at most %s (value #%d (%d chars) \"%s\")",
+        _reportCsvMappingError("Too many entries: expected at most %s (value #%d (%d chars) \"%s\")",
                 _columnCount, _columnCount, value.length(), value);
         return null;
     }
@@ -1100,7 +1099,7 @@ public class CsvParser
     {
         if (_binaryValue == null) {
             if (_currToken != JsonToken.VALUE_STRING) {
-                _reportMappingError("Current token (%s) not VALUE_STRING, can not access as binary", _currToken);
+                _reportCsvMappingError("Current token (%s) not VALUE_STRING, can not access as binary", _currToken);
             }
             ByteArrayBuilder builder = _getByteArrayBuilder();
             _decodeBase64(_currentValue, builder, variant);
@@ -1178,19 +1177,19 @@ public class CsvParser
      * (compared to a low-level generation); if so, should be surfaced
      * as 
      *
-     * @since 2.7
+     * @since 2.9
      */
-    public void _reportMappingError(String msg, Object... args)  throws JsonProcessingException {
+    public void _reportCsvMappingError(String msg, Object... args) throws JsonProcessingException {
         if (args.length > 0) {
             msg = String.format(msg, args);
         }
-        throw JsonMappingException.from(this, msg);
+        throw CsvMappingException.from(this, msg, _schema);
     }
 
     public void _reportParsingError(String msg)  throws JsonProcessingException {
         super._reportError(msg);
     }
-    
+
     public void _reportUnexpectedCsvChar(int ch, String msg)  throws JsonProcessingException {
         super._reportUnexpectedChar(ch, msg);
     }
