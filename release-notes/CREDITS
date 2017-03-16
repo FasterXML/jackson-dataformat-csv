@@ -97,3 +97,8 @@ George Fraser (georgewfraser@github)
 * Contributed #127: Add `CsvGenerator.Feature.ALWAYS_QUOTE_EMPTY_STRINGS` to allow forced
   quoting of empty Strings.
  (2.9.0)
+
+Austin Sharp (sharpau@github)
+
+* Suggested #142: Add methods for appending columns of a `CsvSchema` into another
+ (2.9.0)

@@ -22,7 +22,7 @@ public class SchemaTest extends ModuleTestBase
         public List<String> c;
     }
 
-    // for [databind#74]
+    // for [dataformat-csv#74]
     static class Point {
         public int y;
         public int x;
@@ -30,6 +30,17 @@ public class SchemaTest extends ModuleTestBase
 
     @JsonPropertyOrder()
     public static class PointWithAnnotation extends Point {}
+
+    // for [dataformat-csv#142]
+    interface Named {
+        public String getFirstName();
+        public String getLastName();
+    }
+
+    static abstract class YZ {
+        public abstract int getY();
+        public abstract int getZ();
+    }
     
     /*
     /**********************************************************************
@@ -133,7 +144,7 @@ public class SchemaTest extends ModuleTestBase
             prev = curr;
         }
     }
-    
+
     // For [dataformat-csv#74]: problems applying default do-sort handling
     public void testSchemaWithOrdering() throws Exception
     {
@@ -157,5 +168,42 @@ public class SchemaTest extends ModuleTestBase
         assertTrue(schemaWithReordering.reordersColumns());
         CsvSchema schemaWithoutReordering = schemaWithReordering.withColumnReordering(false);
         assertFalse(schemaWithoutReordering.reordersColumns());
+    }
+
+    // For [dataformat-csv#142]: append columns from POJOs
+    public void testSchemaComposition() throws Exception
+    {
+        CsvSchema pointSchema = MAPPER.typedSchemaFor(Point.class);
+        CsvSchema yzSchema = MAPPER.typedSchemaFor(YZ.class);
+        CsvSchema namedSchema = MAPPER.typedSchemaFor(Named.class);
+        
+        // should only add `z` since there's already `y`
+        CsvSchema schema = pointSchema;
+        schema = schema.withColumnsFrom(yzSchema);
+        // but then two name properties
+        schema = schema.withColumnsFrom(namedSchema);
+
+        assertEquals(5, schema.size());
+        Iterator<CsvSchema.Column> it = schema.iterator();
+        assertEquals("x", it.next().getName());
+        assertEquals("y", it.next().getName());
+        assertEquals("z", it.next().getName());
+        assertEquals("firstName", it.next().getName());
+        assertEquals("lastName", it.next().getName());
+
+        // and try alternate way as well.
+        CsvSchema.Builder builder = CsvSchema.builder();
+        builder.addColumnsFrom(yzSchema)
+            .addColumnsFrom(namedSchema)
+            .addColumnsFrom(pointSchema);
+        schema = builder.build();
+
+        assertEquals(5, schema.size());
+        it = schema.iterator();
+        assertEquals("y", it.next().getName());
+        assertEquals("z", it.next().getName());
+        assertEquals("firstName", it.next().getName());
+        assertEquals("lastName", it.next().getName());
+        assertEquals("x", it.next().getName());
     }
 }

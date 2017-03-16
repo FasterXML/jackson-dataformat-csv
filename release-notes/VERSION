@@ -12,7 +12,9 @@ Project: jackson-dataformat-csv
 #130: Add fluent addColumns operation to CsvSchema.Builder
  (contributed by Peter A)
 #139: Add `CsvParser.Feature.ALLOW_TRAILING_COMMA` to allow enforcing strict handling
-  (contributed by Nick B)
+ (contributed by Nick B)
+#142: Add methods for appending columns of a `CsvSchema` into another
+ (suggested by Austin S)
 
 2.8.6 (12-Jan-2017)
 2.8.5 (14-Nov-2016)

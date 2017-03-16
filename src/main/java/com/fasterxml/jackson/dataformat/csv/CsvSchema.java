@@ -453,21 +453,37 @@ public class CsvSchema
             _anyPropertyName = src._anyPropertyName;
         }
 
+        /**
+         * NOTE: does NOT check for duplicate column names so it is possibly to
+         * accidentally add duplicates.
+         */
         public Builder addColumn(String name) {
             int index = _columns.size();
             return addColumn(new Column(index, name));
         }
+
+        /**
+         * NOTE: does NOT check for duplicate column names so it is possibly to
+         * accidentally add duplicates.
+         */
         public Builder addColumn(String name, ColumnType type) {
             int index = _columns.size();
             return addColumn(new Column(index, name, type));
         }
 
+        /**
+         * NOTE: does NOT check for duplicate column names so it is possibly to
+         * accidentally add duplicates.
+         */
         public Builder addColumn(Column c) {
             _columns.add(c);
             return this;
         }
 
         /**
+         * NOTE: does NOT check for duplicate column names so it is possibly to
+         * accidentally add duplicates.
+         *
          * @since 2.9
          */
         public Builder addColumns(Iterable<Column> cs) {
@@ -478,12 +494,33 @@ public class CsvSchema
         }
 
         /**
+         * NOTE: does NOT check for duplicate column names so it is possibly to
+         * accidentally add duplicates.
+         *
          * @since 2.9
          */
         public Builder addColumns(Iterable<String> names, ColumnType type) {
             Builder result = this;
             for (String name : names) {
                 result = addColumn(name, type);
+            }
+            return result;
+        }
+
+        /**
+         * NOTE: unlike many other add methods, this method DOES check for, and
+         * discard, possible duplicate columns: that is, if this builder already
+         * has a column with same name as column to be added, existing column
+         * is retained and new column ignored.
+         *
+         * @since 2.9
+         */
+        public Builder addColumnsFrom(CsvSchema schema) {
+            Builder result = this;
+            for (Column col : schema) {
+                if (!hasColumn(col.getName())) {
+                    result = result.addColumn(col);
+                }
             }
             return result;
         }
@@ -577,7 +614,25 @@ public class CsvSchema
         public Iterator<Column> getColumns() {
             return _columns.iterator();
         }
-        
+
+        /**
+         *<p>
+         * NOTE: this method requires linear scan over existing columns
+         * so it may be more efficient to use other types of lookups if
+         * available (for example, {@link CsvSchema#column(String)} has a
+         * hash lookup to use).
+         *
+         * @since 2.9
+         */
+        public boolean hasColumn(String name) {
+            for (int i = 0, end = _columns.size(); i < end; ++i) {
+                if (_columns.get(i).getName().equals(name)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         /**
          * Method for specifying whether Schema should indicate that
          * a header line (first row that contains column names) is to be
@@ -1114,10 +1169,7 @@ public class CsvSchema
      */
     @Deprecated // in 2.7; remove in 2.8
     public CsvSchema withArrayElementSeparator(char c) {
-        return (Character.toString(c).equals(_arrayElementSeparator)) ? this
-                : new CsvSchema(_columns, _features,
-                        _columnSeparator, _quoteChar, _escapeChar, _lineSeparator, Character.toString(c),
-                        _nullValue, _columnsByName, _anyPropertyName);
+        return withArrayElementSeparator( Character.toString(c));
     }
 
     /**
@@ -1157,11 +1209,38 @@ public class CsvSchema
                 (nvl == null) ? null : nvl.toCharArray(),
                 _columnsByName, _anyPropertyName);
     }
-    
+
     public CsvSchema withoutColumns() {
         return new CsvSchema(NO_COLUMNS, _features,
                 _columnSeparator, _quoteChar, _escapeChar, _lineSeparator, _arrayElementSeparator,
                 _nullValue, _columnsByName, _anyPropertyName);
+    }
+
+    /**
+     * Mutant factory method that will try to combine columns of this schema with those
+     * from `toAppend`, starting with columns of this instance, and ignoring
+     * duplicates (if any) from argument `toAppend`.
+     * All settings aside from column sets are copied from `this` instance.
+     *<p>
+     * As with all `withXxx()` methods this method never modifies `this` but either
+     * returns it unmodified (if no new columns found from `toAppend`), or constructs
+     * a new instance and returns that.
+     *
+     * @since 2.9
+     */
+    public CsvSchema withColumnsFrom(CsvSchema toAppend) {
+        int addCount = toAppend.size();
+        if (addCount == 0) {
+            return this;
+        }
+        Builder b = rebuild();
+        for (int i = 0; i < addCount; ++i) {
+            Column col = toAppend.column(i);
+            if (column(col.getName()) == null) {
+                b.addColumn(col);
+            }
+        }
+        return b.build();
     }
 
     /**
@@ -1318,9 +1397,20 @@ public class CsvSchema
     public Iterator<Column> iterator() {
         return Arrays.asList(_columns).iterator();
     }
-    
+
+    /**
+     * Accessor for finding out how many columns this schema defines.
+     *
+     * @return Number of columns this schema defines
+     */
     public int size() { return _columns.length; }
-    
+
+    /**
+     * Accessor for column at specified index (0-based); index having to be within
+     *<pre>
+     *    0 &lt;= index &lt; size()
+     *</pre>
+     */
     public Column column(int index) {
         return _columns[index];
     }
