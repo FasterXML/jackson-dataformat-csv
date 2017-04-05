@@ -4,14 +4,7 @@ Project: jackson-dataformat-csv
 === Releases ===
 ------------------------------------------------------------------------
 
-2.9.0 (not yet released)
-
-#127: Add `CsvGenerator.Feature.ALWAYS_QUOTE_EMPTY_STRINGS` to allow forced
-  quoting of empty Strings.
- (contributed by georgewfraser@github)
-#130: Add fluent addColumns operation to CsvSchema.Builder
- (contributed by Peter A)
-
+2.8.8 (05-Apr-2017)
 2.8.7 (21-Feb-2017)
 2.8.6 (12-Jan-2017)
 2.8.5 (14-Nov-2016)
