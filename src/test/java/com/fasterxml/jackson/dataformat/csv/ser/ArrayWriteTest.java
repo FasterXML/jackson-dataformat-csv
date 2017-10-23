@@ -36,11 +36,12 @@ public class ArrayWriteTest extends ModuleTestBase
     /**********************************************************************
      */
 
+    private final CsvMapper MAPPER = mapperForCsv();
+    
     public void testSimpleExplicit() throws Exception
     {
-        CsvMapper mapper = mapperForCsv();
         ValueEntry input = new ValueEntry("foo", "stuff", 1, 2, 3);
-        String csv = mapper.writerWithSchemaFor(ValueEntry.class)
+        String csv = MAPPER.writerWithSchemaFor(ValueEntry.class)
                 .writeValueAsString(input)
                 .trim();
         assertEquals("foo,1;2;3,stuff", csv);
@@ -48,11 +49,10 @@ public class ArrayWriteTest extends ModuleTestBase
 
     public void testSeparatorOverride() throws Exception
     {
-        CsvMapper mapper = mapperForCsv();
         ValueEntry input = new ValueEntry("foo", "stuff", 1, 2, 3);
-        String csv = mapper.writer(CsvSchema.builder()
+        String csv = MAPPER.writer(CsvSchema.builder()
                 .addColumn("id")
-                .addArrayColumn("values", ' ')
+                .addArrayColumn("values", " ")
                 .addColumn("extra")
                 .build())
                 .writeValueAsString(input)
@@ -64,8 +64,7 @@ public class ArrayWriteTest extends ModuleTestBase
     public void testArraysWithNulls() throws Exception
     {
         Pojo90 value = new Pojo90();
-        CsvMapper mapper = mapperForCsv();
-        String csvContent = mapper.writer(mapper.schemaFor(Pojo90.class)
+        String csvContent = MAPPER.writer(MAPPER.schemaFor(Pojo90.class)
                 .withHeader())
                 .writeValueAsString(value);
         String[] lines = csvContent.split("\\n");

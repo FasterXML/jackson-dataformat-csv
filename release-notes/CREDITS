@@ -55,3 +55,50 @@ Oliver Röss (cloudyday@github)
 
 * Reported #98: Escape char is not being escaped during serialization
  (2.6.4)
+
+Justo Ruiz Ferrer (jrferrer@github)
+
+* Contributed #89: Allow choice of using header-line declaration to reorder columns
+  of explicit schema, with `CsvSchema.setReorderColumns`
+ (2.7.0)
+
+Rob Baily (rob-baily@github)
+
+* Contributed fix for #93: CSV mapper does not support Views or filtering correctly
+  for serialization
+ (2.6.5)
+
+dharaburda@github)
+
+* Contributed fix for #100: trim spaces: don't trim/strip separator character
+ (2.6.5)
+
+Nick Babcock (nickbabcock@github)
+
+* Contributed #97: Verify CSV headers are in the order as expected (added `strictHeaders`
+  property in `CsvSchema`)
+ (2.7.0)
+* Constributed #139: Add `CsvParser.Feature.ALLOW_TRAILING_COMMA` to allow enforcing
+  strict handling
+ (2.9.0)
+
+Brian Moriarty (morbrian@github)
+
+* Contributed #106: Null fields are always ignored when serializing list of objects
+ (2.7.0)
+
+Peter Ansell (ansell@github)
+
+* Contributed fix for #128: Write out headers even if no data rows written
+ (2.7.7)
+
+George Fraser (georgewfraser@github)
+
+* Contributed #127: Add `CsvGenerator.Feature.ALWAYS_QUOTE_EMPTY_STRINGS` to allow forced
+  quoting of empty Strings.
+ (2.9.0)
+
+Austin Sharp (sharpau@github)
+
+* Suggested #142: Add methods for appending columns of a `CsvSchema` into another
+ (2.9.0)

@@ -9,12 +9,6 @@ import com.fasterxml.jackson.dataformat.csv.*;
 
 public class TestParserWithHeader extends ModuleTestBase
 {
-    /*
-    /**********************************************************************
-    /* Helper types
-    /**********************************************************************
-     */
-
     @JsonPropertyOrder({ "age", "name", "cute" })
     protected static class Entry {
         public int age;

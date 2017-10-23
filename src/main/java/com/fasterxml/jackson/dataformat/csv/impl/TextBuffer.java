@@ -135,23 +135,6 @@ public final class TextBuffer
         }
     }
 
-    public void resetWithShared(char[] buf, int start, int len)
-    {
-        // First, let's clear intermediate values, if any:
-        _resultString = null;
-        _resultArray = null;
-
-        // Then let's mark things we need about input buffer
-        _inputBuffer = buf;
-        _inputStart = start;
-        _inputLen = len;
-
-        // And then reset internal input buffers, if necessary:
-        if (_hasSegments) {
-            clearSegments();
-        }
-    }
-
     public void resetWithString(String value)
     {
         _inputBuffer = null;
@@ -165,7 +148,6 @@ public final class TextBuffer
             clearSegments();
         }
         _currentSize = 0;
-        
     }
     
     /**
@@ -341,15 +323,20 @@ public final class TextBuffer
         final char[] ch = contentsAsArray();
         final int len = ch.length;
 
+        if (len == 0) {
+            return false;
+        }
+        
         int i = 0;
-        if (len > 1) {
-            char c = ch[0];
-            if (c == '-' || c == '+') {
-                ++i;
+        char c = ch[0];
+        if (c == '-' || c == '+') {
+            if (len == 1) {
+                return false;
             }
+            ++i;
         }
         for (; i < len; ++i) {
-            char c = ch[i];
+            c = ch[i];
             if (c > '9' || c < '0') {
                 return false;
             }
@@ -490,22 +477,6 @@ public final class TextBuffer
         _currentSize = 0;
         _currentSegment = curr;
         return curr;
-    }
-
-    /*
-    /**********************************************************
-    /* Standard methods:
-    /**********************************************************
-     */
-
-    /**
-     * Note: calling this method may not be as efficient as calling
-     * {@link #contentsAsString}, since it's not guaranteed that resulting
-     * String is cached.
-     */
-    @Override
-    public String toString() {
-         return contentsAsString();
     }
 
     /*

@@ -1,19 +1,17 @@
 package com.fasterxml.jackson.dataformat.csv.ser;
 
+import java.io.File;
+import java.io.StringWriter;
+
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.core.JsonGenerationException;
+
 import com.fasterxml.jackson.core.JsonGenerator;
+
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.dataformat.csv.CsvFactory;
-import com.fasterxml.jackson.dataformat.csv.CsvGenerator;
-import com.fasterxml.jackson.dataformat.csv.CsvMapper;
-import com.fasterxml.jackson.dataformat.csv.CsvSchema;
-import com.fasterxml.jackson.dataformat.csv.ModuleTestBase;
-
-import java.io.File;
-import java.io.StringWriter;
+import com.fasterxml.jackson.dataformat.csv.*;
 
 public class TestGenerator extends ModuleTestBase
 {
@@ -94,7 +92,7 @@ public class TestGenerator extends ModuleTestBase
         try {
             mapper.writer(schema).writeValueAsString(user);        
             fail("Should fail without columns");
-        } catch (JsonGenerationException e) {
+        } catch (JsonMappingException e) {
             verifyException(e, "contains no column names");
         }
     }
@@ -190,14 +188,39 @@ public class TestGenerator extends ModuleTestBase
     public void testForcedQuoting60() throws Exception
     {
         CsvMapper mapper = mapperForCsv();
-        mapper.enable(CsvGenerator.Feature.ALWAYS_QUOTE_STRINGS);
         CsvSchema schema = CsvSchema.builder()
-            .addColumn("id")
-            .addColumn("amount")
-            .build();
+                                    .addColumn("id")
+                                    .addColumn("amount")
+                                    .build();
         String result = mapper.writer(schema)
+                .with(CsvGenerator.Feature.ALWAYS_QUOTE_STRINGS)
                 .writeValueAsString(new Entry("abc", 1.25));
         assertEquals("\"abc\",1.25\n", result);
+
+        // Also, as per [dataformat-csv#81], should be possible to change dynamically
+        result = mapper.writer(schema)
+                       .without(CsvGenerator.Feature.ALWAYS_QUOTE_STRINGS)
+                       .writeValueAsString(new Entry("xyz", 2.5));
+        assertEquals("xyz,2.5\n", result);
+    }
+
+    public void testForcedQuotingEmptyStrings() throws Exception
+    {
+        CsvMapper mapper = mapperForCsv();
+        mapper.enable(CsvGenerator.Feature.ALWAYS_QUOTE_EMPTY_STRINGS);
+        CsvSchema schema = CsvSchema.builder()
+                                    .addColumn("id")
+                                    .addColumn("amount")
+                                    .build();
+        String result = mapper.writer(schema)
+                              .writeValueAsString(new Entry("", 1.25));
+        assertEquals("\"\",1.25\n", result);
+
+        // Also, as per [dataformat-csv#81], should be possible to change dynamically
+        result = mapper.writer(schema)
+                       .without(CsvGenerator.Feature.ALWAYS_QUOTE_EMPTY_STRINGS)
+                       .writeValueAsString(new Entry("", 2.5));
+        assertEquals(",2.5\n", result);
     }
 
     // Must comment '#', at least if it starts the line

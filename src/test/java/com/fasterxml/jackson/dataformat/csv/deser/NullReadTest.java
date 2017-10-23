@@ -44,7 +44,6 @@ public class NullReadTest extends ModuleTestBase
         String expectedCsv = "foo,bar,123\ntest,abc,42\n";
         String actualCsv = writer.writeValueAsString(list);
 
-System.err.println("CSV:["+actualCsv+"]");        
         assertEquals(expectedCsv, actualCsv);
     }
     

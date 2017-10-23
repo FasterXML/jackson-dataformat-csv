@@ -7,11 +7,6 @@ import com.fasterxml.jackson.dataformat.csv.ModuleTestBase;
 
 public class TestParserEscapes extends ModuleTestBase
 {
-    /*
-    /**********************************************************************
-    /* Helper types
-    /**********************************************************************
-     */
     @JsonPropertyOrder({"id", "description"})
     protected static class Desc {
         public String id, desc;

@@ -3,13 +3,13 @@
   <modelVersion>4.0.0</modelVersion> 
   <parent>
     <groupId>com.fasterxml.jackson</groupId>
-    <artifactId>jackson-parent</artifactId>
-    <version>2.6.2</version>
+    <artifactId>jackson-bom</artifactId>
+    <version>2.9.0.pr2-SNAPSHOT</version>
   </parent>
   <groupId>com.fasterxml.jackson.dataformat</groupId>
   <artifactId>jackson-dataformat-csv</artifactId>
   <name>Jackson-dataformat-CSV</name>
-  <version>2.6.4</version>
+  <version>2.9.0.pr2-SNAPSHOT</version>
   <packaging>bundle</packaging>
   <description>Support for reading and writing CSV-encoded data via Jackson
 abstractions.
@@ -19,31 +19,15 @@ abstractions.
     <connection>scm:git:git@github.com:FasterXML/jackson-dataformat-csv.git</connection>
     <developerConnection>scm:git:git@github.com:FasterXML/jackson-dataformat-csv.git</developerConnection>
     <url>http://github.com/FasterXML/jackson-dataformat-csv</url>    
-    <tag>jackson-dataformat-csv-2.6.4</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <properties>
-    <jackson.version.annotations>2.6.0</jackson.version.annotations>
-    <jackson.version.core>2.6.4</jackson.version.core>
     <!-- Generate PackageVersion.java into this directory. -->
     <packageVersion.dir>com/fasterxml/jackson/dataformat/csv</packageVersion.dir>
     <packageVersion.package>${project.groupId}.csv</packageVersion.package>
-
-    <osgi.export>${project.groupId}.csv;version=${project.version}
-</osgi.export>
     <osgi.private>com.fasterxml.jackson.dataformat.csv.impl</osgi.private>
-    <osgi.import>com.fasterxml.jackson.core
-,com.fasterxml.jackson.core.base
-,com.fasterxml.jackson.core.format
-,com.fasterxml.jackson.core.io
-,com.fasterxml.jackson.core.json
-,com.fasterxml.jackson.core.type
-,com.fasterxml.jackson.core.util
-,com.fasterxml.jackson.databind
-,com.fasterxml.jackson.databind.introspect
-,com.fasterxml.jackson.databind.type
-,com.fasterxml.jackson.databind.util
-</osgi.import>
+    <!-- default OSGi import ought to work -->
   </properties>
 
   <dependencies>
@@ -51,19 +35,24 @@ abstractions.
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>
-      <version>${jackson.version.core}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>${jackson.version.core}</version>
+    </dependency>
+    <!-- we do not 100% need dep here because it is transitive dependency
+        through databind: however, since it is needed anyway let's force
+        suitable version by adding direct dep
+      -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
     </dependency>
 
      <!-- and for testing -->
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-annotations</artifactId>
-      <version>${jackson.version.annotations}</version>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

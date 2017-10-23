@@ -4,6 +4,98 @@ Project: jackson-dataformat-csv
 === Releases ===
 ------------------------------------------------------------------------
 
+2.9.0 (not yet released)
+
+#127: Add `CsvGenerator.Feature.ALWAYS_QUOTE_EMPTY_STRINGS` to allow forced
+  quoting of empty Strings.
+ (contributed by georgewfraser@github)
+#130: Add fluent addColumns operation to CsvSchema.Builder
+ (contributed by Peter A)
+#137: Inject "missing" trailing columns as `null`s
+   (`JsonParser.Feature.INSERT_NULLS_FOR_MISSING_COLUMNS`)
+#139: Add `CsvParser.Feature.ALLOW_TRAILING_COMMA` to allow enforcing strict handling
+ (contributed by Nick B)
+#140: Fail for missing column values (`JsonParser.Feature.FAIL_ON_MISSING_COLUMNS`)
+ (suggested by jwilmoth@github)
+#142: Add methods for appending columns of a `CsvSchema` into another
+ (suggested by Austin S)
+- Add new exception type `CsvMappingException` to indicate CSV-mapping issues (and
+  give access to effective Schema)
+
+2.8.6 (12-Jan-2017)
+2.8.5 (14-Nov-2016)
+2.8.4 (14-Oct-2016)
+2.8.3 (17-Sep-2016)
+2.8.2 (30-Aug-2016)
+2.8.1 (20-Jul-2016)
+
+No changes since 2.8.0.
+
+2.8.0 (04-Jul-2016)
+
+- Removed unused `CsvEncoding` class.
+
+2.7.7 (not yet released)
+
+#128: Write out headers even if no data rows written
+ (contributed by Peter A)
+#132: Invalid UTF8-character in non-UTF8 file is detected too early,
+  so parsing can not be continued
+ (reported by flappingeagle@github)
+
+2.7.6 (23-Jul-2016)
+2.7.5 (11-Jun-2016)
+
+#124: jackson-annotations are not included as a dependency within jackson-dataformat-csv
+ (reported by zauberjoe@github)
+
+2.7.4 (29-Apr-2016)
+
+#??: Implement basic format detection
+- Minor fixes to `parser.getIntValue()` (and related) implementations
+
+2.7.3 (16-Mar-2016)
+
+No changes since 2.7.2
+
+2.7.2 (27-Feb-2016)
+
+- Change build to produce JDK6-compatible jar, to allow use on JDK6 runtime
+
+2.7.1 (02-Feb-2016)
+
+No changes since 2.7.0
+
+2.7.0 (10-Jan-2016)
+
+#81: Add alternative way to configure 'wrap-as-array', as `CsvParser` feature
+#89: Allow choice of using header-line declaration to reorder columns of explicit schema,
+  with `CsvSchema.setReorderColumns`
+ (contributed by Justo-Ruiz F)
+#92: Allow multi-character separator values
+ (contributed by dharaburda@github)
+#94: Change schema/mapping related `JsonParseException`s to proper `JsonMappingException`s
+#95: Add `CsvParser.Feature.IGNORE_TRAILING_UNMAPPABLE` to allow skipping of
+  all extra, unmappable columns
+#97: Verify CSV headers are in the order as expected (added `strictHeaders` property in `CsvSchema`)
+ (contributed by Nick B)
+#103: `JsonGenerator.Feature.IGNORE_UNKNOWN` does not prevent error when writing structured values
+#106: Null fields are always ignored when serializing list of objects
+ (reported, fix contributed by Brian M)
+#109: Allow specifying (via `CsvSchema`) a way to map "extra" columns into specific
+ key (to use via any setter)
+
+2.6.6 (05-Apr-2016)
+
+No changes since 2.6.5.
+
+2.6.5 (18-Jan-2016)
+
+#93: CSV mapper does not support Views or filtering correctly for serialization
+ (reported by triviski@github; fix contributed by Rob B)
+#96: SortedBy only apply to headers and actual data
+ (reported by ShijunK@github)
+
 2.6.4 (07-Dec-2015)
 
 #90: Unexpected output with arrays starting with a null/empty element

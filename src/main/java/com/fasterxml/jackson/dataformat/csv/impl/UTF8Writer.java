@@ -41,10 +41,8 @@ public final class UTF8Writer
         _out = out;
 
         _outBuffer = ctxt.allocWriteEncodingBuffer();
-        /* Max. expansion for a single char (in unmodified UTF-8) is
-         * 4 bytes (or 3 depending on how you view it -- 4 when recombining
-         * surrogate pairs)
-         */
+        // Max. expansion for a single char (in unmodified UTF-8) is 4 bytes (or 3 depending
+        // on how you view it -- 4 when recombining surrogate pairs)
         _outBufferEnd = _outBuffer.length - 4;
         _outPtr = 0;
     }
@@ -139,7 +137,7 @@ public final class UTF8Writer
             }
 
             int c = cbuf[off++];
-            // And then see if we have an Ascii char:
+            // And then see if we have an ASCII char:
             if (c < 0x80) { // If so, can do a tight inner loop:
                 outBuf[outPtr++] = (byte)c;
                 // Let's calc how many ascii chars we can copy at most:

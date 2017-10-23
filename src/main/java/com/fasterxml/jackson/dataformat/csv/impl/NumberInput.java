@@ -57,63 +57,6 @@ public final class NumberInput
         return num;
     }
 
-    /**
-     * Helper method to (more) efficiently parse integer numbers from
-     * String values.
-     */
-    public final static int parseInt(String str)
-    {
-        /* Ok: let's keep strategy simple: ignoring optional minus sign,
-         * we'll accept 1 - 9 digits and parse things efficiently;
-         * otherwise just defer to JDK parse functionality.
-         */
-        char c = str.charAt(0);
-        int length = str.length();
-        boolean negative = (c == '-');
-        int offset = 1;
-        // must have 1 - 9 digits after optional sign:
-        // negative?
-        if (negative) {
-            if (length == 1 || length > 10) {
-                return Integer.parseInt(str);
-            }
-            c = str.charAt(offset++);
-        } else {
-            if (length > 9) {
-                return Integer.parseInt(str);
-            }
-        }
-        if (c > '9' || c < '0') {
-            return Integer.parseInt(str);
-        }
-        int num = c - '0';
-        if (offset < length) {
-            c = str.charAt(offset++);
-            if (c > '9' || c < '0') {
-                return Integer.parseInt(str);
-            }
-            num = (num * 10) + (c - '0');
-            if (offset < length) {
-                c = str.charAt(offset++);
-                if (c > '9' || c < '0') {
-                    return Integer.parseInt(str);
-                }
-                num = (num * 10) + (c - '0');
-                // Let's just loop if we have more than 3 digits:
-                if (offset < length) {
-                    do {
-                        c = str.charAt(offset++);
-                        if (c > '9' || c < '0') {
-                            return Integer.parseInt(str);
-                        }
-                        num = (num * 10) + (c - '0');
-                    } while (offset < length);
-                }
-            }
-        }
-        return negative ? -num : num;
-    }
-    
     public final static long parseLong(char[] digitChars, int offset, int len)
     {
         // Note: caller must ensure length is [10, 18]
@@ -122,19 +65,6 @@ public final class NumberInput
         return val + parseInt(digitChars, offset+len1, 9);
     }
 
-    public final static long parseLong(String str)
-    {
-        /* Ok, now; as the very first thing, let's just optimize case of "fake longs";
-         * that is, if we know they must be ints, call int parsing
-         */
-        int length = str.length();
-        if (length <= 9) {
-            return parseInt(str);
-        }
-        // !!! TODO: implement efficient 2-int parsing...
-        return Long.parseLong(str);
-    }
-    
     /**
      * Helper method for determining if given String representation of
      * an integral number would fit in 64-bit Java long or not.

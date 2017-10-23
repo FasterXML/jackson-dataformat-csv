@@ -8,7 +8,6 @@ import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.JsonParser.NumberType;
 import com.fasterxml.jackson.core.json.JsonReadContext;
 import com.fasterxml.jackson.core.io.IOContext;
-
 import com.fasterxml.jackson.dataformat.csv.CsvParser;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 
@@ -249,34 +248,6 @@ public class CsvDecoder
 
     protected BigDecimal _numberBigDecimal;
 
-    // And then other information about value itself
-
-    /**
-     * Flag that indicates whether numeric value has a negative
-     * value. That is, whether its textual representation starts
-     * with minus character.
-     */
-    protected boolean _numberNegative;
-
-    /**
-     * Length of integer part of the number, in characters
-     */
-    protected int _intLength;
-
-    /**
-     * Length of the fractional part (not including decimal
-     * point or exponent), in characters.
-     * Not used for  pure integer values.
-     */
-    protected int _fractLength;
-
-    /**
-     * Length of the exponent part of the number, if any, not
-     * including 'e' marker or sign, just digits. 
-     * Not used for  pure integer values.
-     */
-    protected int _expLength;
-    
     /*
     /**********************************************************************
     /* Life-cycle
@@ -284,20 +255,21 @@ public class CsvDecoder
      */
 
     public CsvDecoder(CsvParser owner, IOContext ctxt, Reader r, CsvSchema schema, TextBuffer textBuffer,
-            boolean autoCloseInput, boolean trimSpaces)
+            int stdFeatures, int csvFeatures)
+//            boolean autoCloseInput, boolean trimSpaces)
     {
         _owner = owner;
         _ioContext = ctxt;
         _inputSource = r;
         _textBuffer = textBuffer;
-        _autoCloseInput = autoCloseInput;
-        _trimSpaces = trimSpaces;
+        _autoCloseInput =  JsonParser.Feature.AUTO_CLOSE_SOURCE.enabledIn(stdFeatures);
+        _allowComments = JsonParser.Feature.ALLOW_YAML_COMMENTS.enabledIn(stdFeatures);
+        _trimSpaces = CsvParser.Feature.TRIM_SPACES.enabledIn(csvFeatures);
         _inputBuffer = ctxt.allocTokenBuffer();
         _bufferRecyclable = true; // since we allocated it
         _inputSource = r;
         _tokenInputRow = -1;
         _tokenInputCol = -1;
-        _allowComments = owner.isEnabled(JsonParser.Feature.ALLOW_YAML_COMMENTS);
         setSchema(schema);
     }
 
@@ -313,7 +285,14 @@ public class CsvDecoder
         max = Math.max(max, '\n');
         _maxSpecialChar = max;
     }
-    
+
+    /**
+     * @since 2.7
+     */
+    public void overrideFormatFeatures(int csvFeatures) {
+        _trimSpaces = CsvParser.Feature.TRIM_SPACES.enabledIn(csvFeatures);
+    }
+
     /*
     /**********************************************************************
     /* JsonParser implementations passed-through by CsvParser
@@ -774,7 +753,7 @@ public class CsvDecoder
             int ptr = _inputPtr;
             if (ptr >= _inputEnd) {
                 if (!loadMore()) { // not ok, missing end quote
-                    _owner._reportCsvError("Missing closing quote for value"); // should indicate start position?
+                    _owner._reportParsingError("Missing closing quote for value"); // should indicate start position?
                 }
                 ptr = _inputPtr;
                 if (checkLF && inputBuffer[ptr] == '\n') {
@@ -856,7 +835,8 @@ public class CsvDecoder
                 }
                 continue;
             }
-            _owner._reportUnexpectedCsvChar(ch, "Expected separator ("+_getCharDesc(_quoteChar)+") or end-of-line");
+            _owner._reportUnexpectedCsvChar(ch, String.format(
+                    "Expected separator (%s) or end-of-line", _getCharDesc(_quoteChar)));
         }
         return result;
     }
@@ -908,9 +888,10 @@ public class CsvDecoder
         }
         return _inputBuffer[_inputPtr++];
     }
-    
+
     protected final int _skipLeadingSpace() throws IOException
     {
+        final int sep = _separatorChar;
         while (true) {
             if (_inputPtr >= _inputEnd) {
                 if (!loadMore()) {
@@ -918,7 +899,7 @@ public class CsvDecoder
                 }
             }
             char ch = _inputBuffer[_inputPtr++];
-            if (ch > ' ') {
+            if ((ch > ' ') || (ch == sep)) {
                 return ch;
             }
             switch (ch) {
@@ -928,7 +909,7 @@ public class CsvDecoder
             }
         }
     }
-    
+
     /*
     /**********************************************************************
     /* Numeric accessors for CsvParser
@@ -1080,24 +1061,33 @@ public class CsvDecoder
         if (_textBuffer.looksLikeInt()) {
             char[] buf = _textBuffer.getTextBuffer();
             int offset = _textBuffer.getTextOffset();
-            int len = _intLength;
-            if (_numberNegative) {
+            char c = buf[offset];
+            boolean neg;
+            
+            if (c == '-') {
+                neg = true;
                 ++offset;
+            } else {
+                neg = false;
+                if (c == '+') {
+                    ++offset;
+                }
             }
+            int len = buf.length - offset;
             if (len <= 9) { // definitely fits in int
                 int i = NumberInput.parseInt(buf, offset, len);
-                _numberInt = _numberNegative ? -i : i;
+                _numberInt = neg ? -i : i;
                 _numTypesValid = NR_INT;
                 return;
             }
             if (len <= 18) { // definitely fits AND is easy to parse using 2 int parse calls
                 long l = NumberInput.parseLong(buf, offset, len);
-                if (_numberNegative) {
+                if (neg) {
                     l = -l;
                 }
                 // [JACKSON-230] Could still fit in int, need to check
                 if (len == 10) {
-                    if (_numberNegative) {
+                    if (neg) {
                         if (l >= MIN_INT_L) {
                             _numberInt = (int) l;
                             _numTypesValid = NR_INT;
@@ -1115,7 +1105,7 @@ public class CsvDecoder
                 _numTypesValid = NR_LONG;
                 return;
             }
-            _parseSlowIntValue(expType, buf, offset, len);
+            _parseSlowIntValue(expType, buf, offset, len, neg);
             return;
         }
         /*
@@ -1153,13 +1143,13 @@ public class CsvDecoder
         }
     }
     
-    private final void _parseSlowIntValue(int expType, char[] buf, int offset, int len)
+    private final void _parseSlowIntValue(int expType, char[] buf, int offset, int len,
+            boolean neg)
         throws IOException
     {
         String numStr = _textBuffer.contentsAsString();
         try {
-            // [JACKSON-230] Some long cases still...
-            if (NumberInput.inLongRange(buf, offset, len, _numberNegative)) {
+            if (NumberInput.inLongRange(buf, offset, len, neg)) {
                 // Probably faster to construct a String, call parse, than to use BigInteger
                 _numberLong = Long.parseLong(numStr);
                 _numTypesValid = NR_LONG;
@@ -1179,9 +1169,8 @@ public class CsvDecoder
     /* Numeric conversions
     /**********************************************************************
      */    
-    
-    protected void convertNumberToInt()
-        throws IOException
+
+    protected void convertNumberToInt() throws IOException
     {
         // First, converting from long ought to be easy
         if ((_numTypesValid & NR_LONG) != 0) {
@@ -1213,8 +1202,7 @@ public class CsvDecoder
         _numTypesValid |= NR_INT;
     }
     
-    protected void convertNumberToLong()
-        throws IOException
+    protected void convertNumberToLong() throws IOException
     {
         if ((_numTypesValid & NR_INT) != 0) {
             _numberLong = _numberInt;
@@ -1330,7 +1318,7 @@ public class CsvDecoder
     }
 
     protected final JsonParseException constructError(String msg, Throwable t) {
-        return new JsonParseException(msg, getCurrentLocation(), t);
+        return new JsonParseException(_owner, msg, t);
     }
     
     protected final static String _getCharDesc(int ch)
@@ -1349,7 +1337,10 @@ public class CsvDecoder
         throw new IllegalStateException("Internal error: code path should never get executed");
     }
 
+    /**
+     * Method for reporting low-level decoding (parsing) problems
+     */
     protected final void _reportError(String msg) throws JsonParseException {
-        throw new JsonParseException(msg, getCurrentLocation());
+        throw new JsonParseException(_owner, msg);
     }
 }

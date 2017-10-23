@@ -55,11 +55,12 @@ public class TestFiltering extends ModuleTestBase
     /**********************************************************
      */
 
+    private final CsvMapper MAPPER = mapperForCsv();
+    
     public void testWithJsonView() throws Exception
     {
-        CsvMapper mapper = mapperForCsv();
-        CsvSchema schema = mapper.schemaFor(Bean.class).withLineSeparator("\n").withHeader();
-        String actual = mapper.writer(schema).withView(ViewB.class).writeValueAsString(new Bean());
+        CsvSchema schema = MAPPER.schemaFor(Bean.class).withLineSeparator("\n").withHeader();
+        String actual = MAPPER.writer(schema).withView(ViewB.class).writeValueAsString(new Bean());
 //      System.out.println(actual);
 
         BufferedReader br = new BufferedReader(new StringReader(actual.trim()));
@@ -69,7 +70,7 @@ public class TestFiltering extends ModuleTestBase
 
         // plus read back?
         final String INPUT = "a,aa,b\n5,6,7\n";
-        Bean result = mapper.readerFor(Bean.class).with(schema).withView(ViewB.class).readValue(INPUT);
+        Bean result = MAPPER.readerFor(Bean.class).with(schema).withView(ViewB.class).readValue(INPUT);
         assertEquals("5", result.a);
         // due to filtering, ought to use default
         assertEquals("2", result.aa);
@@ -78,8 +79,7 @@ public class TestFiltering extends ModuleTestBase
     
     public void testWithJsonFilter() throws Exception
     {
-        CsvMapper mapper = mapperForCsv();
-        CsvSchema schema = mapper.schemaFor(Company.class).withLineSeparator("\n").withHeader();
+        CsvSchema schema = MAPPER.schemaFor(Company.class).withLineSeparator("\n").withHeader();
 
         SimpleFilterProvider filterProvider = new SimpleFilterProvider()
                 .addFilter(COMPANY_FILTER, FilterExceptFilter.filterOutAllExcept("name", "ticker"));
@@ -88,7 +88,7 @@ public class TestFiltering extends ModuleTestBase
                 new Company(1, "name1", "ticker1")
                 , new Company(2, "name2", "ticker2")
                 , new Company(3, "name3", "ticker3"));
-        String actual = mapper.writer(filterProvider).with(schema).writeValueAsString(companies);
+        String actual = MAPPER.writer(filterProvider).with(schema).writeValueAsString(companies);
 //        System.out.println(actual);
 
         BufferedReader br = new BufferedReader(new StringReader(actual.trim()));
@@ -98,4 +98,29 @@ public class TestFiltering extends ModuleTestBase
         assertEquals(",name3,ticker3", br.readLine());
         assertNull(br.readLine());
     }    
+
+    public void testWithJsonFilterFieldSuppressed() throws Exception
+    {
+        final CsvSchema schema = new CsvSchema.Builder()
+                .addColumn("name")
+                .addColumn("ticker")
+                .setLineSeparator("\n").setUseHeader(true)
+                .build();
+
+        SimpleFilterProvider filterProvider = new SimpleFilterProvider()
+                .addFilter(COMPANY_FILTER, FilterExceptFilter.filterOutAllExcept("name", "ticker"));
+
+        List<Company> companies = Arrays.asList(
+                new Company(1, "name1", "ticker1")
+                , new Company(2, "name2", "ticker2")
+                , new Company(3, "name3", "ticker3"));
+        String actual = MAPPER.writer(filterProvider).with(schema).writeValueAsString(companies);
+
+        BufferedReader br = new BufferedReader(new StringReader(actual.trim()));
+        assertEquals("name,ticker", br.readLine());
+        assertEquals("name1,ticker1", br.readLine());
+        assertEquals("name2,ticker2", br.readLine());
+        assertEquals("name3,ticker3", br.readLine());
+        assertNull(br.readLine());
+    }
 }

@@ -57,7 +57,8 @@ public class SequenceRecoveryTest extends ModuleTestBase
             it.nextValue();
             fail("Shouldn't have passed");
         } catch (JsonMappingException e) {
-            verifyException(e, "'invalid': not a valid");
+            verifyException(e, "not a valid Integer value");
+            verifyException(e, "\"invalid\"");
         }
 
         // but third is fine again
@@ -87,7 +88,8 @@ public class SequenceRecoveryTest extends ModuleTestBase
             it.nextValue();
             fail("Shouldn't have passed");
         } catch (JsonMappingException e) {
-            verifyException(e, "String value 'garbage'");
+            verifyException(e, "not a valid Integer value");
+            verifyException(e, "\"garbage\"");
         }
         assertFalse(it.hasNext());
         it.close();

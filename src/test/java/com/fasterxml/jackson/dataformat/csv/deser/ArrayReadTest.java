@@ -1,5 +1,7 @@
 package com.fasterxml.jackson.dataformat.csv.deser;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.csv.*;
 
@@ -10,6 +12,15 @@ public class ArrayReadTest extends ModuleTestBase
     static class ValueEntry {
         public String id, extra;
         public int[] values;
+
+        @JsonCreator
+        public ValueEntry(@JsonProperty("id") String id,
+            @JsonProperty("extra") String extra,
+            @JsonProperty("values") int[] values) {
+            this.id = id;
+            this.extra = extra;
+            this.values = values;
+        }
     }
 
     /*
@@ -60,20 +71,54 @@ public class ArrayReadTest extends ModuleTestBase
         assertEquals(0, v.length);
     }
 
-    /*
-    public void testSeparatorOverride() throws Exception
+    public void testSeparatorOverrideSpace() throws Exception
     {
-        CsvMapper mapper = mapperForCsv();
-        ValueEntry input = new ValueEntry("foo", "stuff", 1, 2, 3);
-        String csv = mapper.writer(CsvSchema.builder()
+        ValueEntry input = new ValueEntry("foo", "stuff", new int[] {1, 2, 3});
+        String csv = MAPPER.writer(CsvSchema.builder()
                 .addColumn("id")
-                .addArrayColumn("values", ' ')
+                .addArrayColumn("values", " ")
                 .addColumn("extra")
                 .build())
                 .writeValueAsString(input)
                 .trim();
         // gets quoted due to white space
         assertEquals("foo,\"1 2 3\",stuff", csv);
+
+        ValueEntry value = MAPPER.reader(MAPPER.schemaFor(ValueEntry.class).withArrayElementSeparator(" ")).forType(ValueEntry.class)
+            .readValue(csv);
+        assertEquals("foo", value.id);
+        assertEquals("stuff", value.extra);
+        int[] v = value.values;
+        assertNotNull(v);
+        assertEquals(3, v.length);
+        assertEquals(1, v[0]);
+        assertEquals(2, v[1]);
+        assertEquals(3, v[2]);
     }
-    */
+
+    public void testSeparatorOverrideMulti() throws Exception
+    {
+        ValueEntry input = new ValueEntry("foo", "stuff", new int[] {1, 2, 3});
+        String csv = MAPPER.writer(CsvSchema.builder()
+            .addColumn("id")
+            .addArrayColumn("values", "::")
+            .addColumn("extra")
+            .build())
+            .writeValueAsString(input)
+            .trim();
+        assertEquals("foo,1::2::3,stuff", csv);
+
+        ValueEntry value = MAPPER.reader(MAPPER.schemaFor(ValueEntry.class).withArrayElementSeparator("::")).forType(ValueEntry.class)
+            .readValue(csv);
+        assertEquals("foo", value.id);
+        assertEquals("stuff", value.extra);
+        int[] v = value.values;
+        assertNotNull(v);
+        assertEquals(3, v.length);
+        assertEquals(1, v[0]);
+        assertEquals(2, v[1]);
+        assertEquals(3, v[2]);
+    }
+
+
 }
