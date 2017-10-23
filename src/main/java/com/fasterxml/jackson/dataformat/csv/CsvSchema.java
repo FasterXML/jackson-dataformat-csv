@@ -608,6 +608,9 @@ public class CsvSchema
     protected final int _escapeChar;
     
     protected final char[] _lineSeparator;
+    
+    /** CSV ends with a line separator ? Default is <code>true</code> */
+    protected final boolean _endingLineSeparator;
 
     /**
      * @since 2.5
@@ -648,6 +651,7 @@ public class CsvSchema
         _quoteChar = quoteChar;
         _escapeChar = escapeChar;
         _lineSeparator = lineSeparator;
+        _endingLineSeparator = true;
         _nullValue = nullValue;
         
         // and then we may need to create a mapping
@@ -677,10 +681,33 @@ public class CsvSchema
         _quoteChar = quoteChar;
         _escapeChar = escapeChar;
         _lineSeparator = lineSeparator;
+        _endingLineSeparator = true;
         _arrayElementSeparator = arrayElementSeparator;
         _nullValue = nullValue;
         _columnsByName = columnsByName;
-    }    
+    }  
+
+    /**
+     * Copy constructor used for creating variants using
+     * <code>withXxx()</code> methods.
+     */
+    protected CsvSchema(Column[] columns, int features,
+            char columnSeparator, int quoteChar, int escapeChar,
+            char[] lineSeparator, boolean endingLineSeparator, int arrayElementSeparator,
+            char[] nullValue,
+            Map<String,Column> columnsByName)
+    {
+        _columns = columns;
+        _features = features;
+        _columnSeparator = columnSeparator;
+        _quoteChar = quoteChar;
+        _escapeChar = escapeChar;
+        _lineSeparator = lineSeparator;
+        _endingLineSeparator = endingLineSeparator;
+        _arrayElementSeparator = arrayElementSeparator;
+        _nullValue = nullValue;
+        _columnsByName = columnsByName;
+    }   
 
     /**
      * Copy constructor used for creating variants using
@@ -693,6 +720,7 @@ public class CsvSchema
         _quoteChar = base._quoteChar;
         _escapeChar = base._escapeChar;
         _lineSeparator = base._lineSeparator;
+        _endingLineSeparator = true;
         _arrayElementSeparator = base._arrayElementSeparator;
         _nullValue = base._nullValue;
         _columnsByName = base._columnsByName;
@@ -710,6 +738,7 @@ public class CsvSchema
         _quoteChar = base._quoteChar;
         _escapeChar = base._escapeChar;
         _lineSeparator = base._lineSeparator;
+        _endingLineSeparator = true;
         _arrayElementSeparator = base._arrayElementSeparator;
         _nullValue = base._nullValue;
         _columnsByName = base._columnsByName;
@@ -891,6 +920,26 @@ public class CsvSchema
     }
 
     /**
+     * @return
+     */
+    public CsvSchema withEndingLineSeparator() {
+
+      return new CsvSchema(_columns, _features,
+          _columnSeparator, _quoteChar, _escapeChar, _lineSeparator, true,
+          _arrayElementSeparator, _nullValue, _columnsByName);
+    }
+
+    /**
+     * @return
+     */
+    public CsvSchema withoutEndingLineSeparator() {
+
+      return new CsvSchema(_columns, _features,
+          _columnSeparator, _quoteChar, _escapeChar, _lineSeparator, false,
+          _arrayElementSeparator, _nullValue, _columnsByName);
+    }
+
+    /**
      * @since 2.5
      */
     public CsvSchema withNullValue(String nvl) {
@@ -989,6 +1038,7 @@ public class CsvSchema
     public int getEscapeChar() { return _escapeChar; }
 
     public char[] getLineSeparator() { return _lineSeparator; }
+    public boolean getEndingLineSeparator() { return _endingLineSeparator; }
 
     /**
      * @return Null value defined, as char array, if one is defined to be recognized; Java null
